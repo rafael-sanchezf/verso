@@ -1,0 +1,92 @@
+[
+  {
+    "id": 100225411,
+    "title": "Assassin’s Creed® Odyssey",
+    "sortName": "assassins_creed_11",
+    "isFullyOptimized": true,
+    "steamUrl": "https://store.steampowered.com/app/812140",
+    "store": "Steam",
+    "publisher": "Ubisoft",
+    "genres": [
+      "Action",
+      "Adventure"
+    ],
+    "status": "AVAILABLE"
+  },
+  {
+    "id": 18113211,
+    "title": "Portal 2",
+    "sortName": "portal_2",
+    "isFullyOptimized": true,
+    "steamUrl": "https://store.steampowered.com/app/620",
+    "store": "Steam",
+    "publisher": "Valve Software",
+    "genres": [
+      "Action",
+      "Adventure",
+      "First-Person Shooter",
+      "Puzzle"
+    ],
+    "status": "AVAILABLE"
+  },
+  {
+    "id": 101751711,
+    "title": "Absolute Drift: Zen Edition",
+    "sortName": "absolute_drift_egs",
+    "isFullyOptimized": false,
+    "steamUrl": "",
+    "store": "Epic",
+    "publisher": "Funselektor Labs Inc.",
+    "genres": [
+      "Action",
+      "Casual",
+      "Indie",
+      "Racing",
+      "Simulation",
+      "Sports"
+    ],
+    "status": "AVAILABLE"
+  },
+  {
+    "id": 101899911,
+    "title": "Alan Wake's American Nightmare",
+    "sortName": "alan_wake's_american_nightmare_-_epic_games_store",
+    "isFullyOptimized": false,
+    "steamUrl": "",
+    "store": "Epic",
+    "publisher": "Remedy Entertainment Oy",
+    "genres": [
+      "Action",
+      "Adventure"
+    ],
+    "status": "AVAILABLE"
+  },
+  {
+    "id": 101792111,
+    "title": "Anno® 1404 History Edition",
+    "sortName": "anno_1404_-_history_edition_-_ubisoft_connect",
+    "isFullyOptimized": false,
+    "steamUrl": "",
+    "store": "Ubisoft Connect",
+    "publisher": "Ubisoft",
+    "genres": [
+      "Simulation",
+      "Strategy"
+    ],
+    "status": "AVAILABLE"
+  },
+  {
+    "id": 100079511,
+    "title": "Argo",
+    "sortName": "argo",
+    "isFullyOptimized": true,
+    "steamUrl": "https://store.steampowered.com/app/530700",
+    "store": "Steam",
+    "publisher": "Bohemia Interactive",
+    "genres": [
+      "Action",
+      "Free To Play"
+    ],
+    "status": "MAINTENANCE"
+  }
+]

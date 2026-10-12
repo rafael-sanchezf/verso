@@ -1,0 +1,39 @@
+{
+  "_comment": [
+    "GET /3/watch/providers/tv?language=en-US, trimmed the same way as",
+    "tmdb-providers-movie.json and with the same provenance.",
+    "",
+    "It overlaps that file on Netflix (8) and Amazon Prime Video (9), which is",
+    "the normal case: a provider that carries both films and series is in both",
+    "directories under one id. The two responses are merged by provider_id",
+    "before anything is written, so one provider is one row however many",
+    "directories name it. Freevee (613) is here to be a provider only the TV",
+    "directory has.",
+    "",
+    "Netflix's display_priorities differ from the movie file's on purpose: the",
+    "merge is last-one-wins per id and the test pins which of the two survives."
+  ],
+  "results": [
+    {
+      "display_priorities": { "US": 1, "GB": 1 },
+      "display_priority": 1,
+      "logo_path": "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg",
+      "provider_name": "Netflix",
+      "provider_id": 8
+    },
+    {
+      "display_priorities": { "US": 3, "GB": 2 },
+      "display_priority": 3,
+      "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+      "provider_name": "Amazon Prime Video",
+      "provider_id": 9
+    },
+    {
+      "display_priorities": { "US": 12 },
+      "display_priority": 12,
+      "logo_path": "/zrDlBfmYivfPo6xvSyaidKMhFnU.jpg",
+      "provider_name": "Freevee",
+      "provider_id": 613
+    }
+  ]
+}

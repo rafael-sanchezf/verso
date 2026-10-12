@@ -1,0 +1,1264 @@
+/*
+ * The site's styling entry point.
+ *
+ * `theme.css` is generated from packages/tokens/tokens.json, the same file the
+ * app styles from, so the utilities here (`bg-bg-canvas`, `text-text-secondary`,
+ * `border-border-separator`, `text-title-1`, `rounded-xl`) carry the app's
+ * values, light and dark. Never write a color here: add it to the tokens.
+ */
+
+@import 'tailwindcss';
+@import '@verso/tokens/theme.css';
+
+/*
+ * Site-only additions to the theme, each one line so the brand round is a
+ * value swap rather than a hunt.
+ */
+@theme {
+  /*
+   * The brand green, decision 29, from the tokens since the app adopted it
+   * (#76): the site's one accent is three names pointed at the generated
+   * `brand/*` variables, and no brand or tier hex is written anywhere in
+   * the site. No medium carries a color anywhere on the page.
+   *
+   * `--color-accent` is the fill (`brand/primary`, the same in light and
+   * dark), always with `--color-accent-label` on it (`brand/on-primary`,
+   * white): the filled buttons, the switch's selected segment, the send
+   * buttons, the pick badges.
+   *
+   * `--color-accent-text` is brand text, icons and marks drawn on the canvas
+   * (`brand/text`: the step numbers, the focus ring, the rings, the hairline
+   * fill, the tints). The token itself lifts in dark, because the fill on
+   * black is 3.0:1, enough for a filled edge and not for text or a mark.
+   *
+   * The tier chips and score badges inside the mocked screens are not the
+   * brand: they take the `tier/*` solids as the app draws them
+   * (components/tier.tsx).
+   */
+  --color-accent: var(--color-brand-primary);
+  --color-accent-text: var(--color-brand-text);
+  --color-accent-label: var(--color-brand-on-primary);
+
+  /*
+   * The filled button's hover: the accent mixed a little toward the text
+   * color, so it darkens in light and lightens in dark. Its white label stays
+   * above 5:1 either way. Derived from the accent, not a new color.
+   */
+  --color-accent-hover: color-mix(in srgb, var(--color-accent) 86%, var(--color-text-primary));
+
+  /*
+   * Inter, self-hosted by `next/font` at build time (layout.tsx), which names
+   * the family itself; `--font-inter` carries that name. The token's own
+   * 'Inter' stays as the next fallback.
+   */
+  --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /*
+   * The hero's size. The token ramp tops out at the large title (34 px), which
+   * is a phone screen's title; every reference site sets its hero at 56 to 96
+   * px at desktop (DESIGN.md). So the hero is 36 px at phone width and grows
+   * to 56 px at desktop, set in Inter's Display cut by the optical-size axis.
+   * Weight 600 and -0.025 em, after Unisound's 600 at -0.03 em (DESIGN.md,
+   * "Round two"): at 700 the Display cut reads heavy at this size.
+   */
+  --text-display: clamp(2.25rem, 1.35rem + 3.2vw, 3.5rem);
+  --text-display--line-height: 1.06;
+  --text-display--font-weight: 600;
+  --text-display--letter-spacing: -0.025em;
+
+  /*
+   * The site's one easing curve, an ease-out (quint): fast at the start, so a
+   * thing that enters reads as already arriving, and long at the end, so it
+   * settles rather than stops (DESIGN.md, "Round two", the motion rules).
+   */
+  --ease-site: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * The medium the page shows (round four). The switch at the top writes
+ * `?medium=` to the address and `data-medium` to <html>; an inline script in
+ * the layout's <head> reads the address before the first paint, so a link
+ * opens on either side with no flash. Every part that names the medium is in
+ * the HTML twice, marked `data-medium-only`, and the side not shown is
+ * `display: none`, out of the layout, the tab order and the accessibility
+ * tree. With no attribute (no script) the page shows movies, the default
+ * since the finalize round (Rafa, 2026-10-08: the movie side reads cleaner
+ * while its screens are drawn); `?medium=games` opens games.
+ *
+ * Unlayered on purpose: it beats Tailwind's display utilities, which sit in
+ * a layer. A hidden side's CSS animations do not run; the browser starts them
+ * afresh when it is shown, which is how a switch replays the hero's ask and
+ * the scenes (play-on-view.tsx re-arms the scenes off screen).
+ */
+html[data-medium='games'] [data-medium-only='movies'],
+html:not([data-medium='games']) [data-medium-only='games'] {
+  display: none;
+}
+
+/*
+ * The tagline's last word (finalize round; Rafa, 2026-10-08: on the games
+ * side "press play" becomes "press start", with an animation as it changes).
+ * Both words share one grid cell, so the headline never reflows. A switch
+ * rolls them like a reel: the word leaving lifts out, blurring and fading,
+ * and the word arriving rises in from under the line, sharpening, lands in
+ * the brand green and settles to the text color; back to movies the reel
+ * runs the other way. Transitions only, so nothing plays on first paint,
+ * and the green landing plays only after a switch (`data-medium-switched`).
+ * With no attribute (no script) movies shows, as everywhere on the page.
+ */
+.press-swap {
+  display: inline-grid;
+}
+
+.press-word {
+  grid-area: 1 / 1;
+}
+
+html[data-medium='games'] .press-word[data-word='movies'],
+html:not([data-medium='games']) .press-word[data-word='games'] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .press-word {
+    transition:
+      translate 640ms var(--ease-site),
+      opacity 360ms ease-out,
+      filter 520ms var(--ease-site);
+  }
+
+  html:not([data-medium='games']) .press-word[data-word='games'] {
+    translate: 0 0.6em;
+    filter: blur(8px);
+  }
+
+  html[data-medium='games'] .press-word[data-word='movies'] {
+    translate: 0 -0.6em;
+    filter: blur(8px);
+  }
+
+  html[data-medium-switched][data-medium='games'] .press-word[data-word='games'],
+  html[data-medium-switched]:not([data-medium='games']) .press-word[data-word='movies'] {
+    animation: press-land 1200ms ease-out both;
+  }
+}
+
+@keyframes press-land {
+  0%,
+  40% {
+    color: var(--color-accent-text);
+  }
+  100% {
+    color: var(--color-text-primary);
+  }
+}
+
+/*
+ * The switch (medium-switch.tsx): a pill track, a brand-green thumb that
+ * slides under the selected segment, and the segment's label in white over
+ * it. The selection is drawn from <html>'s attribute, so it is right from
+ * the first paint, before React hydrates the radios. Since round five the
+ * thumb lives in the inner pair of live segments, so TV and Books after it
+ * never move it.
+ */
+.medium-thumb {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 50%;
+  border-radius: 9999px;
+  background-color: var(--color-accent);
+  pointer-events: none;
+}
+
+/* Movies is the first segment since the finalize round, so the thumb moves only for games. */
+html[data-medium='games'] .medium-thumb {
+  translate: 100% 0;
+}
+
+html[data-medium='games'] .medium-seg[data-value='games'],
+html:not([data-medium='games']) .medium-seg[data-value='movies'] {
+  color: var(--color-accent-label);
+}
+
+.medium-seg:has(:focus-visible) {
+  outline: 2px solid var(--color-accent-text);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .medium-thumb {
+    transition: translate 320ms var(--ease-site);
+  }
+
+  .medium-seg {
+    transition: color 200ms ease-out;
+  }
+}
+
+/*
+ * TV and Books, coming (round five): the icon and the name a step back from
+ * the live segments' gray, the "soon" tag at full gray so it reads. Disabled
+ * controls are exempt from the contrast minimum; the tag still clears 4.5:1
+ * on the track.
+ */
+.medium-coming-icon,
+.medium-coming-name {
+  opacity: 0.55;
+}
+
+@media (forced-colors: active) {
+  html[data-medium='games'] .medium-seg[data-value='games'],
+  html:not([data-medium='games']) .medium-seg[data-value='movies'] {
+    outline: 2px solid Highlight;
+  }
+
+  .medium-seg-coming {
+    color: GrayText;
+  }
+}
+
+/*
+ * Rafa's mark (components/verso-mark.tsx): its play is drawn at the file's
+ * own opacity on white (0.733, the fallback the component writes), and whole
+ * on black in dark mode, as the brand identity gives it by ground (decision
+ * 31). A mocked screen resets it, since a screen is always light (phone.tsx).
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --site-mark-play-opacity: 1;
+  }
+}
+
+/*
+ * The phone (components/phone.tsx). A device is an object, not a palette
+ * color, so its few colors are the site's literals beside the shadow, and
+ * they do not flip with the color scheme: a titanium edge (a gray gradient
+ * that catches light at the top left), a near-black bezel, and side buttons
+ * of the same metal.
+ *
+ * Its shadow is the absence of light, in four layers, each wider and fainter
+ * than the last, so the phone reads as lifted rather than outlined, peaking at
+ * the app's `Cover` opacities (0.18 in light, 0.5 in dark, rule 30). In dark,
+ * where a black phone would sink into the black canvas, a faint light ring
+ * draws its edge, the way rule 30 gives dark covers one.
+ */
+:root {
+  --site-device-shadow:
+    0 1px 1px rgb(0 0 0 / 0.05), 0 3px 6px rgb(0 0 0 / 0.05), 0 16px 32px -10px rgb(0 0 0 / 0.14),
+    0 40px 80px -28px rgb(0 0 0 / 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --site-device-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.1), 0 3px 6px rgb(0 0 0 / 0.5), 0 16px 32px -10px rgb(0 0 0 / 0.5),
+      0 40px 80px -28px rgb(0 0 0 / 0.5);
+  }
+}
+
+@utility shadow-device {
+  box-shadow: var(--site-device-shadow);
+}
+
+.site-device-edge {
+  background: linear-gradient(150deg, #8a8a8f 0%, #3a3a3d 22%, #55555a 55%, #2a2a2d 80%, #6a6a6f 100%);
+}
+
+.site-device-bezel {
+  background-color: #070708;
+}
+
+.site-device-button {
+  background: linear-gradient(90deg, #3a3a3d, #6a6a6f);
+}
+
+/*
+ * The strip in Inside the app (feature-strip.tsx; interactive strip,
+ * 2026-10-08). Below 768 px it is the snap row of the component's
+ * utilities, as before: every phone 200 px, Home 300 on the movies side
+ * with its caption under it, no buttons and no caption stack.
+ *
+ * From 768 px one phone is large and three are small, spread across the
+ * column. The sizes come from the column's width in container units
+ * (`.strip-frame` is the container): a small phone is 200 px and the large
+ * one 1.6 times that, 320, as the movies row had them; where the column is
+ * too narrow for 320 + 3 × 200 with 16 px between (a window under about
+ * 1010 px), all four scale down together, to 146 and 234 at 768.
+ *
+ * The row is as tall as the large phone (2.099 times its width: the
+ * screen's 402:874 at 93.6% of the width, plus the bezel and the edge) and
+ * every phone is centered in it, so the middles meet at every frame of the
+ * motion and nothing under the strip moves. The widths animate; the phone
+ * leaving shrinks as the one arriving grows, on the same curve, so their
+ * sum stays put and the other two phones barely move.
+ *
+ * The four captions share one grid cell under the row, each as wide as the
+ * large phone and set where its own phone sits when it is the large one
+ * (its index times a small phone and the space after it). So the cell is
+ * as tall as the longest caption, the strip's height never changes with
+ * the selection, and no caption reaches past the column. The one leaving
+ * fades out first; the one arriving fades and rises in as the phone
+ * finishes growing.
+ */
+.strip-expand,
+.strip-captions {
+  display: none;
+}
+
+@media (width >= 48rem) {
+  .strip-frame {
+    container-type: inline-size;
+    --strip-small: min(200px, (100cqi - 48px) / 4.6);
+    --strip-large: calc(var(--strip-small) * 1.6);
+    --strip-space: calc((100cqi - var(--strip-large) - 3 * var(--strip-small)) / 3);
+  }
+
+  .strip-row {
+    height: calc(var(--strip-large) * 2.099);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Allowed to shrink here (never in the snap row), so a press mid-motion can never push the row past the column. */
+  .strip-item {
+    width: var(--strip-small);
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .strip-item[data-featured] {
+    width: var(--strip-large);
+  }
+
+  /* A container of the phone's width, so the button's corners are the phone's (17.6% of it, phone.tsx) and the focus ring follows them. */
+  .strip-phone {
+    position: relative;
+    container-type: inline-size;
+  }
+
+  .strip-expand {
+    display: block;
+    position: absolute;
+    inset: 0;
+    border-radius: 17.6cqi;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .strip-item[data-featured] .strip-expand {
+    cursor: default;
+  }
+
+  .strip-captions {
+    display: grid;
+    margin-top: 20px;
+  }
+
+  .strip-caption {
+    grid-area: 1 / 1;
+    width: var(--strip-large);
+    margin-left: calc(var(--strip-index) * (var(--strip-small) + var(--strip-space)));
+  }
+
+  .strip-caption:not([data-featured]) {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+/*
+ * The strip's motion. The hover lift (4 px, as before) is on every phone in
+ * the snap row and on the small ones from 768 px, which are the ones a click
+ * changes. Under reduced motion nothing lifts and a press swaps the sizes
+ * and the caption at once.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .strip-phone {
+    transition: translate 300ms var(--ease-site);
+  }
+
+  @media (hover: hover) {
+    .strip-phone:hover {
+      translate: 0 -4px;
+    }
+  }
+
+  @media (width >= 48rem) {
+    .strip-item {
+      transition: width 640ms var(--ease-site);
+    }
+
+    .strip-item[data-featured] .strip-phone {
+      translate: none;
+    }
+
+    .strip-caption {
+      transition:
+        opacity 200ms ease-out,
+        translate 200ms ease-out,
+        visibility 0s linear 200ms;
+    }
+
+    .strip-caption:not([data-featured]) {
+      translate: 0 6px;
+    }
+
+    .strip-caption[data-featured] {
+      transition:
+        opacity 400ms ease-out 240ms,
+        translate 640ms var(--ease-site) 240ms,
+        visibility 0s;
+    }
+  }
+}
+
+/* A row that scrolls sideways on touch without a scrollbar track under it. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /*
+   * Anchors and keyboard focus land under the sticky nav, not behind it. A
+   * margin on what scrolls into view in the page, not `scroll-padding` on
+   * the page itself (rounds one to three): with the padding, focusing
+   * anything inside the sticky nav (the switch, Log in) while scrolled down
+   * made Chrome scroll the page up by several hundred pixels, measuring the
+   * stuck nav at its place in the flow. Found in round four, when the
+   * switch made the nav a control you click mid-page.
+   */
+  main :is([id], a, button, input, summary, [tabindex]) {
+    scroll-margin-top: 5rem;
+  }
+
+  /*
+   * Native smooth scrolling, for anchor jumps only (See how it works), and
+   * only when motion is allowed. The wheel and the trackpad are never
+   * smoothed: macOS already gives them momentum (DESIGN.md: Lenis refused).
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    background-color: var(--color-bg-canvas);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * One focus ring for every control, the app's (interaction.ts): 2 px in the
+   * brand mark color, 2 px outside the edge, for the keyboard only.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-text);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-accent-text) 28%, transparent);
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+/*
+ * The nav once the page scrolls under it (nav-bar.tsx): a hairline, and the
+ * canvas at 80% over a blur where the browser can blur and the reader has
+ * not asked for reduced transparency or more contrast.
+ */
+.site-nav[data-scrolled='true'] {
+  border-color: var(--color-border-separator);
+}
+
+@supports (backdrop-filter: blur(0)) {
+  .site-nav[data-scrolled='true'] {
+    background-color: color-mix(in srgb, var(--color-bg-canvas) 80%, transparent);
+    backdrop-filter: blur(20px) saturate(1.5);
+  }
+
+  /* Safari has no reduced-transparency query, so the opt-out is the guarded side. */
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .site-nav[data-scrolled='true'] {
+      background-color: var(--color-bg-canvas);
+      backdrop-filter: none;
+    }
+  }
+}
+
+/*
+ * The motion, all of it. Every animation below sits inside
+ * `prefers-reduced-motion: no-preference`, so a reader who asks for reduced
+ * motion gets the page drawn in place, with nothing that moves, fades or
+ * scales; so does a browser that cannot answer the query. Nearly everything
+ * animates `opacity`, `translate`, `rotate` and `scale`, which the compositor
+ * runs off the main thread; the exceptions are a few small fills and rings
+ * inside the scenes. Nothing loops (DESIGN.md, "Round three").
+ */
+
+@keyframes site-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--rise-from, 16px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /*
+   * The hero's entrance, on first paint: CSS rather than script, so it runs
+   * before the page hydrates and the hero is never blank while JavaScript
+   * loads. `--rise-delay` staggers the line, the subline and the buttons.
+   */
+  .animate-rise {
+    animation: site-rise 900ms var(--ease-site) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /*
+   * The fade-up per section. `RevealOnScroll` marks a `[data-reveal]` element
+   * `hidden` only when it starts below the fold, then `shown` as it enters;
+   * without JavaScript nothing is ever hidden.
+   */
+  /* Hidden at once (it is below the fold), revealed over 900 ms. */
+  [data-reveal='shown'] {
+    transition:
+      opacity 900ms var(--ease-site),
+      translate 900ms var(--ease-site);
+  }
+
+  [data-reveal='hidden'] {
+    opacity: 0;
+    translate: 0 24px;
+  }
+
+  /* An answer fades in as its question opens. */
+  details[open] > .faq-answer {
+    --rise-from: 6px;
+    animation: site-rise 360ms var(--ease-site) both;
+  }
+
+  /*
+   * And, where the browser can animate to `auto` (Chrome), the answer's
+   * height opens rather than jumps. Elsewhere it jumps, as native details do.
+   */
+  @supports (interpolate-size: allow-keywords) {
+    :root {
+      interpolate-size: allow-keywords;
+    }
+
+    details::details-content {
+      block-size: 0;
+      overflow-y: clip;
+      transition:
+        block-size 360ms var(--ease-site),
+        content-visibility 360ms allow-discrete;
+    }
+
+    details[open]::details-content {
+      block-size: auto;
+    }
+  }
+}
+
+/*
+ * The angled phone (angled-phone.tsx), after the motion note's B1. Four
+ * boxes, each owning one motion: the stage (perspective, the fade on load),
+ * the settle (the resting angle, eased toward flat by the scroll), the tilt
+ * (the pointer) and the body (the turn-in on load, the face and the
+ * thickness). The settle animates two registered angles rather than
+ * `transform`, so the pointer's tilt on the box inside it never fights it;
+ * the turn-in uses the individual `rotate` and `translate` properties, which
+ * stack on the parents' turns.
+ *
+ * Nothing in the 3D chain (settle, tilt, body) takes `opacity`, `filter`,
+ * `overflow` or a mask, any of which would flatten it: the fade is on the
+ * flat stage, the floor shadow is a sibling with its own blur, and only the
+ * screen, a leaf, clips. Under reduced motion the angle stays, still.
+ *
+ * Support: CSS 3D everywhere; `@property` (the settle's registered angles)
+ * in Chrome 85, Safari 16.4, Firefox 128; the scroll-driven settle in
+ * Chrome 115 and Safari 26. Firefox holds the resting angle.
+ */
+@property --ap-ry {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: -22deg;
+}
+
+@property --ap-rx {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 8deg;
+}
+
+.ap-stage {
+  position: relative;
+  perspective: 1400px;
+  perspective-origin: 30% 40%;
+  container-type: inline-size;
+}
+
+.ap-settle,
+.ap-tilt,
+.ap-body {
+  transform-style: preserve-3d;
+}
+
+.ap-settle {
+  transform: rotateY(var(--ap-ry)) rotateX(var(--ap-rx)) rotateZ(-1.5deg);
+}
+
+/* Stacked under the text, a gentler angle, so the turned phone keeps inside the column. */
+@media (width < 64rem) {
+  .ap-settle {
+    --ap-ry: -14deg;
+    --ap-rx: 6deg;
+  }
+}
+
+/* 8.25 mm deep on a 71.5 mm wide phone: 11.5% of its width. */
+.ap-body {
+  position: relative;
+  --ap-depth: 11.5cqi;
+}
+
+.ap-slice {
+  position: absolute;
+  inset: 0;
+  border-radius: 17.6cqi;
+  transform: translateZ(calc(var(--z) * var(--ap-depth) / -10));
+}
+
+/* A sheen on the glass that slides with the pointer's side. */
+.ap-glare {
+  position: absolute;
+  inset: 1cqi;
+  border-radius: 16.6cqi;
+  pointer-events: none;
+  transform: translateZ(1px);
+  background: linear-gradient(105deg, transparent 32%, rgb(255 255 255 / 0.16) 46%, transparent 60%) no-repeat;
+  background-size: 250% 100%;
+  background-position: calc(50% + var(--tilt-u, 0) * 30%) 0;
+}
+
+/* The shadow on the floor, which reads better than a box shadow turning with the face. */
+.ap-floor {
+  position: absolute;
+  inset: auto 10% -4% 16%;
+  height: 6%;
+  border-radius: 50%;
+  filter: blur(14px);
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.3), transparent);
+  pointer-events: none;
+}
+
+/* A faint pool of the brand green behind the phone, through the brand mark variable. */
+.ap-glow {
+  position: absolute;
+  inset: 6% -36% 12% -30%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent-text) 14%, transparent), transparent);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ap-stage {
+    animation: ap-fade 900ms var(--ease-site) 120ms both;
+  }
+
+  .ap-body {
+    animation: ap-turn-in 1400ms var(--ease-site) 120ms both;
+  }
+
+  /* The pointer's lean, set by tilt-on-pointer.tsx and eased here. Never on touch. */
+  .ap-tilt {
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 800ms var(--ease-site);
+  }
+
+  .ap-glare {
+    transition: background-position 800ms var(--ease-site);
+  }
+
+  /*
+   * The settle: beside the text, over the first 70% of a screen of scroll;
+   * stacked under it, while the phone crosses the screen.
+   */
+  @supports (animation-timeline: scroll()) {
+    .ap-settle {
+      animation: ap-settle linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 70vh;
+    }
+
+    @media (width < 64rem) {
+      .ap-settle {
+        animation-timeline: view();
+        animation-range: entry 100% exit 40%;
+      }
+    }
+  }
+}
+
+@keyframes ap-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ap-turn-in {
+  from {
+    rotate: y -18deg;
+    translate: 0 56px;
+  }
+}
+
+@keyframes ap-settle {
+  to {
+    --ap-ry: -6deg;
+    --ap-rx: 2deg;
+  }
+}
+
+/*
+ * The ask (ask-moment.tsx), once on load and again on each switch, timed
+ * after the phone has turned in: the question at `--t0`, the field 180 ms
+ * later with a caret that blinks once, the answer typed a character every
+ * 38 ms with the caret riding its end, the send button filling as typing
+ * ends, then the trace (three lines 320 ms apart, each under a shimmer that
+ * passes once and a check as it ends), then the label and the three picks,
+ * 150 ms apart. About four seconds. Each medium has its own screen; the
+ * switch shows the other one, whose animations the browser starts afresh,
+ * so it replays from the question.
+ */
+.ask-run {
+  --t0: 700ms;
+  --type-step: 38ms;
+  --t-type: calc(var(--t0) + 550ms);
+  --t-think: calc(var(--t-type) + var(--n) * var(--type-step) + 300ms);
+  --t-picks: calc(var(--t-think) + 1250ms);
+}
+
+/* After the first switch, a newly shown screen replays from the question at once. */
+html[data-medium-switched] .ask-run {
+  --t0: 60ms;
+}
+
+/* The carets, shared with How it works' third scene: on each character only while it is the last one typed. */
+.ask-ch {
+  position: relative;
+}
+
+.ask-ch::after,
+.ask-caret-start {
+  content: '';
+  position: absolute;
+  top: 12%;
+  bottom: 8%;
+  width: 2px;
+  border-radius: 1px;
+  background-color: var(--color-accent-text);
+  opacity: 0;
+}
+
+.ask-ch::after {
+  right: -2px;
+}
+
+.ask-caret-start {
+  left: 0;
+}
+
+/* The trace's text: gray, with a lighter band that the shimmer passes across once. */
+.ask-trace-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-text-secondary) 40%,
+    var(--color-text-primary) 50%,
+    var(--color-text-secondary) 60%
+  );
+  background-size: 300% 100%;
+  background-position: 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (forced-colors: active) {
+  .ask-trace-text {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-medium-switched] .ask-run {
+    animation: ask-show 240ms ease-out both;
+  }
+
+  .ask-run .ask-in {
+    --rise-from: 8px;
+    animation: site-rise 600ms var(--ease-site) both;
+    animation-delay: calc(var(--t0) + var(--d, 0ms));
+  }
+
+  .ask-run .ask-ch {
+    animation: ask-show 1ms linear both;
+    animation-delay: calc(var(--t-type) + var(--c) * var(--type-step));
+  }
+
+  .ask-run .ask-ch::after {
+    animation: ask-caret var(--type-step) linear forwards;
+    animation-delay: calc(var(--t-type) + var(--c) * var(--type-step));
+  }
+
+  .ask-run .ask-ch-last::after {
+    animation: ask-caret-tail 1100ms linear forwards;
+    animation-delay: calc(var(--t-type) + var(--c) * var(--type-step));
+  }
+
+  .ask-run .ask-caret-start {
+    animation: ask-caret-tail 450ms linear forwards;
+    animation-delay: calc(var(--t0) + 250ms);
+  }
+
+  .ask-run .ask-send {
+    animation: ask-send 240ms ease-out both;
+    animation-delay: calc(var(--t-type) + var(--n) * var(--type-step));
+  }
+
+  .ask-run .ask-trace li {
+    --rise-from: 6px;
+    animation: site-rise 320ms var(--ease-site) both;
+    animation-delay: calc(var(--t-think) + var(--i) * 320ms);
+  }
+
+  .ask-run .ask-trace-text {
+    animation: ask-shimmer 900ms linear both;
+    animation-delay: calc(var(--t-think) + var(--i) * 320ms);
+  }
+
+  .ask-run .ask-check {
+    animation: ask-show 200ms ease-out both;
+    animation-delay: calc(var(--t-think) + var(--i) * 320ms + 650ms);
+  }
+
+  .ask-run .ask-from {
+    animation: ask-show 400ms ease-out both;
+    animation-delay: calc(var(--t-picks) - 150ms);
+  }
+
+  .ask-run .ask-pick {
+    --rise-from: 14px;
+    animation: site-rise 560ms var(--ease-site) both;
+    animation-delay: calc(var(--t-picks) + var(--i) * 150ms);
+  }
+}
+
+@keyframes ask-show {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * The carets hold each value with paired stops under linear timing rather
+ * than `step-end`: a delay built with calc() ends at a progress of
+ * 0.9999999999999984, where a step function never takes its last value.
+ */
+@keyframes ask-caret {
+  0%,
+  96% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ask-caret-tail {
+  0%,
+  33% {
+    opacity: 1;
+  }
+  34%,
+  58% {
+    opacity: 0;
+  }
+  59%,
+  88% {
+    opacity: 1;
+  }
+  89%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ask-send {
+  from {
+    background-color: var(--color-bg-placeholder);
+  }
+}
+
+/* The band starts off the right edge and ends off the left, so the line rests gray. */
+@keyframes ask-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+}
+
+/*
+ * How it works' scenes (how-scenes.tsx). The rules outside the motion query
+ * are the finished scenes, which is what the static HTML, reduced motion and
+ * a scene already on screen at load show. The animations exist only under
+ * `[data-play]`, which `PlayOnView` sets on a scene below the fold: `armed`
+ * holds them on their first frame, `run` plays them, once.
+ *
+ * Side by side (from 768 px) the three play in turn, 1.4 s apart, so the
+ * reader sees the pick, then the slot, then the ask; stacked, each plays as
+ * it arrives.
+ */
+.how-step {
+  --scene-delay: 0ms;
+}
+
+@media (width >= 48rem) {
+  .how-step:nth-child(2) {
+    --scene-delay: 1400ms;
+  }
+
+  .how-step:nth-child(3) {
+    --scene-delay: 2800ms;
+  }
+}
+
+/* Scene 1: the chosen card wears the brand ring; the other has stepped back. */
+.pick-card[data-chosen] {
+  scale: 1.03;
+  box-shadow: 0 0 0 2px var(--color-accent-text);
+}
+
+.pick-card:not([data-chosen]) {
+  opacity: 0.4;
+  scale: 0.96;
+}
+
+/* The tap: a brand ring around a soft disc, spreading and fading once where the finger lands. */
+.tap-ring {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 2px solid var(--color-accent-text);
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--color-accent-text) 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Scene 2: the new row keeps a faint brand wash, so the finished scene still says which row arrived. */
+.slot-list {
+  --row-step: 48px; /* a 44 px row and the 4 px gap */
+}
+
+.slot-row[data-new] {
+  background-color: color-mix(in srgb, var(--color-accent-text) 10%, transparent);
+}
+
+.slot-was {
+  opacity: 0;
+}
+
+/* Scene 3: the titles left out step back; the three picks wear the ring and their number, a white numeral on the fill. */
+.list-cover:not([data-pick]) {
+  opacity: 0.3;
+  scale: 0.9;
+}
+
+.list-cover[data-pick] img {
+  box-shadow: 0 0 0 2px var(--color-accent-text);
+}
+
+.pick-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: var(--color-accent);
+  color: var(--color-accent-label);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--color-bg-surface);
+}
+
+/* The hairline over each step: a brand fill that grows with the scroll, only where scroll-driven animation runs. */
+.step-fill {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-play] {
+    --play: paused;
+  }
+
+  [data-play='run'] {
+    --play: running;
+  }
+
+  /* Scene 1: the tap at 400 ms, the chosen card presses in and rings, the other steps back. */
+  [data-play] .tap-ring {
+    animation: tap-ring 700ms ease-out both;
+    animation-delay: calc(var(--scene-delay) + 400ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .pick-card[data-chosen] {
+    animation: pick-chosen 750ms var(--ease-site) both;
+    animation-delay: calc(var(--scene-delay) + 380ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .pick-card:not([data-chosen]) {
+    animation: pick-passed 650ms var(--ease-site) both;
+    animation-delay: calc(var(--scene-delay) + 650ms);
+    animation-play-state: var(--play);
+  }
+
+  /*
+   * Scene 2: the rows under the slot start where they sat without it and
+   * move down a row (a FLIP worked out in CSS, since the layout is known),
+   * their old rank and score giving way to the new; then the pick slides in
+   * from the right into the gap, under a brand wash that fades.
+   */
+  [data-play] .slot-row[data-moves] {
+    animation: slot-make-room 520ms var(--ease-site) both;
+    animation-delay: calc(var(--scene-delay) + 300ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .slot-was {
+    animation: slot-was 260ms ease-out both;
+    animation-delay: calc(var(--scene-delay) + 420ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .slot-now {
+    animation: slot-now 320ms ease-out both;
+    animation-delay: calc(var(--scene-delay) + 520ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .slot-row[data-new] {
+    animation:
+      slot-in 700ms var(--ease-site) both,
+      slot-wash 1600ms ease-out both;
+    animation-delay: calc(var(--scene-delay) + 560ms);
+    animation-play-state: var(--play);
+  }
+
+  /*
+   * Scene 3: the question types itself, the send fills, then the list
+   * narrows: three games step back, the three picks ring and take their
+   * numbers in turn, and the first pick's reason rises.
+   */
+  [data-play] .scene-ask {
+    --type-step: 40ms;
+    --t-type: calc(var(--scene-delay) + 450ms);
+    --t-pick: calc(var(--t-type) + var(--n) * var(--type-step) + 300ms);
+  }
+
+  [data-play] .scene-ask .ask-ch {
+    animation: ask-show 1ms linear both;
+    animation-delay: calc(var(--t-type) + var(--c) * var(--type-step));
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .scene-ask .ask-ch::after {
+    animation: ask-caret var(--type-step) linear forwards;
+    animation-delay: calc(var(--t-type) + var(--c) * var(--type-step));
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .scene-ask .ask-ch-last::after {
+    animation: ask-caret-tail 1100ms linear forwards;
+    animation-delay: calc(var(--t-type) + var(--c) * var(--type-step));
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .scene-ask .ask-caret-start {
+    animation: ask-caret-tail 450ms linear forwards;
+    animation-delay: calc(var(--scene-delay) + 100ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .scene-ask .ask-send {
+    animation: ask-send 240ms ease-out both;
+    animation-delay: calc(var(--t-type) + var(--n) * var(--type-step));
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .list-cover:not([data-pick]) {
+    animation: cover-drop 520ms var(--ease-site) both;
+    animation-delay: var(--t-pick);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .list-cover[data-pick] img {
+    animation: cover-ring 360ms ease-out both;
+    animation-delay: calc(var(--t-pick) + 160ms + var(--k) * 130ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .pick-badge {
+    animation: badge-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--t-pick) + 200ms + var(--k) * 130ms);
+    animation-play-state: var(--play);
+  }
+
+  [data-play] .scene-reason {
+    --rise-from: 8px;
+    animation: site-rise 560ms var(--ease-site) both;
+    animation-delay: calc(var(--t-pick) + 760ms);
+    animation-play-state: var(--play);
+  }
+
+  /*
+   * The step hairline's fill, scrubbed by the scroll (Granola's step
+   * underline): it grows as the step rises from the bottom of the screen to
+   * its middle. Chrome 115 and Safari 26; elsewhere the hairline stays plain.
+   */
+  @supports (animation-timeline: view()) {
+    .step-fill {
+      position: absolute;
+      top: -1px;
+      left: 0;
+      display: block;
+      width: 100%;
+      height: 2px;
+      background-color: var(--color-accent-text);
+      transform-origin: left;
+      scale: 0 1;
+      animation: step-fill linear both;
+      animation-timeline: view();
+      animation-range: cover 8% cover 50%;
+    }
+  }
+}
+
+@keyframes tap-ring {
+  0% {
+    opacity: 1;
+    scale: 0.4;
+  }
+  45% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+
+@keyframes pick-chosen {
+  0% {
+    scale: 1;
+    box-shadow: 0 0 0 0 transparent;
+  }
+  35% {
+    scale: 0.95;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes pick-passed {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes slot-make-room {
+  from {
+    translate: 0 calc(-1 * var(--row-step));
+  }
+}
+
+@keyframes slot-was {
+  from {
+    opacity: 1;
+  }
+}
+
+@keyframes slot-now {
+  from {
+    opacity: 0;
+    translate: 0 5px;
+  }
+}
+
+@keyframes slot-in {
+  from {
+    opacity: 0;
+    translate: 40% 0;
+  }
+}
+
+@keyframes slot-wash {
+  from {
+    background-color: color-mix(in srgb, var(--color-accent-text) 30%, transparent);
+  }
+}
+
+@keyframes cover-drop {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes cover-ring {
+  from {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes badge-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes step-fill {
+  to {
+    scale: 1 1;
+  }
+}

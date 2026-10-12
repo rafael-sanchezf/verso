@@ -1,0 +1,17 @@
+{
+  "_comment": [
+    "The same game as opencritic-game.json, but with percentRecommended on a",
+    "0-to-1 scale instead of 0-100. Not a response anyone has seen: it is the",
+    "shape the field would take if the API ever shipped the fraction, which a",
+    "plain 0-100 range check would wave through as '0.97 percent recommended'.",
+    "No number is better than a wrong number, so the mapper withholds the row",
+    "and the run logs the suspicion once."
+  ],
+  "id": 12090,
+  "name": "Elden Ring",
+  "tier": "Mighty",
+  "topCriticScore": 94.5137,
+  "percentRecommended": 0.971428,
+  "numReviews": 182,
+  "numTopCriticReviews": 70
+}

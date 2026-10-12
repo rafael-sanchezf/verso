@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "GET /game/12090 on opencritic-api.p.rapidapi.com, trimmed to the fields the",
+    "catalog reads. The RapidAPI documentation page renders its example response",
+    "in JavaScript and could not be fetched, so the field names here were taken",
+    "from two independent open-source clients of the same API on 2026-09-16 and",
+    "cross-checked against each other: the opencritic-mcp package, which calls",
+    "this RapidAPI listing and types GET /game/{id} with exactly these names, and",
+    "southern_light's opencritic_integration.ApiGame Go struct. The figures are",
+    "illustrative; the names are the part under test. The real response also",
+    "carries images, trailers, Platforms, Companies, Genres and more, which the",
+    "catalog ignores - the extra keys below stand in for that."
+  ],
+  "id": 12090,
+  "name": "Elden Ring",
+  "url": "https://opencritic.com/game/12090/elden-ring",
+  "tier": "Mighty",
+  "topCriticScore": 94.5137,
+  "percentRecommended": 97.1428,
+  "numReviews": 182,
+  "numTopCriticReviews": 70,
+  "medianScore": 95,
+  "percentile": 99,
+  "firstReleaseDate": "2022-02-25T00:00:00.000Z",
+  "isMajorTitle": true,
+  "hasLootBoxes": false
+}

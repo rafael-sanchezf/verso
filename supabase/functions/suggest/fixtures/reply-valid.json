@@ -1,0 +1,21 @@
+{
+  "id": "msg_01SuggestFixtureValid",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"pick1\":{\"label\":\"c01\",\"reason\":\"You put Hades in Loved; this is Supergiant's sequel, with the same fast combat and the same one-more-run pull.\",\"because\":[\"Hades\"]},\"pick2\":{\"label\":\"c03\",\"reason\":\"Slay the Spire's deck-building runs, rebuilt around poker hands: short sessions and the same urge to break the build.\",\"because\":[\"Slay the Spire\"]},\"pick3\":{\"label\":\"c11\",\"reason\":\"A stretch: a short puzzle world folded inside other worlds, closer to Outer Wilds' curiosity than to your action picks.\",\"because\":[\"Outer Wilds\"]}}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 2412,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 173,
+    "service_tier": "standard"
+  }
+}

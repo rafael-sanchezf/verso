@@ -1,0 +1,18 @@
+{
+  "_comment": [
+    "A game OpenCritic has a page for but no Top Critic reviews of. The API has",
+    "historically answered with a sentinel rather than omitting the fields, which",
+    "is why mapOpenCriticScores gates on numTopCriticReviews and tests the range",
+    "of the two figures instead of trusting that they are present."
+  ],
+  "id": 17890,
+  "name": "An Unreviewed Game",
+  "url": "https://opencritic.com/game/17890/an-unreviewed-game",
+  "tier": null,
+  "topCriticScore": -1,
+  "percentRecommended": 0,
+  "numReviews": 0,
+  "numTopCriticReviews": 0,
+  "firstReleaseDate": null,
+  "hasLootBoxes": false
+}

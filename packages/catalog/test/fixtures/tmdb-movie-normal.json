@@ -1,0 +1,153 @@
+{
+  "_comment": [
+    "GET /3/movie/550?language=en-US&append_to_response=credits,external_ids,",
+    "release_dates,watch/providers, trimmed to the fields the mirror reads.",
+    "",
+    "Confirmed against TMDB's own rendered example responses, fetched",
+    "2026-09-16: the top-level movie fields against developer.themoviedb.org",
+    "/reference/movie-details, the release_dates block against",
+    "/reference/movie-release-dates (including that release_date there is a full",
+    "instant rather than a plain date, and that a country repeats an entry per",
+    "language), and the provider entry fields against",
+    "/reference/movie-watch-providers.",
+    "",
+    "Inferred rather than confirmed: the JSON key append_to_response nests the",
+    "providers under. /docs/append-to-response says only that each sub-request",
+    "'appends as a new JSON object' and does not name the keys, and the watch",
+    "providers page renders its example as prose. 'watch/providers' verbatim is",
+    "what every open-source client reads; the first live run confirms it.",
+    "",
+    "The US release_dates below deliberately carry two type-3 entries on the",
+    "same date differing only in note (a standard run and an IMAX one), which is",
+    "a real shape and which media_release_dates' four-column primary key cannot",
+    "hold twice. GB is here to be a region with no certification at all.",
+    "Provider 1899 (Max) is deliberately absent from tmdb-providers-movie.json,",
+    "so the title has to stub it before its own availability row.",
+    "",
+    "The figures are illustrative; the field names are the part under test."
+  ],
+  "adult": false,
+  "backdrop_path": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
+  "belongs_to_collection": {
+    "id": 1234,
+    "name": "Fight Club Collection",
+    "poster_path": "/pWVLFh4OuejTpUaDQbB1C4zoS2p.jpg",
+    "backdrop_path": "/iY2ujEY2m68OTTlPFTiHub9joHS.jpg"
+  },
+  "budget": 63000000,
+  "genres": [
+    { "id": 18, "name": "Drama" },
+    { "id": 53, "name": "Thriller" }
+  ],
+  "homepage": "",
+  "id": 550,
+  "imdb_id": "tt0137523",
+  "origin_country": ["US"],
+  "original_language": "en",
+  "original_title": "Fight Club",
+  "overview": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
+  "popularity": 61.416,
+  "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+  "production_companies": [
+    { "id": 711, "logo_path": "/tEiIH5QesdheJmDAqQwvtN60727.png", "name": "Fox 2000 Pictures", "origin_country": "US" },
+    { "id": 508, "logo_path": "/7PzJdsLGlR7oW4J0J5Xcd0pHGRg.png", "name": "Regency Enterprises", "origin_country": "US" }
+  ],
+  "production_countries": [{ "iso_3166_1": "US", "name": "United States of America" }],
+  "release_date": "1999-10-15",
+  "revenue": 100853753,
+  "runtime": 139,
+  "spoken_languages": [{ "english_name": "English", "iso_639_1": "en", "name": "English" }],
+  "status": "Released",
+  "tagline": "Mischief. Mayhem. Soap.",
+  "title": "Fight Club",
+  "video": false,
+  "vote_average": 8.438,
+  "vote_count": 30127,
+  "credits": {
+    "cast": [
+      { "id": 819, "name": "Edward Norton", "original_name": "Edward Norton", "character": "The Narrator", "profile_path": "/5XBzD5WuTyVQZeS4VI25z2moMeY.jpg", "order": 0 },
+      { "id": 287, "name": "Brad Pitt", "original_name": "Brad Pitt", "character": "Tyler Durden", "profile_path": "/cckcYc2v0yh1tc9QjRelptcOBko.jpg", "order": 1 },
+      { "id": 1283, "name": "Helena Bonham Carter", "original_name": "Helena Bonham Carter", "character": "Marla Singer", "profile_path": "/DDeITcCpnBd0CkAIRPhggy9bt5.jpg", "order": 2 },
+      { "id": 7470, "name": "Meat Loaf", "original_name": "Meat Loaf", "character": "Robert Paulson", "profile_path": "/pw7b1sJrKgUjnJUaLfJMHHIVBGE.jpg", "order": 3 },
+      { "id": 7471, "name": "Jared Leto", "original_name": "Jared Leto", "character": "Angel Face", "profile_path": "/ca3x0OfIKbJppZh8S1Alx3GfUZO.jpg", "order": 4 },
+      { "id": 7472, "name": "Zach Grenier", "original_name": "Zach Grenier", "character": "Richard Chesler", "profile_path": null, "order": 5 },
+      { "id": 7473, "name": "Holt McCallany", "original_name": "Holt McCallany", "character": "The Mechanic", "profile_path": null, "order": 6 },
+      { "id": 7474, "name": "Eion Bailey", "original_name": "Eion Bailey", "character": "Ricky", "profile_path": null, "order": 7 },
+      { "id": 7475, "name": "Richmond Arquette", "original_name": "Richmond Arquette", "character": "Intern", "profile_path": null, "order": 8 },
+      { "id": 7476, "name": "David Andrews", "original_name": "David Andrews", "character": "Thomas", "profile_path": null, "order": 9 },
+      { "id": 7477, "name": "George Maguire", "original_name": "George Maguire", "character": "Group Leader", "profile_path": null, "order": 10 },
+      { "id": 7478, "name": "Eugenie Bondurant", "original_name": "Eugenie Bondurant", "character": "Tall Woman", "profile_path": null, "order": 11 }
+    ],
+    "crew": [
+      { "id": 376, "name": "Art Linson", "job": "Producer", "department": "Production", "profile_path": null },
+      { "id": 7467, "name": "David Fincher", "job": "Director", "department": "Directing", "profile_path": "/dcBHejOsKvzVZVozWJAPzYthb8X.jpg" },
+      { "id": 7468, "name": "Jim Uhls", "job": "Screenplay", "department": "Writing", "profile_path": null },
+      { "id": 7469, "name": "Chuck Palahniuk", "job": "Novel", "department": "Writing", "profile_path": null },
+      { "id": 7468, "name": "Jim Uhls", "job": "Story", "department": "Writing", "profile_path": null },
+      { "id": 1556, "name": "Ren Klyce", "job": "Sound Designer", "department": "Sound", "profile_path": null }
+    ]
+  },
+  "external_ids": {
+    "imdb_id": "tt0137523",
+    "wikidata_id": "Q190050",
+    "facebook_id": "FightClub",
+    "instagram_id": "",
+    "twitter_id": null
+  },
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          { "certification": "", "descriptors": [], "iso_639_1": "", "note": "Venice Film Festival", "release_date": "1999-09-10T00:00:00.000Z", "type": 1 },
+          { "certification": "R", "descriptors": [], "iso_639_1": "", "note": "", "release_date": "1999-10-15T00:00:00.000Z", "type": 3 },
+          { "certification": "R", "descriptors": [], "iso_639_1": "", "note": "IMAX", "release_date": "1999-10-15T00:00:00.000Z", "type": 3 },
+          { "certification": "R", "descriptors": [], "iso_639_1": "", "note": "", "release_date": "2000-06-06T00:00:00.000Z", "type": 5 },
+          { "certification": "TV-MA", "descriptors": [], "iso_639_1": "", "note": "", "release_date": "2004-01-01T00:00:00.000Z", "type": 6 }
+        ]
+      },
+      {
+        "iso_3166_1": "GB",
+        "release_dates": [
+          { "certification": "", "descriptors": [], "iso_639_1": "", "note": "", "release_date": "1999-11-12T00:00:00.000Z", "type": 3 }
+        ]
+      },
+      {
+        "iso_3166_1": "FR",
+        "release_dates": [
+          { "certification": "16", "descriptors": [], "iso_639_1": "", "note": "", "release_date": "1999-11-10T00:00:00.000Z", "type": 3 }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "id": 550,
+    "results": {
+      "US": {
+        "link": "https://www.themoviedb.org/movie/550-fight-club/watch?locale=US",
+        "flatrate": [
+          { "logo_path": "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg", "provider_id": 8, "provider_name": "Netflix", "display_priority": 0 },
+          { "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg", "provider_id": 1899, "provider_name": "Max", "display_priority": 3 }
+        ],
+        "rent": [
+          { "logo_path": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg", "provider_id": 2, "provider_name": "Apple TV", "display_priority": 5 }
+        ],
+        "buy": [
+          { "logo_path": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg", "provider_id": 2, "provider_name": "Apple TV", "display_priority": 5 }
+        ]
+      },
+      "GB": {
+        "link": "https://www.themoviedb.org/movie/550-fight-club/watch?locale=GB",
+        "flatrate": [
+          { "logo_path": "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg", "provider_id": 8, "provider_name": "Netflix", "display_priority": 0 }
+        ]
+      },
+      "DE": {
+        "link": "https://www.themoviedb.org/movie/550-fight-club/watch?locale=DE",
+        "flatrate": [
+          { "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg", "provider_id": 9, "provider_name": "Amazon Prime Video", "display_priority": 2 }
+        ]
+      }
+    }
+  }
+}

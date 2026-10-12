@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16.5 0 915 915">
+<style>@media (prefers-color-scheme: dark) { .play { fill: #80B491; fill-opacity: 1; } .v { fill: #009B37; } }</style>
+<path class="play" d="M373.809 216V0L561.809 108L373.809 216Z" fill="#80B491" fill-opacity="0.733333"/>
+<path class="v" d="M201.263 32.79L417.129 500.5H417.027L417.354 501.21L527.71 740.314L440.809 914.118L0.361328 33.2236L0 32.5H201.129L201.263 32.79ZM881.256 33.2236L542.843 710.048L455.308 520.389L680.354 32.79L680.488 32.5H881.617L881.256 33.2236Z" fill="#006822"/>
+</svg>

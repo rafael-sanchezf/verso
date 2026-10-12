@@ -1,0 +1,34 @@
+{
+  "name": "verso",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "mobile": "pnpm --filter mobile",
+    "ios": "pnpm --filter mobile run ios",
+    "web": "pnpm --filter mobile run web",
+    "web:export": "pnpm --filter mobile exec expo export --platform web",
+    "web:serve": "npx --yes serve -s apps/mobile/dist -l 8090",
+    "site:dev": "pnpm --filter @verso/site run dev",
+    "site:build": "pnpm --filter @verso/site run build",
+    "catalog:sync": "pnpm --filter @verso/catalog run sync",
+    "catalog:sync:full": "pnpm --filter @verso/catalog run sync -- --full",
+    "catalog:steam-scores": "pnpm --filter @verso/catalog run steam-scores",
+    "catalog:wikidata-ids": "pnpm --filter @verso/catalog run wikidata-ids",
+    "catalog:opencritic-ids": "pnpm --filter @verso/catalog run wikidata-ids",
+    "catalog:opencritic-scores": "pnpm --filter @verso/catalog run opencritic-scores",
+    "catalog:availability": "pnpm --filter @verso/catalog run availability",
+    "catalog:tmdb-sync": "pnpm --filter @verso/catalog run tmdb-sync",
+    "catalog:tmdb-sync:full": "pnpm --filter @verso/catalog run tmdb-sync -- --full",
+    "tokens:build": "pnpm --filter @verso/tokens run build",
+    "tokens:check": "pnpm --filter @verso/tokens run check",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "db:push": "supabase db push",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --linked --schema public > packages/api/src/database.types.ts"
+  }
+}

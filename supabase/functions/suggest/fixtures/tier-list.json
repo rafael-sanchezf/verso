@@ -1,0 +1,18 @@
+{
+  "loved": [
+    { "media_item_id": "20000000-0000-4000-8000-000000000001", "position": 0, "title": "Hades", "year": 2020, "cover_image_id": "co2i0t", "external_ids": { "steam": 1145360 }, "genres": ["Roguelike", "Action"], "platforms": ["PC (Microsoft Windows)", "Nintendo Switch"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000002", "position": 1, "title": "Outer Wilds", "year": 2019, "cover_image_id": "co1r0w", "external_ids": { "steam": 753640 }, "genres": ["Puzzle", "Adventure"], "platforms": ["PC (Microsoft Windows)"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000003", "position": 2, "title": "Celeste", "year": 2018, "cover_image_id": "co3byy", "external_ids": { "steam": 504230 }, "genres": ["Platform", "Indie"], "platforms": ["PC (Microsoft Windows)", "Nintendo Switch"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000004", "position": 3, "title": "Hollow Knight", "year": 2017, "cover_image_id": "co93cr", "external_ids": { "steam": 367520 }, "genres": ["Platform", "Adventure", "Indie"], "platforms": ["PC (Microsoft Windows)"] }
+  ],
+  "liked": [
+    { "media_item_id": "20000000-0000-4000-8000-000000000005", "position": 0, "title": "Slay the Spire", "year": 2019, "cover_image_id": "co1iyf", "external_ids": { "steam": 646570 }, "genres": ["Card & Board Game", "Roguelike", "Strategy"], "platforms": ["PC (Microsoft Windows)"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000006", "position": 1, "title": "Into the Breach", "year": 2018, "cover_image_id": "co1r7i", "external_ids": { "steam": 590380 }, "genres": ["Strategy", "Turn-based strategy (TBS)"], "platforms": ["PC (Microsoft Windows)"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000007", "position": 2, "title": "Dead Cells", "year": 2018, "cover_image_id": "co2vkj", "external_ids": { "steam": 588650 }, "genres": ["Roguelike", "Platform", "Action"], "platforms": ["PC (Microsoft Windows)", "Nintendo Switch"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000008", "position": 3, "title": "Inscryption", "year": 2021, "cover_image_id": "co3yq1", "external_ids": { "steam": 1092790 }, "genres": ["Card & Board Game", "Puzzle"], "platforms": ["PC (Microsoft Windows)"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000009", "position": 4, "title": "Stardew Valley", "year": 2016, "cover_image_id": "co5dd4", "external_ids": { "steam": 413150 }, "genres": ["Simulator", "Role-playing (RPG)"], "platforms": ["PC (Microsoft Windows)", "Nintendo Switch"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000010", "position": 5, "title": "Disco Elysium", "year": 2019, "cover_image_id": "co1sfj", "external_ids": { "steam": 632470 }, "genres": ["Role-playing (RPG)", "Adventure"], "platforms": ["PC (Microsoft Windows)"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000011", "position": 6, "title": "Return of the Obra Dinn", "year": 2018, "cover_image_id": "co1ixb", "external_ids": { "steam": 653530 }, "genres": ["Puzzle", "Adventure"], "platforms": ["PC (Microsoft Windows)"] },
+    { "media_item_id": "20000000-0000-4000-8000-000000000012", "position": 7, "title": "Spelunky 2", "year": 2020, "cover_image_id": "co2hhs", "external_ids": { "steam": 418530 }, "genres": ["Roguelike", "Platform"], "platforms": ["PC (Microsoft Windows)"] }
+  ]
+}

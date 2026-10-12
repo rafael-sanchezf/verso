@@ -1,0 +1,4 @@
+{
+  "valid": "ns:http://specs.openid.net/auth/2.0\nis_valid:true\n",
+  "invalid": "ns:http://specs.openid.net/auth/2.0\nis_valid:false\n"
+}

@@ -1,0 +1,437 @@
+{
+    "head": {
+        "vars": [
+            "igdb",
+            "opencritic",
+            "metacritic",
+            "hltb",
+            "steam",
+            "gog",
+            "epic"
+        ]
+    },
+    "results": {
+        "bindings": [
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "1020"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "163"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "grand-theft-auto-v"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "4064"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "271590"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "grand-theft-auto-v"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "472"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "the-elder-scrolls-v-skyrim"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "9859"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "72850"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "1905"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "6228"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "fortnite"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "3657"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "fortnite"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "1942"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "463"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "the-witcher-3-wild-hunt"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "10270"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "292030"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "the-witcher-3-wild-hunt"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/the_witcher_3_wild_hunt"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "1942"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "463"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "the-witcher-3-wild-hunt"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "10270"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "292030"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "the-witcher-3-wild-hunt"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/the_witcher_3_wild_hunt_expansion_pass"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "7346"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "1548"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "the-legend-of-zelda-breath-of-the-wild"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "38019"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "4809"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-enhanced-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "1801"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-enhanced-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "4809"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout-2016"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-enhanced-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "1801"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout-2016"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-enhanced-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "4809"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-solar-challenge-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "1801"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-solar-challenge-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "4809"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout-2016"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-solar-challenge-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "13197"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "1801"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "redout-2016"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "39800"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "517710"
+                },
+                "epic": {
+                    "type": "literal",
+                    "value": "redout-solar-challenge-edition"
+                },
+                "gog": {
+                    "type": "literal",
+                    "value": "game/redout_solar_challenge_edition"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "1905"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "6228"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "62651"
+                }
+            },
+            {
+                "igdb": {
+                    "type": "literal",
+                    "value": "119133"
+                },
+                "opencritic": {
+                    "type": "literal",
+                    "value": "12090"
+                },
+                "metacritic": {
+                    "type": "literal",
+                    "value": "elden-ring"
+                },
+                "hltb": {
+                    "type": "literal",
+                    "value": "68151"
+                },
+                "steam": {
+                    "type": "literal",
+                    "value": "1245620"
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,162 @@
+{
+  "_comment": [
+    "GET /3/tv/1396?language=en-US&append_to_response=aggregate_credits,",
+    "external_ids,content_ratings,watch/providers, trimmed to the fields the",
+    "mirror reads.",
+    "",
+    "Confirmed against TMDB's own rendered example responses, fetched",
+    "2026-09-16: the top-level series fields and the seasons, networks,",
+    "created_by and last_episode_to_air blocks against",
+    "developer.themoviedb.org/reference/tv-series-details; the aggregate cast",
+    "entry shape (roles[] with credit_id, character and episode_count, plus",
+    "total_episode_count and order) against /reference/tv-series-aggregate-",
+    "credits; the content_ratings block against /reference/tv-series-content-",
+    "ratings.",
+    "",
+    "Inferred rather than confirmed: the 'watch/providers' key, as in",
+    "tmdb-movie-normal.json.",
+    "",
+    "This is the returning series with a next episode announced, and it is also",
+    "the season 0 case: seasons[0] is Specials, which the mirror stores and the",
+    "app excludes from progress (research 7). GB is a region with no content",
+    "rating, so it gets no certification row.",
+    "",
+    "The figures are illustrative; the field names are the part under test."
+  ],
+  "adult": false,
+  "backdrop_path": "/gc8PfyTQZlDKlTlnCGE9GmvTQFM.jpg",
+  "created_by": [
+    { "id": 66633, "name": "Vince Gilligan", "profile_path": "/rLSUjr725ez1cK7SKVxC9udO03Y.jpg" },
+    { "id": 66634, "name": "Peter Gould", "profile_path": null }
+  ],
+  "episode_run_time": [47],
+  "first_air_date": "2024-02-18",
+  "genres": [
+    { "id": 18, "name": "Drama" },
+    { "id": 80, "name": "Crime" }
+  ],
+  "homepage": "",
+  "id": 1396,
+  "in_production": true,
+  "languages": ["en"],
+  "last_air_date": "2026-09-07",
+  "last_episode_to_air": {
+    "id": 62161,
+    "name": "The Long Way Down",
+    "overview": "Everything catches up at once.",
+    "air_date": "2026-09-07",
+    "episode_number": 8,
+    "season_number": 3,
+    "runtime": 52,
+    "still_path": "/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg",
+    "vote_average": 8.1,
+    "vote_count": 210
+  },
+  "name": "Breaking Point",
+  "next_episode_to_air": {
+    "id": 62162,
+    "name": "First Light",
+    "overview": "",
+    "air_date": "2026-10-05",
+    "episode_number": 1,
+    "season_number": 4,
+    "runtime": null,
+    "still_path": null,
+    "vote_average": 0,
+    "vote_count": 0
+  },
+  "networks": [
+    { "id": 174, "logo_path": "/alqLicR1ZMHMaZGP3xRQxn9sq7p.png", "name": "AMC", "origin_country": "US" }
+  ],
+  "number_of_episodes": 24,
+  "number_of_seasons": 3,
+  "origin_country": ["US"],
+  "original_language": "en",
+  "original_name": "Breaking Point",
+  "overview": "A chemistry teacher runs out of patience.",
+  "popularity": 122.4,
+  "poster_path": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+  "production_companies": [],
+  "seasons": [
+    { "air_date": "2024-02-11", "episode_count": 3, "id": 3572, "name": "Specials", "overview": "", "poster_path": "/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg", "season_number": 0, "vote_average": 0 },
+    { "air_date": "2024-02-18", "episode_count": 8, "id": 3573, "name": "Season 1", "overview": "Where it starts.", "poster_path": "/1BP4xYv9ZG4ZVHkL7ocOziBbSYH.jpg", "season_number": 1, "vote_average": 8.3 },
+    { "air_date": "2025-03-09", "episode_count": 8, "id": 3574, "name": "Season 2", "overview": "", "poster_path": null, "season_number": 2, "vote_average": 8.5 },
+    { "air_date": "2026-07-12", "episode_count": 8, "id": 3575, "name": "Season 3", "overview": "", "poster_path": "/pA0YwyhvdDXP3BEGL2grrIhq8aM.jpg", "season_number": 3, "vote_average": 8.6 }
+  ],
+  "status": "Returning Series",
+  "tagline": "All in.",
+  "type": "Scripted",
+  "vote_average": 8.9,
+  "vote_count": 14203,
+  "aggregate_credits": {
+    "cast": [
+      {
+        "id": 17419,
+        "name": "Bryan Cranston",
+        "original_name": "Bryan Cranston",
+        "profile_path": "/n1MHnCq3ULwRhQ6KGiRjNUVv4Fr.jpg",
+        "roles": [{ "credit_id": "5256c8c219c2956ff6047cd8", "character": "Walter White", "episode_count": 24 }],
+        "total_episode_count": 24,
+        "order": 0
+      },
+      {
+        "id": 84497,
+        "name": "Aaron Paul",
+        "original_name": "Aaron Paul",
+        "profile_path": "/oIciQWr8VwKoR8TmAw1owaiZFyb.jpg",
+        "roles": [
+          { "credit_id": "5256c8c219c2956ff6047cd9", "character": "Jesse Pinkman", "episode_count": 20 },
+          { "credit_id": "5256c8c219c2956ff6047cda", "character": "Himself", "episode_count": 1 }
+        ],
+        "total_episode_count": 21,
+        "order": 1
+      },
+      {
+        "id": 134531,
+        "name": "Anna Gunn",
+        "original_name": "Anna Gunn",
+        "profile_path": null,
+        "roles": [{ "credit_id": "5256c8c219c2956ff6047cdb", "character": "Skyler White", "episode_count": 18 }],
+        "total_episode_count": 18,
+        "order": 2
+      }
+    ],
+    "crew": []
+  },
+  "external_ids": {
+    "imdb_id": "tt0903747",
+    "wikidata_id": "Q1079",
+    "tvdb_id": 81189,
+    "facebook_id": "BreakingPoint",
+    "instagram_id": "",
+    "twitter_id": null
+  },
+  "content_ratings": {
+    "results": [
+      { "descriptors": [], "iso_3166_1": "US", "rating": "TV-MA" },
+      { "descriptors": [], "iso_3166_1": "GB", "rating": "" },
+      { "descriptors": [], "iso_3166_1": "DE", "rating": "16" }
+    ],
+    "id": 1396
+  },
+  "watch/providers": {
+    "id": 1396,
+    "results": {
+      "US": {
+        "link": "https://www.themoviedb.org/tv/1396/watch?locale=US",
+        "flatrate": [
+          { "logo_path": "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg", "provider_id": 8, "provider_name": "Netflix", "display_priority": 0 }
+        ],
+        "ads": [
+          { "logo_path": "/zrDlBfmYivfPo6xvSyaidKMhFnU.jpg", "provider_id": 613, "provider_name": "Freevee", "display_priority": 12 }
+        ]
+      },
+      "GB": {
+        "link": "https://www.themoviedb.org/tv/1396/watch?locale=GB",
+        "flatrate": [
+          { "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg", "provider_id": 9, "provider_name": "Amazon Prime Video", "display_priority": 2 }
+        ]
+      }
+    }
+  }
+}

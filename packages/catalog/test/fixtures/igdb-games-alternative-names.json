@@ -1,0 +1,157 @@
+[
+  {
+    "id": 732,
+    "alternative_names": [
+      {
+        "id": 2332,
+        "name": "GTA: SA"
+      },
+      {
+        "id": 148468,
+        "name": "GTA: Сан Андреас"
+      },
+      {
+        "id": 144662,
+        "name": "侠盗飞车：圣安地列斯"
+      },
+      {
+        "id": 144663,
+        "name": "侠盗猎车手：圣安地列斯"
+      },
+      {
+        "id": 175141,
+        "name": "GTA: San Andreas"
+      },
+      {
+        "id": 175142,
+        "name": "San Andreas"
+      },
+      {
+        "id": 175143,
+        "name": "GTA San Andreas"
+      }
+    ],
+    "name": "Grand Theft Auto: San Andreas",
+    "game_type": 0
+  },
+  {
+    "id": 1020,
+    "alternative_names": [
+      {
+        "id": 30476,
+        "name": "俠盜獵車手 5"
+      },
+      {
+        "id": 168251,
+        "name": "Grand Theft Auto V Legacy"
+      },
+      {
+        "id": 89447,
+        "name": "GTA 5"
+      },
+      {
+        "id": 89445,
+        "name": "GTA V"
+      },
+      {
+        "id": 90133,
+        "name": "그랜드 테프트 오토 V "
+      },
+      {
+        "id": 103297,
+        "name": "Grand Theft Auto 5"
+      },
+      {
+        "id": 119282,
+        "name": "GTAV"
+      },
+      {
+        "id": 119283,
+        "name": "GTA5"
+      }
+    ],
+    "name": "Grand Theft Auto V",
+    "game_type": 0
+  },
+  {
+    "id": 1022,
+    "alternative_names": [
+      {
+        "id": 37766,
+        "name": "The Hyrule Fantasy: Legend of Zelda"
+      },
+      {
+        "id": 37767,
+        "name": "Zelda no Densetsu: The Hyrule Fantasy"
+      },
+      {
+        "id": 120471,
+        "name": "Легендата за Зелда"
+      },
+      {
+        "id": 71141,
+        "name": "LoZ"
+      },
+      {
+        "id": 71139,
+        "name": "TLoZ"
+      },
+      {
+        "id": 118554,
+        "name": "Zelda no Densetsu 1: The Hyrule Fantasy"
+      },
+      {
+        "id": 119301,
+        "name": "Zelda no Densetsu"
+      },
+      {
+        "id": 191961,
+        "name": "A lenda de Zelda"
+      }
+    ],
+    "name": "The Legend of Zelda",
+    "game_type": 0
+  },
+  {
+    "id": 7346,
+    "alternative_names": [
+      {
+        "id": 24387,
+        "name": "TLoZ BotW"
+      },
+      {
+        "id": 51798,
+        "name": "BotW"
+      },
+      {
+        "id": 111231,
+        "name": "Breath of the Wild"
+      },
+      {
+        "id": 132653,
+        "name": "薩爾達傳說：曠野之息"
+      },
+      {
+        "id": 137950,
+        "name": "젤다 야숨"
+      },
+      {
+        "id": 175703,
+        "name": "塞尔达传说 旷野之息"
+      }
+    ],
+    "name": "The Legend of Zelda: Breath of the Wild",
+    "game_type": 0
+  },
+  {
+    "id": 113112,
+    "alternative_names": [
+      {
+        "id": 186710,
+        "name": "Hades.exe"
+      }
+    ],
+    "name": "Hades",
+    "game_type": 0
+  }
+]

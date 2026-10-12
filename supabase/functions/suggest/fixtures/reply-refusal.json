@@ -1,0 +1,27 @@
+{
+  "id": "msg_01SuggestFixtureRefusal",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "",
+      "signature": "fixture-signature-not-a-real-one"
+    }
+  ],
+  "stop_reason": "refusal",
+  "stop_sequence": null,
+  "stop_details": {
+    "type": "refusal",
+    "category": "general_harms",
+    "explanation": "Fixture explanation text that must never reach the logs."
+  },
+  "usage": {
+    "input_tokens": 3136,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 41,
+    "service_tier": "standard"
+  }
+}

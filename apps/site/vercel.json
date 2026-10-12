@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "pnpm install --frozen-lockfile --filter @verso/site...",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "out",
+  "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.rankverso.com" }],
+      "destination": "https://rankverso.com/$1",
+      "permanent": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+/*
+ * The styling layer's entry point.
+ *
+ * `theme.css` is generated from packages/tokens/tokens.json, so the utilities
+ * Tailwind generates (`bg-bg-canvas`, `text-text-secondary`, `rounded-md`) are
+ * built from the same values the typed theme gives the primitives. Nothing
+ * here is written by hand; change a token in Figma, re-export, and run
+ * `pnpm tokens:build`.
+ */
+
+@import 'tailwindcss';
+@import 'uniwind';
+@import '@verso/tokens/theme.css';

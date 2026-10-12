@@ -1,0 +1,104 @@
+{
+  "Products": [
+    {
+      "ProductId": "9NPDN9R45JX4",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "1000xRESIST",
+          "ShortTitle": "1000xRESIST"
+        }
+      ]
+    },
+    {
+      "ProductId": "9P8LR42PTRGJ",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "33 Immortals",
+          "ShortTitle": ""
+        }
+      ]
+    },
+    {
+      "ProductId": "9NGLST31DG26",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "A Game About Digging A Hole™",
+          "ShortTitle": ""
+        }
+      ]
+    },
+    {
+      "ProductId": "9ND0JVB184XL",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "A Plague Tale: Requiem",
+          "ShortTitle": "Requiem"
+        }
+      ]
+    },
+    {
+      "ProductId": "BWVBNCMF22ZK",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "A Way Out",
+          "ShortTitle": "A Way Out"
+        }
+      ]
+    },
+    {
+      "ProductId": "9P4NV23Q6QC2",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "Abiotic Factor",
+          "ShortTitle": "ABF"
+        }
+      ]
+    },
+    {
+      "ProductId": "9NR6NJ401NBS",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "Absolum",
+          "ShortTitle": ""
+        }
+      ]
+    },
+    {
+      "ProductId": "9P8NKVVB0XQJ",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "Abyssus",
+          "ShortTitle": null
+        }
+      ]
+    },
+    {
+      "ProductId": "9P59J86GHDGL",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "Aerial_Knight's DropShot",
+          "ShortTitle": "DropShot"
+        }
+      ]
+    },
+    {
+      "ProductId": "9N42SSSX2MTG",
+      "ProductType": "Game",
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "Age of Empires II: Definitive Edition",
+          "ShortTitle": "Age of Empires II: Definitive Edition"
+        }
+      ]
+    }
+  ]
+}

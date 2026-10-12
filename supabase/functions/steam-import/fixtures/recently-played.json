@@ -1,0 +1,19 @@
+{
+  "response": {
+    "total_count": 2,
+    "games": [
+      {
+        "appid": 1145360,
+        "name": "Hades",
+        "playtime_2weeks": 95,
+        "playtime_forever": 1235
+      },
+      {
+        "appid": 892970,
+        "name": "Valheim",
+        "playtime_2weeks": 400,
+        "playtime_forever": 400
+      }
+    ]
+  }
+}

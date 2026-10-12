@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1877,
+    "name": "Cyberpunk 2077",
+    "aggregated_rating": 75.23809523809524,
+    "aggregated_rating_count": 21,
+    "rating": 83.2272268223649,
+    "rating_count": 1635,
+    "total_rating": 79.23266103023008,
+    "total_rating_count": 1656
+  },
+  {
+    "id": 26192,
+    "name": "The Last of Us Part II",
+    "aggregated_rating": 95.18181818181819,
+    "aggregated_rating_count": 11,
+    "rating": 90.12157979474046,
+    "rating_count": 1792,
+    "total_rating": 92.65169898827932,
+    "total_rating_count": 1803
+  },
+  {
+    "id": 113112,
+    "name": "Hades",
+    "aggregated_rating": 93.52941176470588,
+    "aggregated_rating_count": 17,
+    "rating": 89.43656701366126,
+    "rating_count": 1752,
+    "total_rating": 91.48298938918357,
+    "total_rating_count": 1769
+  },
+  {
+    "id": 119133,
+    "name": "Elden Ring",
+    "aggregated_rating": 96.9,
+    "aggregated_rating_count": 10,
+    "rating": 93.433541768754,
+    "rating_count": 2288,
+    "total_rating": 95.166770884377,
+    "total_rating_count": 2298
+  }
+]

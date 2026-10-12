@@ -1,0 +1,83 @@
+{
+  "_comment": [
+    "An ended miniseries: type Miniseries, status Ended, one season, no",
+    "next_episode_to_air. Every next_episode_* column has to come out null",
+    "together, because 'no date announced' on a show page is exactly a null next",
+    "date and half a stale episode stub would say something else (research 7,",
+    "film-tv-catalog.md tv_details).",
+    "",
+    "It also has no availability anywhere and an empty episode_run_time array,",
+    "which is the common case for a show TMDB has no per-episode runtimes for.",
+    "",
+    "Same field names and provenance as tmdb-tv-returning.json."
+  ],
+  "adult": false,
+  "backdrop_path": "/rkB4LyZHo1NHXFEDHl9vSD9r1lI.jpg",
+  "created_by": [{ "id": 1223786, "name": "Craig Mazin", "profile_path": null }],
+  "episode_run_time": [],
+  "first_air_date": "2019-05-06",
+  "genres": [{ "id": 18, "name": "Drama" }],
+  "homepage": "",
+  "id": 87108,
+  "in_production": false,
+  "languages": ["en"],
+  "last_air_date": "2019-06-03",
+  "last_episode_to_air": {
+    "id": 1731155,
+    "name": "Vichnaya Pamyat",
+    "overview": "The trial.",
+    "air_date": "2019-06-03",
+    "episode_number": 5,
+    "season_number": 1,
+    "runtime": 72,
+    "still_path": "/8IfsSUEQbcrPJTHZAlTGVJ0kzjR.jpg",
+    "vote_average": 8.9,
+    "vote_count": 140
+  },
+  "name": "Reactor Four",
+  "next_episode_to_air": null,
+  "networks": [
+    { "id": 49, "logo_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png", "name": "HBO", "origin_country": "US" }
+  ],
+  "number_of_episodes": 5,
+  "number_of_seasons": 1,
+  "origin_country": ["US", "GB"],
+  "original_language": "en",
+  "original_name": "Reactor Four",
+  "overview": "The story of one of the worst man-made catastrophes in history.",
+  "popularity": 44.2,
+  "poster_path": "/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg",
+  "production_companies": [],
+  "seasons": [
+    { "air_date": "2019-05-06", "episode_count": 5, "id": 115552, "name": "Limited Series", "overview": "", "poster_path": "/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg", "season_number": 1, "vote_average": 8.7 }
+  ],
+  "status": "Ended",
+  "tagline": "What is the cost of lies?",
+  "type": "Miniseries",
+  "vote_average": 8.7,
+  "vote_count": 5182,
+  "aggregate_credits": {
+    "cast": [
+      {
+        "id": 3292,
+        "name": "Jared Harris",
+        "original_name": "Jared Harris",
+        "profile_path": "/dQGYrGlgLGvS5Dt2BdLWgLfDZlv.jpg",
+        "roles": [{ "credit_id": "5c3b7f2b0e0a2679d2f0b1a1", "character": "Valery Legasov", "episode_count": 5 }],
+        "total_episode_count": 5,
+        "order": 0
+      }
+    ],
+    "crew": []
+  },
+  "external_ids": {
+    "imdb_id": "tt7366338",
+    "wikidata_id": null,
+    "tvdb_id": 360893
+  },
+  "content_ratings": {
+    "results": [{ "descriptors": [], "iso_3166_1": "US", "rating": "TV-MA" }],
+    "id": 87108
+  },
+  "watch/providers": { "id": 87108, "results": {} }
+}

@@ -1,0 +1,239 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The theme the app styles from is generated from packages/tokens/tokens.json
+      # and committed, so nothing here has a build step. That only holds if the
+      # committed outputs match the token file: regenerate and fail on a diff.
+      - name: Check the generated theme is in step with tokens.json
+        run: pnpm tokens:check
+
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  # The web build is the same Expo app exported for the browser, and `expo export`
+  # is the only step that proves it still builds: Metro resolves every `.web.ts`
+  # file and every web-only import there, and `pnpm typecheck` never runs Metro.
+  # Own job, in parallel with `check`, because it shares nothing with it but the
+  # install. Vercel builds with this same export (`vercel.json`), so a failure
+  # here is a failed preview deploy caught before the merge.
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Inlined into the bundle at export time, which is why they are needed at
+      # all. Placeholders: a build check never talks to Supabase, and a real URL
+      # or key must never be written into this file (the real ones live in the
+      # Vercel project's environment variables, docs/process/hosted-setup.md,
+      # section 9).
+      EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Export the web build
+        run: pnpm web:export
+
+      # `public/index.html` is the only way to put tags in the head under the
+      # `single` output. If a later Expo upgrade stopped reading it, the export
+      # would still succeed and quietly ship the stock page, so look for what
+      # that page is there to carry.
+      - name: Check the head and the static files reached the export
+        working-directory: apps/mobile/dist
+        run: |
+          test -f robots.txt
+          test -f apple-touch-icon.png
+          test -f favicon.ico
+          grep -q '<html lang="en">' index.html
+          grep -q '<title>Verso</title>' index.html
+          grep -q 'name="description"' index.html
+          grep -q 'name="theme-color"' index.html
+          grep -q 'property="og:title"' index.html
+          # Not `! grep`: a negated command never trips the shell's -e.
+          if grep -q '%WEB_TITLE%\|%LANG_ISO_CODE%' index.html; then
+            echo 'index.html still has an unfilled Expo placeholder' >&2
+            exit 1
+          fi
+
+      # Size creep is silent otherwise: the export is one script with no code
+      # splitting. Decimal kilobytes, gzip at level 9, to compare with the W0
+      # spike (docs/design/web-brief.md): 3.6 MB raw, 873 KB gzipped.
+      - name: Report the bundle size
+        run: |
+          raw_total=0
+          gz_total=0
+          {
+            echo '### Web bundle size'
+            echo
+            echo '| Script | Raw | Gzipped |'
+            echo '|---|---|---|'
+            for file in apps/mobile/dist/_expo/static/js/web/*.js; do
+              raw=$(wc -c < "$file")
+              gz=$(gzip -9 -c "$file" | wc -c)
+              raw_total=$((raw_total + raw))
+              gz_total=$((gz_total + gz))
+              printf '| `%s` | %s KB | %s KB |\n' "$(basename "$file")" "$((raw / 1000))" "$((gz / 1000))"
+            done
+            printf '| **Total** | **%s KB** | **%s KB** |\n' "$((raw_total / 1000))" "$((gz_total / 1000))"
+            echo
+            echo 'W0 baseline (2026-10-07): 3.6 MB raw, 873 KB gzipped, one script.'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # The marketing site in apps/site is a Next.js static export, and `next build`
+  # is the only step that proves it still exports: it prerenders every page,
+  # and a page that reached for a server feature (the image optimizer, a
+  # request header) fails here rather than on the host. `pnpm typecheck` in
+  # `check` already covers its types. Own job, in parallel with the others,
+  # because it shares nothing with them but the install. `next/font` fetches
+  # Inter from Google at build time and serves it from the site, which is why
+  # this job needs the network and the readers' browsers do not.
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Next sends anonymous usage telemetry from builds unless told not to;
+      # the site's own rule is that nothing leaves (onboarding guidelines,
+      # principle 12), and CI holds itself to it too.
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the static export
+        run: pnpm site:build
+
+      # A static export that silently dropped a page, or picked up a script or
+      # a font from another host, would still build. Look for every page, and
+      # fail on anything loaded from off the site: the "never sold" rule
+      # reaches the site as no analytics, no ad pixels and no third-party
+      # scripts (docs/private/design/site-brief.md, "What it waits on", 5). The cover
+      # art is served from the site too (apps/site/src/content/art.ts), so any
+      # file in the export that still names TMDB's or Steam's image hosts
+      # fails: a reader's browser would ask them for the picture. Links to
+      # the Steam store page in the footer credit are not image hosts.
+      - name: Check the pages reached the export and load nothing third-party
+        working-directory: apps/site/out
+        run: |
+          test -f index.html
+          test -f privacy/index.html
+          test -f login/index.html
+          test ! -e terms/index.html
+          test -f 404.html
+          grep -q '<html lang="en"' index.html
+          # The log-in page sends nothing anywhere (apps/site/src/components/login-form.tsx):
+          # no form action, no password field, and no named input a submit could put in a URL.
+          if grep -qE '<form[^>]* (action|method)=|type="password"|<input[^>]* name=' login/index.html; then
+            echo 'the log-in page has a form action, a password field or a named input' >&2
+            exit 1
+          fi
+          if grep -rlE '<script[^>]+src="(https?:)?//' --include='*.html' .; then
+            echo 'a page loads a script from another host' >&2
+            exit 1
+          fi
+          if grep -rlE 'fonts\.(googleapis|gstatic)\.com' --include='*.html' --include='*.css' .; then
+            echo 'a page loads a font from Google at runtime; use next/font' >&2
+            exit 1
+          fi
+          if grep -rlIE 'image\.tmdb\.org|steamstatic\.com|steamcdn-[a-z]+\.akamaihd\.net|media\.steampowered\.com|steamusercontent\.com' .; then
+            echo 'the export references a TMDB or Steam image host; serve the art from apps/site/public/art' >&2
+            exit 1
+          fi
+
+  # The Edge Functions are Deno, not Node, and their unit tests need neither a
+  # stack nor the workspace: they run the fetch logic against fixtures with an
+  # injected `fetch`, so nothing here reaches Steam or the Anthropic API. Its own
+  # job, in parallel with the other two, because it shares no setup with either.
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test supabase/functions/steam-player-counts
+      - run: deno test supabase/functions/steam-link
+      - run: deno test supabase/functions/steam-import
+      - run: deno test supabase/functions/suggest
+
+  # Runs the pgTAP suite in supabase/tests and the packages/api tests against a
+  # fresh local stack. Migrations in supabase/migrations apply during
+  # `supabase start`, so no `db reset` is needed. Runs in parallel with `check`.
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v3
+        with:
+          # Keep in step with `supabase --version` on the developer machine.
+          version: 2.117.0
+
+      - name: Start local Supabase (database, auth, and the API gateway)
+        # The CLI applies the auth, storage, and realtime schema migrations
+        # while initialising the database no matter which services run, so the
+        # schema matches the hosted project either way. Kept running: gotrue,
+        # because the core migration hooks auth.users, the RLS tests insert
+        # rows there, and the auth tests sign real users up; kong, because
+        # supabase-js reaches gotrue through the gateway rather than directly;
+        # postgrest, because kong's routes expect it. mailpit is not needed
+        # because enable_confirmations is false, so nothing sends an email.
+        # Everything else is excluded to shorten startup. Names come from
+        # `supabase start --help` (--exclude).
+        run: >-
+          supabase start
+          -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
+
+      - name: Run pgTAP tests
+        run: supabase test db --local
+
+      - name: Run the packages/api tests against the local stack
+        # Without these variables the suites skip themselves, so read them from
+        # the stack that is already up rather than hardcoding ports and keys.
+        # The data-hook suites need the service role key too: the catalog is
+        # read-only to signed-in users, so seeding a game to track means going in
+        # the way the IGDB mirror does. These are local throwaway credentials,
+        # not secrets.
+        run: |
+          eval "$(supabase status -o env)"
+          SUPABASE_URL="$API_URL" \
+          SUPABASE_ANON_KEY="$ANON_KEY" \
+          SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+            pnpm --filter @verso/api test
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup

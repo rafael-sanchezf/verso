@@ -1,0 +1,18 @@
+{
+  "_comment": [
+    "A game with reviews but not enough of them for OpenCritic to publish a",
+    "percent recommended: topCriticScore is real, percentRecommended is the same",
+    "-1 sentinel. Both rows are written independently, so this one yields an",
+    "`opencritic` row and no `opencritic_recommended` row."
+  ],
+  "id": 14567,
+  "name": "A Quietly Reviewed Game",
+  "url": "https://opencritic.com/game/14567/a-quietly-reviewed-game",
+  "tier": "Fair",
+  "topCriticScore": 68,
+  "percentRecommended": -1,
+  "numReviews": 4,
+  "numTopCriticReviews": 3,
+  "firstReleaseDate": "2025-11-04T00:00:00.000Z",
+  "hasLootBoxes": false
+}

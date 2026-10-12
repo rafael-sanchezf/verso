@@ -1,0 +1,31 @@
+{
+  "response": {
+    "game_count": 4,
+    "games": [
+      {
+        "appid": 1145360,
+        "name": "Hades",
+        "playtime_forever": 1200,
+        "playtime_2weeks": 60,
+        "rtime_last_played": 1757980800
+      },
+      {
+        "appid": 504230,
+        "name": "Celeste",
+        "playtime_forever": 300,
+        "rtime_last_played": 1700000000
+      },
+      {
+        "appid": 553420,
+        "name": "Tunic",
+        "playtime_forever": 0,
+        "rtime_last_played": 0
+      },
+      {
+        "appid": 323910,
+        "name": "Some Level Editor",
+        "playtime_forever": 10
+      }
+    ]
+  }
+}
