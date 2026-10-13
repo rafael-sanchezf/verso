@@ -18,7 +18,7 @@ import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Cover, ErrorLine, Icon, Pressed, Sheet, Text, TextButton, useTheme } from '@/ui';
 
@@ -54,9 +54,13 @@ export function AskView(props: AskViewProps) {
   const theme = useTheme();
   const { phase } = props;
   const answered = phase.kind === 'picks' || phase.kind === 'limit' || phase.kind === 'empty';
+  // The window's inset, not SafeAreaView's: inside the full-screen modal the
+  // native SafeAreaView measured no top inset on iOS, which put the close
+  // under the status bar, where a tap never reaches it.
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
+    <View style={[styles.fill, { paddingTop: insets.top, backgroundColor: theme.colors['bg/canvas'] }]}>
       <TopRow medium={props.medium} onClose={props.onClose} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -65,7 +69,7 @@ export function AskView(props: AskViewProps) {
       </ScrollView>
 
       <ConsentSheet visible={phase.kind === 'consent'} onAnswer={props.onConsent} />
-    </SafeAreaView>
+    </View>
   );
 }
 
