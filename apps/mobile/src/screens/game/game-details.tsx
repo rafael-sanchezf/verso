@@ -14,9 +14,11 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon, Pressed, Text, TextButton, useTheme } from '@/ui';
 
 import type { DetailRow } from './details-rows';
+import { say } from './phrase';
 
 export function DetailsSection({
   rows,
@@ -29,6 +31,7 @@ export function DetailsSection({
   onTimeToBeat: () => void;
   onHours: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const openFor = (row: DetailRow) => {
     if (row.action === 'time-to-beat') return onTimeToBeat;
@@ -40,7 +43,7 @@ export function DetailsSection({
     <View>
       <View style={[styles.titleRow, { paddingBottom: theme.space[1] }]}>
         <Text size={18} weight={700}>
-          Details
+          {t('browse.game.details.title')}
         </Text>
         {/*
           A plain `Pressable` rather than the `Pressed` primitive: this is the
@@ -49,7 +52,7 @@ export function DetailsSection({
         */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Add a detail"
+          accessibilityLabel={t('browse.game.details.addDetail')}
           onPress={onAdd}
           style={({ pressed }) => [
             styles.plus,
@@ -69,14 +72,14 @@ export function DetailsSection({
             { paddingVertical: 10, gap: row.wrap ? 2 : theme.space[3] },
           ]}>
           <Text size={15} color="text/secondary">
-            {row.label}
+            {t(row.label)}
           </Text>
           <Text
             size={15}
             weight={500}
             align={row.wrap ? 'left' : 'right'}
             layout={row.wrap ? undefined : styles.value}>
-            {row.value}
+            {say(t, row.value)}
           </Text>
         </Pressed>
       ))}
@@ -85,6 +88,7 @@ export function DetailsSection({
 }
 
 export function AboutSection({ summary }: { summary: string }) {
+  const t = useT();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const [lines, setLines] = useState<number | null>(null);
@@ -92,7 +96,7 @@ export function AboutSection({ summary }: { summary: string }) {
   return (
     <View style={{ gap: theme.space[2] }}>
       <Text size={18} weight={700}>
-        About
+        {t('browse.game.about.title')}
       </Text>
 
       {lines === null ? (
@@ -110,7 +114,7 @@ export function AboutSection({ summary }: { summary: string }) {
       </Text>
 
       {!expanded && lines !== null && lines > 3 ? (
-        <TextButton label="more" size={14} onPress={() => setExpanded(true)} />
+        <TextButton label={t('browse.game.about.more')} size={14} onPress={() => setExpanded(true)} />
       ) : null}
     </View>
   );

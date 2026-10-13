@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { View } from 'react-native';
 
 import { alert, showDialog } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { Button, DateField, Sheet, Text, TextButton, useTheme } from '@/ui';
@@ -34,6 +35,7 @@ export function DiarySheet({
   onLogAnother: () => void;
   onDismiss: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const queryClient = useQueryClient();
   const today = dateOnly(new Date());
@@ -41,22 +43,22 @@ export function DiarySheet({
   const edit = useMutation({
     mutationFn: ({ id, watchedOn }: { id: string; watchedOn: string }) => editWatch(supabase, id, { watchedOn }),
     onSuccess: () => invalidateEntry(queryClient, mediaItemId),
-    onError: () => alert("Couldn't change that day", 'Check your connection and try again.'),
+    onError: () => alert(t('browse.movie.diary.couldNotChangeDay'), t('browse.tryAgain')),
   });
 
   const remove = useMutation({
     mutationFn: (id: string) => removeWatch(supabase, id),
     onSuccess: () => invalidateEntry(queryClient, mediaItemId),
-    onError: () => alert("Couldn't remove it", 'Check your connection and try again.'),
+    onError: () => alert(t('browse.movie.diary.couldNotRemove'), t('browse.tryAgain')),
   });
 
   const confirmRemove = (row: DiaryRow) =>
     showDialog({
-      title: 'Remove this watch?',
-      message: 'The film stays watched, and its place in your ranking does not change.',
+      title: t('browse.movie.diary.removeTitle'),
+      message: t('browse.movie.diary.removeMessage'),
       buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: () => remove.mutate(row.id) },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('browse.movie.diary.remove'), style: 'destructive', onPress: () => remove.mutate(row.id) },
       ],
     });
 
@@ -65,7 +67,7 @@ export function DiarySheet({
       <View style={{ gap: theme.space[3], paddingTop: theme.space[3] }}>
         <View style={{ gap: 2 }}>
           <Text size={20} weight={600}>
-            Your diary
+            {t('browse.movie.diary.title')}
           </Text>
           <Text size={15} color="text/secondary" numberOfLines={1}>
             {title}
@@ -74,7 +76,11 @@ export function DiarySheet({
         {rows.map((row, index) => (
           <View key={row.id} style={{ gap: 2 }}>
             <DateField
-              label={rows.length === 1 ? 'Watched' : `Watch ${rows.length - index}`}
+              label={
+                rows.length === 1
+                  ? t('browse.movie.diary.watched')
+                  : t('browse.movie.diary.watchNumber', { count: rows.length - index })
+              }
               value={row.watchedOn}
               max={today}
               onChange={(next) => next !== null && next !== row.watchedOn && edit.mutate({ id: row.id, watchedOn: next })}
@@ -84,10 +90,10 @@ export function DiarySheet({
                 {row.note}
               </Text>
             ) : null}
-            <TextButton label="Remove" size={14} color="text/destructive" onPress={() => confirmRemove(row)} />
+            <TextButton label={t('browse.movie.diary.remove')} size={14} color="text/destructive" onPress={() => confirmRemove(row)} />
           </View>
         ))}
-        <Button label="Log another watch" variant="secondary" onPress={onLogAnother} />
+        <Button label={t('browse.movie.diary.logAnother')} variant="secondary" onPress={onLogAnother} />
       </View>
     </Sheet>
   );

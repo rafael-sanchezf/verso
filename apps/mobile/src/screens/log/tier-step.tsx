@@ -13,9 +13,10 @@ import type { Tier } from '@verso/core';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import { Icon, Pressed, Skeleton, Text, TIER_ICONS, TIER_LABELS, TIER_ORDER, tierColor } from '@/ui';
+import { Icon, Pressed, Skeleton, Text, TIER_ICONS, TIER_ORDER, tierColor } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
+import { TIER_ROW_LABELS } from './game';
 
 export interface TierStepProps {
   /** The game's title, or null while it is still loading. */
@@ -26,6 +27,7 @@ export interface TierStepProps {
 }
 
 export function TierStep({ title, pending, onChoose }: TierStepProps) {
+  const t = useT();
   return (
     // 10 is the frame's column gap and is not on the spacing scale.
     <View style={{ gap: 10 }}>
@@ -33,7 +35,7 @@ export function TierStep({ title, pending, onChoose }: TierStepProps) {
         <Skeleton width="70%" height={24} style={styles.heading} />
       ) : (
         <Text size={20} weight={700} align="center">
-          How was {title}?
+          {t('browse.log.tierStep.howWas', { title })}
         </Text>
       )}
 
@@ -82,7 +84,7 @@ function TierRow({
         <Icon name={TIER_ICONS[tier]} size={16} color="tier/label" />
       </View>
       <Text size={17} weight={600} layout={styles.label}>
-        {t(TIER_LABELS[tier])}
+        {t(TIER_ROW_LABELS[tier])}
       </Text>
       {busy ? (
         <ActivityIndicator color={theme.colors['text/secondary']} />

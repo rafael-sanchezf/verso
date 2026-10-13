@@ -32,9 +32,11 @@ import { useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { t, useT } from '@/lib/i18n';
 import { invalidateEntry, invalidateMovieHome } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
+import { say } from '@/screens/game/phrase';
 import { Cover, ErrorLine, Icon, Text } from '@/ui';
 import { useTheme, type ColorToken } from '@/ui/theme';
 
@@ -42,6 +44,7 @@ import { addSheetRows, FILM_ROWS, type Choice } from './add-options';
 import { GameRowSkeleton } from './placeholders';
 
 export function AddSheet({ id }: { id: string }) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -84,7 +87,7 @@ export function AddSheet({ id }: { id: string }) {
     if (page.isPending) return <Loading />;
     if (page.isError || !page.data) {
       return (
-        <ErrorLine message="Couldn't load that game." onRetry={() => void page.refetch()} />
+        <ErrorLine message={t('browse.search.addSheet.loadError')} onRetry={() => void page.refetch()} />
       );
     }
     return (
@@ -114,8 +117,8 @@ export function AddSheet({ id }: { id: string }) {
 
 /** A failed write says so and changes nothing. Native alert, per rule 7. */
 function complain(error: unknown): void {
-  const message = error instanceof Error ? error.message : 'Please try again.';
-  Alert.alert("That didn't save", message);
+  const message = error instanceof Error ? error.message : t('browse.search.addSheet.pleaseTryAgain');
+  Alert.alert(t('browse.search.addSheet.didNotSave'), message);
 }
 
 function Loading() {
@@ -147,6 +150,7 @@ function Loaded({
   busy: boolean;
   onChoose: (choice: Choice) => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   // A tracked game gets the same rows as an untracked one, as it always has;
   // an unreleased one, tracked or not, gets the single row.
@@ -168,7 +172,7 @@ function Loaded({
             {page.title}
           </Text>
           <Text size={14} color="text/secondary">
-            Add to…
+            {t('browse.search.addSheet.addTo')}
           </Text>
         </View>
       </View>
@@ -176,8 +180,8 @@ function Loaded({
       {rows.options.map((option) => (
         <Option
           key={option.choice}
-          title={option.title}
-          description={option.description}
+          title={t(option.title)}
+          description={say(t, option.description)}
           filled={option.filled}
           disabled={busy}
           onPress={() => onChoose(option.choice)}

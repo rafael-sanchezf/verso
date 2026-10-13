@@ -30,6 +30,8 @@ import { coverCandidates, type EntryRow } from '@verso/api';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
+import { sayJoined } from '@/screens/game/phrase';
 import { Cover, Text, useTheme } from '@/ui';
 
 import { playingSubtitle } from './rules';
@@ -45,8 +47,10 @@ export interface PlayingCardProps {
  * cover big enough to recognise across the room.
  */
 export function PlayingHero({ row, actions }: PlayingCardProps) {
+  const t = useT();
   const theme = useTheme();
-  const subtitle = playingSubtitle(row);
+  const parts = playingSubtitle(row);
+  const subtitle = parts ? sayJoined(t, parts) : null;
 
   return (
     <PlayingCardLink row={row} actions={actions}>
@@ -144,6 +148,7 @@ function PlayingCardLink({
   actions,
   children,
 }: PlayingCardProps & { children: React.ReactNode }) {
+  const t = useT();
   const id = row.mediaItemId;
 
   return (
@@ -159,13 +164,13 @@ function PlayingCardLink({
 
       <Link.Menu>
         <Link.MenuAction icon="checkmark" onPress={() => actions.markAsFinished(id)}>
-          Mark as finished
+          {t('browse.home.playing.markAsFinished')}
         </Link.MenuAction>
         <Link.MenuAction icon="clock" onPress={() => actions.logHours(id)}>
-          Log hours
+          {t('browse.home.playing.logHours')}
         </Link.MenuAction>
         <Link.MenuAction icon="square.stack" onPress={() => actions.moveToBacklog(id)}>
-          Move to backlog
+          {t('browse.home.playing.moveToBacklog')}
         </Link.MenuAction>
       </Link.Menu>
     </Link>

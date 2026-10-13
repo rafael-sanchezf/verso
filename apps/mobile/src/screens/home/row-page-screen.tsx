@@ -17,10 +17,11 @@ import { coverCandidates, type HomeRow } from '@verso/api';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { EmptyState, ErrorLine, PosterCard, Skeleton, useTheme } from '@/ui';
 import { cardWidth, gapFor } from '@/screens/watchlist/zoom';
 
-import { findRow, rowTitleText } from './movie-rows';
+import { findRow, rowTitleText, saidRow } from './movie-rows';
 import { useMovieHomeRows } from './use-movie-home';
 
 const KINDS: readonly HomeRow['kind'][] = ['watchlist', 'genre', 'because', 'popular'];
@@ -31,6 +32,7 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 }
 
 export function RowPageScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
@@ -49,7 +51,11 @@ export function RowPageScreen() {
   const gap = gapFor(COLUMNS);
   const openFilm = (id: string) => router.push({ pathname: '/movie/[id]', params: { id, from: 'Home' } });
 
-  const header = <Stack.Screen options={{ title: row ? rowTitleText(row) : '', headerBackTitle: 'Home' }} />;
+  const header = (
+    <Stack.Screen
+      options={{ title: row ? rowTitleText(saidRow(row, t)) : '', headerBackTitle: t('browse.home.rowPage.back') }}
+    />
+  );
 
   if (rows.isPending) {
     return (
@@ -68,7 +74,7 @@ export function RowPageScreen() {
         {header}
         {rows.isError && !rows.data ? (
           <ErrorLine
-            message="Couldn't load your recommendations."
+            message={t('browse.home.movies.loadError')}
             onRetry={() => void rows.refetch()}
             style={{ padding: theme.space[4] }}
           />
@@ -76,9 +82,9 @@ export function RowPageScreen() {
           <View style={[styles.fill, styles.center]}>
             <EmptyState
               icon="film"
-              title="This row has moved on"
-              body="Your recommendations changed since you opened it."
-              action={{ label: 'Back to Home', onPress: () => router.back() }}
+              title={t('browse.home.rowPage.goneTitle')}
+              body={t('browse.home.rowPage.goneBody')}
+              action={{ label: t('browse.home.rowPage.goneAction'), onPress: () => router.back() }}
             />
           </View>
         )}

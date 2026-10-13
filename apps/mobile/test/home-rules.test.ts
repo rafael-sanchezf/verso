@@ -2,14 +2,33 @@ import type { Entry, EntryRow } from '@verso/api';
 import { describe, expect, it } from 'vitest';
 
 import {
-  comingUpDate,
+  comingUpDate as comingUpColumn,
   comingUpSubtitle,
   homeState,
-  playingEmptyCard,
-  playingSubtitle,
+  playingEmptyCard as playingEmptyKeys,
+  playingSubtitle as playingParts,
   splitPlaying,
   upNextSubtitle,
 } from '../src/screens/home/rules';
+
+import { english, englishJoined } from './english';
+
+/** The lines as Home says them in English (the module returns phrases and keys). */
+function playingSubtitle(...args: Parameters<typeof playingParts>): string | null {
+  const parts = playingParts(...args);
+  return parts && englishJoined(parts);
+}
+
+function comingUpDate(...args: Parameters<typeof comingUpColumn>) {
+  const column = comingUpColumn(...args);
+  return column && { ...column, month: column.month && english(column.month).toUpperCase() };
+}
+
+function playingEmptyCard(...args: Parameters<typeof playingEmptyKeys>) {
+  const card = playingEmptyKeys(...args);
+  const button = (spec: typeof card.primary) => spec && { ...spec, label: english(spec.label) };
+  return { body: english(card.body), primary: button(card.primary), secondary: button(card.secondary) };
+}
 
 /** A fixed "now" so nothing here depends on the day the suite runs. */
 const NOW = new Date(2026, 8, 16, 14, 30); // Wednesday 16 September 2026

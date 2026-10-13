@@ -8,9 +8,36 @@
 import { releaseState } from '@verso/api';
 import { describe, expect, it } from 'vitest';
 
-import { primaryAction, secondaryAction, statusChoices, statusLine } from '../src/screens/game/status';
+import {
+  primaryAction as primaryPhrase,
+  secondaryAction as secondaryPhrase,
+  statusChoices as statusChoiceKeys,
+  statusLine as statusParts,
+} from '../src/screens/game/status';
+
+import { english, englishJoined } from './english';
 
 import type { Entry } from '@verso/api';
+
+/** The status line as the page says it in English (the module returns phrases). */
+function statusLine(...args: Parameters<typeof statusParts>) {
+  const line = statusParts(...args);
+  return line && { text: englishJoined(line.parts), playing: line.playing };
+}
+
+function primaryAction(...args: Parameters<typeof primaryPhrase>) {
+  const action = primaryPhrase(...args);
+  return action && { ...action, label: english(action.label) };
+}
+
+function secondaryAction(...args: Parameters<typeof secondaryPhrase>) {
+  const action = secondaryPhrase(...args);
+  return action && { ...action, label: english(action.label) };
+}
+
+function statusChoices(...args: Parameters<typeof statusChoiceKeys>) {
+  return statusChoiceKeys(...args).map((choice) => ({ ...choice, label: english(choice.label) }));
+}
 
 /** A fixed "now" so nothing here depends on the day the suite runs. */
 const NOW = new Date(2026, 8, 16, 14, 30); // Wednesday 16 September 2026

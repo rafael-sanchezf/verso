@@ -7,9 +7,23 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { criticsItem, playersItem, scoreLineItems } from '../src/screens/game/score-line';
+import {
+  criticsItem as criticsKeys,
+  playersItem as playersKeys,
+  scoreLineItems as scoreLineKeys,
+  type ScoreLineItem,
+} from '../src/screens/game/score-line';
+
+import { english } from './english';
 
 import type { ExternalScore, ScoresBySource } from '@verso/api';
+
+/** The labels as the row says them in English (the module returns keys). */
+const said = (item: ScoreLineItem | null) => item && { ...item, label: english(item.label) };
+const criticsItem = (scores: ScoresBySource) => said(criticsKeys(scores));
+const playersItem = (scores: ScoresBySource) => said(playersKeys(scores));
+const scoreLineItems = (...args: Parameters<typeof scoreLineKeys>) =>
+  scoreLineKeys(...args).map((item) => ({ ...item, label: english(item.label) }));
 
 function score(source: string, value: number | null, count: number | null = null): ExternalScore {
   return { source, score: value, scoreCount: count, fetchedAt: '2026-09-16T00:00:00Z' };

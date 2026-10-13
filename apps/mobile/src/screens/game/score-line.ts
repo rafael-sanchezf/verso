@@ -32,14 +32,20 @@
 
 import { steamReviewPhrase } from '@verso/core';
 
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
 import type { ScoresBySource } from '@verso/api';
 
-/** One column of the score line. */
+/**
+ * One column of the score line. The label is a dictionary key the row says
+ * (the Spanish wave): a source's name reads the same in both languages, "IGDB
+ * critics" and "You" do not.
+ */
 export type ScoreLineItem =
   /** A published figure and the name of whoever published it. */
-  | { key: 'critics' | 'players'; value: string; label: string }
+  | { key: 'critics' | 'players'; value: string; label: TranslationKey }
   /** The caller's own score, drawn as a `ScoreBadge` rather than as text. */
-  | { key: 'you'; score: number; label: 'You' };
+  | { key: 'you'; score: number; label: 'browse.game.scores.you' };
 
 /** The caller's placement, as `gamePage` returns it. Only the score is needed here. */
 interface Placement {
@@ -61,10 +67,10 @@ function rating(score: number | null | undefined): number | null {
 /** Critics: Metacritic where Valve licenses it, otherwise IGDB's aggregate. */
 export function criticsItem(scores: ScoresBySource): ScoreLineItem | null {
   const metacritic = rating(scores.metacritic?.score);
-  if (metacritic !== null) return { key: 'critics', value: String(metacritic), label: 'Metacritic' };
+  if (metacritic !== null) return { key: 'critics', value: String(metacritic), label: 'browse.game.scores.metacritic' };
 
   const igdb = rating(scores.igdb_critics?.score);
-  if (igdb !== null) return { key: 'critics', value: String(igdb), label: 'IGDB critics' };
+  if (igdb !== null) return { key: 'critics', value: String(igdb), label: 'browse.game.scores.igdbCritics' };
 
   return null;
 }
@@ -81,11 +87,11 @@ export function playersItem(scores: ScoresBySource): ScoreLineItem | null {
   const steam = scores.steam;
   if (steam && steam.score !== null && steam.scoreCount !== null) {
     const phrase = steamReviewPhrase(steam.score, Math.round(steam.scoreCount));
-    if (phrase !== null) return { key: 'players', value: phrase, label: 'Steam' };
+    if (phrase !== null) return { key: 'players', value: phrase, label: 'browse.game.scores.steam' };
   }
 
   const igdb = rating(scores.igdb_users?.score);
-  if (igdb !== null) return { key: 'players', value: String(igdb), label: 'IGDB users' };
+  if (igdb !== null) return { key: 'players', value: String(igdb), label: 'browse.game.scores.igdbUsers' };
 
   return null;
 }
@@ -103,7 +109,7 @@ export function scoreLineItems(
   const players = playersItem(scores);
   if (players) items.push(players);
 
-  if (ranking) items.push({ key: 'you', score: ranking.score, label: 'You' });
+  if (ranking) items.push({ key: 'you', score: ranking.score, label: 'browse.game.scores.you' });
 
   return items;
 }

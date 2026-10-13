@@ -29,6 +29,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { invalidateRanking } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -61,6 +62,7 @@ const FULL_HEIGHT_SHEET = { sheetAllowedDetents: [1] };
  * the tier step, since its page marked it finished before pushing here.
  */
 export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean }) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -175,7 +177,7 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
             }}
           />
         ) : film.isError ? (
-          <ErrorLine message="Couldn't load this film." onRetry={() => void film.refetch()} />
+          <ErrorLine message={t('browse.log.loadFilm')} onRetry={() => void film.refetch()} />
         ) : null
       ) : log.step === 'tier' ? (
         <View
@@ -186,14 +188,14 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
           }}>
           {game.isError || (game.isSuccess && game.data === null) ? (
             <ErrorLine
-              message="Couldn't load this game."
+              message={t('browse.log.loadGame')}
               onRetry={() => {
                 void game.refetch();
               }}
             />
           ) : tiers.error && chosen !== null ? (
             <ErrorLine
-              message={`Couldn't load your ${TIER_IN_SENTENCE[chosen]} list.`}
+              message={t('browse.log.loadTier', { tier: t(TIER_IN_SENTENCE[chosen]) })}
               onRetry={tiers.refetch}
             />
           ) : (
@@ -214,7 +216,7 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
             if (pivotIndex === null || !pivot) {
               return (
                 <View style={styles.centered}>
-                  <ErrorLine message="Couldn't load that comparison." onRetry={tiers.refetch} />
+                  <ErrorLine message={t('browse.log.loadComparison')} onRetry={tiers.refetch} />
                 </View>
               );
             }
@@ -223,7 +225,7 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
             const subtitle =
               above === null
                 ? scoreText(score)
-                : `ranked #${globalRank(above, pivotIndex)} · ${scoreText(score)}`;
+                : t('browse.log.pivotRanked', { rank: globalRank(above, pivotIndex), score: scoreText(score) });
 
             return (
               <CompareStep
@@ -259,7 +261,7 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
             onNudge={onNudge}
             onDone={onDone}
             saving={save.isPending}
-            error={save.isError ? "Couldn't save that placement." : null}
+            error={save.isError ? t('browse.log.savePlacement') : null}
           />
         </View>
       ) : null}

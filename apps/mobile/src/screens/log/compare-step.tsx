@@ -20,6 +20,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { filmComparisonWords } from '@/lib/film';
+import { useT } from '@/lib/i18n';
 import { Button, Icon, Text, TierChip } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -51,6 +52,7 @@ export function CompareStep({
   onAnswer,
   onClose,
 }: CompareStepProps) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   // The top row floats over the stage, so the prompt is kept clear of it by
@@ -97,7 +99,7 @@ export function CompareStep({
           style={[styles.pair, { gap: theme.space[3] }]}>
           <CompareCard
             game={newGame}
-            subtitle={medium === 'movie' ? 'just watched' : 'just finished'}
+            subtitle={medium === 'movie' ? t('browse.log.compare.justWatched') : t('browse.log.compare.justFinished')}
             cue={cue}
             onPress={() => onAnswer('a')}
           />
@@ -107,14 +109,14 @@ export function CompareStep({
         <View style={[styles.below, { paddingTop: theme.space[4] }]}>
           <View style={[styles.hatches, { gap: theme.space[3] }]}>
             <Button
-              label="Too close to call"
+              label={t('browse.log.compare.tooClose')}
               variant="secondary"
               size="small"
               style={styles.hatch}
               onPress={() => onAnswer('too_close')}
             />
             <Button
-              label="Can't compare these"
+              label={t('browse.log.compare.cantCompare')}
               variant="secondary"
               size="small"
               style={styles.hatch}
@@ -144,7 +146,7 @@ export function CompareStep({
         ]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t('browse.log.compare.close')}
           hitSlop={12}
           style={styles.closeButton}
           onPress={onClose}>
@@ -162,7 +164,7 @@ export function CompareStep({
             // The nudged `total` here, not `steps.expected`: this is what
             // VoiceOver reads, and it should never announce a question past
             // the same tilde-total the old counter text showed.
-            accessibilityLabel={`Question ${steps.current} of ${steps.total}`}
+            accessibilityLabel={t('browse.log.compare.question', { current: steps.current, total: steps.total })}
             accessibilityValue={{ min: 0, max: steps.total, now: steps.current }}
           />
           <TierChip tier={insertion.tier} />

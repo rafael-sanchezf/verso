@@ -28,6 +28,38 @@ import type { HomeRow, HomeRowCandidate } from '@verso/api';
 
 import { filmGenreLabel, filmGenreLabels, filmRuntime } from '../../lib/film';
 
+import { say, type Phrase, type Say } from '../game/phrase';
+
+/**
+ * The title a row reads in the app's language, as a phrase, or null to keep
+ * the database's own (a genre row, whose title is the genre).
+ *
+ * `movie_home_rows` writes the titles in English ("You wanted to watch
+ * these", "Because you loved Past Lives", "Popular"); the kind says which
+ * sentence it is and the variable part is the film, so the app says the
+ * sentence itself and the film stays the film (the Spanish wave). The screen
+ * swaps the said title in before `rowTitleParts`, which finds the film in
+ * either language; `seeAllTarget` and `findRow` keep reading the database's.
+ */
+export function rowTitlePhrase(row: Pick<HomeRow, 'kind' | 'variablePart'>): Phrase | null {
+  switch (row.kind) {
+    case 'watchlist':
+      return { key: 'browse.home.movies.rows.watchlist' };
+    case 'popular':
+      return { key: 'browse.home.movies.rows.popular' };
+    case 'because':
+      return row.variablePart ? { key: 'browse.home.movies.rows.because', vars: { title: row.variablePart } } : null;
+    default:
+      return null;
+  }
+}
+
+/** The row with its title said in the language `t` speaks, for drawing only. */
+export function saidRow<T extends Pick<HomeRow, 'kind' | 'title' | 'variablePart'>>(row: T, t: Say): T {
+  const phrase = rowTitlePhrase(row);
+  return phrase ? { ...row, title: say(t, phrase) } : row;
+}
+
 /** One run of a row title: italic or plain. */
 export interface TitlePart {
   text: string;

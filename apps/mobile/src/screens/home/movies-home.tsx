@@ -30,6 +30,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View, type TextStyle } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { EmptyState, ErrorLine, PosterCard, Skeleton, Text, useTheme } from '@/ui';
 
@@ -39,6 +40,7 @@ import {
   cardSize,
   rowTitleParts,
   rowTitleText,
+  saidRow,
   seeAllTarget,
   type CardSize,
   type SeeAll,
@@ -51,6 +53,7 @@ function rowKey(row: HomeRow, index: number): string {
 }
 
 export function MoviesHome() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -88,7 +91,7 @@ export function MoviesHome() {
         {/* A failed refresh keeps what was loaded; the line says the rows may be behind. */}
         {rows.isError ? (
           <ErrorLine
-            message="Couldn't refresh your recommendations."
+            message={t('browse.home.movies.refreshError')}
             onRetry={refresh}
             style={{ paddingHorizontal: theme.space[4] }}
           />
@@ -110,7 +113,7 @@ export function MoviesHome() {
   } else if (rows.isError) {
     body = (
       <ErrorLine
-        message="Couldn't load your recommendations."
+        message={t('browse.home.movies.loadError')}
         onRetry={() => void rows.refetch()}
         style={{ paddingHorizontal: theme.space[4] }}
       />
@@ -121,9 +124,9 @@ export function MoviesHome() {
     body = (
       <EmptyState
         icon="film"
-        title="Nothing to recommend yet"
-        body="Add films you want to watch and they start here."
-        action={{ label: 'Search', onPress: () => router.navigate('/search') }}
+        title={t('browse.home.movies.emptyTitle')}
+        body={t('browse.home.movies.emptyBody')}
+        action={{ label: t('browse.home.movies.emptyAction'), onPress: () => router.navigate('/search') }}
       />
     );
   }
@@ -153,21 +156,24 @@ export function PickRow({
   onOpenFilm: (id: string) => void;
   onSeeAll: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const width = CARD_WIDTH[size];
+  // The title in the app's language; "See all" still goes by the database's.
+  const shown = saidRow(row, t);
 
   return (
     <View style={{ gap: 10 }}>
       <View style={[styles.header, { paddingHorizontal: theme.space[4], gap: theme.space[2] }]}>
-        <RowTitle row={row} />
+        <RowTitle row={shown} />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`See all, ${rowTitleText(row)}`}
+          accessibilityLabel={t('browse.home.movies.seeAllLabel', { row: rowTitleText(shown) })}
           hitSlop={12}
           onPress={onSeeAll}
           style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
           <Text style="subheadline" color="text/secondary">
-            See all
+            {t('browse.home.movies.seeAll')}
           </Text>
         </Pressable>
       </View>

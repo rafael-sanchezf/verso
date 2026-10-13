@@ -6,8 +6,11 @@
  * it, "Buy · Apple TV". A film in theaters with nothing streaming shows "In
  * theaters" (movies-brief.md, "Movie page").
  *
- * No React; relative imports only (`test/film.test.ts`).
+ * No React; relative imports only (`test/film.test.ts`). A label is the
+ * service's name or a phrase the page says (the Spanish wave).
  */
+
+import type { Words } from '../game/phrase';
 
 export interface Offer {
   providerId: number;
@@ -19,7 +22,7 @@ export interface Offer {
 
 export interface WatchChip {
   key: string;
-  label: string;
+  label: Words;
   /** One of the caller's services, drawn with the brand stroke and the check. */
   mine: boolean;
 }
@@ -47,7 +50,12 @@ export function whereToWatch(
     .filter(({ streams, rents, buys }) => streams || rents || buys)
     .map(({ offer, streams, rents }) => ({
       key: String(offer.providerId),
-      label: streams ? offer.name : `${rents ? 'Rent' : 'Buy'} · ${offer.name}`,
+      label: streams
+        ? offer.name
+        : ({
+            key: rents ? 'browse.movie.whereToWatch.rent' : 'browse.movie.whereToWatch.buy',
+            vars: { name: offer.name },
+          } satisfies Words),
       mine: streams && mine.has(offer.providerId),
       order: rank(streams, rents),
       priority: offer.priority ?? Number.MAX_SAFE_INTEGER,
@@ -56,6 +64,8 @@ export function whereToWatch(
     .map(({ key, label, mine: isMine }) => ({ key, label, mine: isMine }));
 
   const streamsAnywhere = [...byProvider.values()].some(({ streams }) => streams);
-  if (inTheaters && !streamsAnywhere) return [{ key: 'theaters', label: 'In theaters', mine: false }, ...chips];
+  if (inTheaters && !streamsAnywhere) {
+    return [{ key: 'theaters', label: { key: 'browse.movie.whereToWatch.inTheaters' }, mine: false }, ...chips];
+  }
   return chips;
 }

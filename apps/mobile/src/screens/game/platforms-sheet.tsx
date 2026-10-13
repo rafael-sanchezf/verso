@@ -24,12 +24,14 @@ import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import { platforms as formatPlatforms, platformShortName } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { Chip, ErrorLine, SheetFrame, Text, TextButton, useTheme } from '@/ui';
 
 import { PlayedBox } from './game-platforms';
 import { useGamePage, usePlayedPlatforms, useSheetSave } from './use-game';
 
 export function PlatformsSheet({ id }: { id: string }) {
+  const t = useT();
   const theme = useTheme();
   const query = useGamePage(id);
   const { dismiss } = useSheetSave(id);
@@ -55,22 +57,27 @@ export function PlatformsSheet({ id }: { id: string }) {
   const onSave = () => {
     playedOn.mutate(selected, {
       onSuccess: dismiss,
-      onError: () => Alert.alert('Could not save', 'Check your connection and try again.'),
+      onError: () => Alert.alert(t('browse.game.couldNotSave'), t('browse.tryAgain')),
     });
   };
 
   // Empty is "not recorded", never "not played" (decision 19).
-  const summary = formatPlatforms(selected, ', ') ?? 'Not recorded';
+  const summary = formatPlatforms(selected, ', ') ?? t('browse.game.platformsSheet.notRecorded');
 
   return (
-    <SheetFrame title="Played on" onCancel={dismiss} onSave={onSave} saveDisabled={playedOn.isPending}>
+    <SheetFrame
+      title={t('browse.game.platformsSheet.title')}
+      onCancel={dismiss}
+      onSave={onSave}
+      saveLabel={t('common.save')}
+      saveDisabled={playedOn.isPending}>
       {query.isError ? (
-        <ErrorLine message="We couldn't load this game." onRetry={() => void query.refetch()} />
+        <ErrorLine message={t('browse.game.loadError')} onRetry={() => void query.refetch()} />
       ) : null}
 
       {catalog.length === 0 && !query.isPending && !query.isError ? (
         <Text size={15} color="text/secondary">
-          The catalog does not list any platforms for this game yet.
+          {t('browse.game.platformsSheet.noPlatforms')}
         </Text>
       ) : null}
 
@@ -98,7 +105,11 @@ export function PlatformsSheet({ id }: { id: string }) {
 
       {selected.length > 0 ? (
         <View style={styles.footer}>
-          <TextButton label="Clear" color="text/secondary" onPress={() => setPicked([])} />
+          <TextButton
+            label={t('browse.game.platformsSheet.clear')}
+            color="text/secondary"
+            onPress={() => setPicked([])}
+          />
         </View>
       ) : null}
     </SheetFrame>

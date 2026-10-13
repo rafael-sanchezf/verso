@@ -19,6 +19,8 @@
 
 import { releaseState, type OnboardingGameRow } from '@verso/api';
 
+import type { Phrase } from '../game/phrase';
+
 /**
  * The add-many pill for one row: the check circle for a game that is out,
  * the add pill for one that is not. `releaseDate` is `undefined` until
@@ -53,17 +55,22 @@ export function afterMarked(state: AddManyState, row: OnboardingGameRow, already
   return { added: [...state.added, row], alreadyRanked: null };
 }
 
-/** The header's counter chip. */
-export function addedChipLabel(count: number): string {
-  return `${count} added`;
+/** The header's counter chip: "3 added". The words are phrases Search says (the Spanish wave). */
+export function addedChipLabel(count: number): Phrase {
+  return {
+    key: count === 1 ? 'browse.search.addMany.addedChipOne' : 'browse.search.addMany.addedChipOther',
+    vars: { count },
+  };
 }
 
 /** The pinned button: "Rank 3 games", "Rank 1 game". */
-export function rankAddedLabel(count: number): string {
-  return count === 1 ? 'Rank 1 game' : `Rank ${count} games`;
+export function rankAddedLabel(count: number): Phrase {
+  return count === 1
+    ? { key: 'browse.search.addMany.rankOne' }
+    : { key: 'browse.search.addMany.rankOther', vars: { count } };
 }
 
 /** The notice under the header when a tapped game was ranked already. */
-export function alreadyRankedLine(title: string): string {
-  return `${title} is already in your ranking.`;
+export function alreadyRankedLine(title: string): Phrase {
+  return { key: 'browse.search.addMany.alreadyRanked', vars: { title } };
 }

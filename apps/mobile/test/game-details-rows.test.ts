@@ -7,12 +7,27 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { detailRows, groupDigits, timeToBeatBreakdown } from '../src/screens/game/details-rows';
+import {
+  detailRows as detailPhrases,
+  groupDigits,
+  timeToBeatBreakdown as breakdownPhrases,
+} from '../src/screens/game/details-rows';
 import { steamAppId } from '../src/screens/game/steam';
+
+import { english } from './english';
 
 import type { Entry, GamePage } from '@verso/api';
 
 const NOW = new Date(2026, 8, 16, 14, 30); // Wednesday 16 September 2026
+
+/** The rows as the page says them in English (the module returns keys and phrases). */
+function detailRows(...args: Parameters<typeof detailPhrases>) {
+  return detailPhrases(...args).map((row) => ({ ...row, label: english(row.label), value: english(row.value) }));
+}
+
+function timeToBeatBreakdown(...args: Parameters<typeof breakdownPhrases>): string[] {
+  return breakdownPhrases(...args).map(english);
+}
 
 function entry(patch: Partial<Entry> = {}): Entry {
   return {

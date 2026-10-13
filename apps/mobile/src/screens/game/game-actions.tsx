@@ -14,8 +14,10 @@
 
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Button, Text, TextButton, useTheme } from '@/ui';
 
+import { say, sayJoined } from './phrase';
 import type { PrimaryAction, SecondaryAction, StatusLine } from './status';
 
 export function ActionsRow({
@@ -31,6 +33,7 @@ export function ActionsRow({
   onPrimary: () => void;
   onSecondary: () => void;
 }) {
+  const t = useT();
   // A game that is not out has no "I finished this" (status.ts), and none of
   // the two once it is in the backlog: the row then takes what is left, full
   // width, or is not drawn (rule 20).
@@ -40,7 +43,7 @@ export function ActionsRow({
     <View style={[styles.row, { gap: 10 }]}>
       {primary ? (
         <Button
-          label={primary.label}
+          label={say(t, primary.label)}
           size="compact"
           disabled={primary.disabled || busy}
           onPress={onPrimary}
@@ -49,7 +52,7 @@ export function ActionsRow({
       ) : null}
       {secondary ? (
         <Button
-          label={secondary.label}
+          label={t(secondary.label)}
           variant="secondary"
           size="compact"
           disabled={busy}
@@ -62,6 +65,7 @@ export function ActionsRow({
 }
 
 export function StatusRow({ line, onChange }: { line: StatusLine; onChange: () => void }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -77,9 +81,9 @@ export function StatusRow({ line, onChange }: { line: StatusLine; onChange: () =
         ]}
       />
       <Text size={14} color="text/secondary" layout={styles.fill}>
-        {line.text}
+        {sayJoined(t, line.parts)}
       </Text>
-      <TextButton label="Change" size={14} weight={500} onPress={onChange} />
+      <TextButton label={t('browse.game.status.change')} size={14} weight={500} onPress={onChange} />
     </View>
   );
 }

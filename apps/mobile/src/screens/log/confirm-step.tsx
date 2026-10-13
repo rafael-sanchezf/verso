@@ -12,6 +12,7 @@
 
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Button, Cover, ErrorLine, Skeleton, Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -43,6 +44,7 @@ export function ConfirmStep({
   saving,
   error,
 }: ConfirmStepProps) {
+  const t = useT();
   const theme = useTheme();
 
   const ids = provisionalList(state).map((item) => item.id);
@@ -56,14 +58,14 @@ export function ConfirmStep({
   });
 
   const wasEmpty = state.insertion.list.length === 0;
-  const tierName = TIER_IN_SENTENCE[state.insertion.tier];
+  const tierName = t(TIER_IN_SENTENCE[state.insertion.tier]);
   const rank = above === null ? null : above + state.insertAt + 1;
 
   const subtitle = wasEmpty
-    ? `First in ${tierName}.`
+    ? t('browse.log.confirm.firstIn', { tier: tierName })
     : rank === null
-      ? `${newGame.title} lands in ${tierName}. Nudge it if that feels off.`
-      : `${newGame.title} lands at #${rank} in ${tierName}. Nudge it if that feels off.`;
+      ? t('browse.log.confirm.landsIn', { title: newGame.title, tier: tierName })
+      : t('browse.log.confirm.landsAt', { title: newGame.title, rank, tier: tierName });
 
   return (
     /*
@@ -90,7 +92,7 @@ export function ConfirmStep({
       */}
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={{ gap: theme.space[1] + 2, paddingBottom: theme.space[5] }}>
-          <Text style="title-1">Look right?</Text>
+          <Text style="title-1">{t('browse.log.confirm.title')}</Text>
           <Text size={15} color="text/secondary">
             {subtitle}
           </Text>
@@ -109,7 +111,7 @@ export function ConfirmStep({
 
         <View style={[styles.nudges, { paddingTop: theme.space[5], gap: theme.space[3] }]}>
           <Button
-            label="▲ Move up"
+            label={t('browse.log.confirm.moveUp')}
             variant="secondary"
             size="small"
             style={styles.nudge}
@@ -117,7 +119,7 @@ export function ConfirmStep({
             onPress={() => onNudge(-1)}
           />
           <Button
-            label="▼ Move down"
+            label={t('browse.log.confirm.moveDown')}
             variant="secondary"
             size="small"
             style={styles.nudge}
@@ -134,7 +136,7 @@ export function ConfirmStep({
           </View>
         ) : null}
 
-        <Button label="Done" variant="contrast" disabled={saving} onPress={onDone} />
+        <Button label={t('browse.log.confirm.done')} variant="contrast" disabled={saving} onPress={onDone} />
       </View>
     </View>
   );

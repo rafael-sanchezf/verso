@@ -24,6 +24,7 @@
 import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
 import { select, showDialog } from '@/lib/dialog';
+import { t } from '@/lib/i18n';
 
 export interface SheetChoice {
   label: string;
@@ -54,7 +55,7 @@ export function showActionSheet(options: { title?: string; choices: SheetChoice[
   }
 
   if (Platform.OS === 'ios') {
-    const labels = [...choices.map((choice) => choice.label), 'Cancel'];
+    const labels = [...choices.map((choice) => choice.label), t('common.cancel')];
     const destructive = choices.findIndex((choice) => choice.destructive);
 
     ActionSheetIOS.showActionSheetWithOptions(
@@ -80,7 +81,7 @@ export function showActionSheet(options: { title?: string; choices: SheetChoice[
       style: choice.destructive ? ('destructive' as const) : ('default' as const),
       onPress: () => defer(choice.onPress),
     })),
-    { text: 'Cancel', style: 'cancel' as const },
+    { text: t('common.cancel'), style: 'cancel' as const },
   ]);
 }
 
@@ -96,7 +97,7 @@ export function confirmDestructive(options: {
       title: options.title,
       message: options.message,
       buttons: [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { text: options.confirmLabel, style: 'destructive', onPress: options.onConfirm },
       ],
     });
@@ -104,7 +105,7 @@ export function confirmDestructive(options: {
   }
 
   Alert.alert(options.title, options.message, [
-    { text: 'Cancel', style: 'cancel' },
+    { text: t('common.cancel'), style: 'cancel' },
     { text: options.confirmLabel, style: 'destructive', onPress: options.onConfirm },
   ]);
 }
@@ -112,9 +113,9 @@ export function confirmDestructive(options: {
 /** A plain alert with one dismiss button: the Time-to-beat breakdown. */
 export function showInfo(title: string, message: string): void {
   if (Platform.OS === 'web') {
-    showDialog({ title, message, buttons: [{ text: 'Done', style: 'cancel' }] });
+    showDialog({ title, message, buttons: [{ text: t('browse.game.done'), style: 'cancel' }] });
     return;
   }
 
-  Alert.alert(title, message, [{ text: 'Done', style: 'cancel' }]);
+  Alert.alert(title, message, [{ text: t('browse.game.done'), style: 'cancel' }]);
 }

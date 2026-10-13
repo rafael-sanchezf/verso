@@ -44,9 +44,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { alert, select, showDialog } from '@/lib/dialog';
 import { filmFactsLine, filmGenreLabels, filmRuntime, tmdbScoreText } from '@/lib/film';
 import { fullDate } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { invalidateEntry, invalidateMovieHome } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
+import { backTitle } from '@/screens/game/back-title';
+import { say } from '@/screens/game/phrase';
 import { GoingSheet, type GoingTarget } from '@/screens/watchlist/going-sheet';
 import { useMyProfile } from '@/state/medium';
 import { Button, Chip, Cover, ErrorLine, Icon, Skeleton, Text, TextButton, useTheme } from '@/ui';
@@ -65,7 +68,8 @@ const TMDB_PROFILE_BASE = 'https://image.tmdb.org/t/p/w185';
 export function MoviePageScreen() {
   const params = useLocalSearchParams<{ id: string; from?: string }>();
   const id = firstParam(params.id) ?? '';
-  const from = firstParam(params.from);
+  const t = useT();
+  const from = backTitle(firstParam(params.from), t);
 
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -100,7 +104,7 @@ export function MoviePageScreen() {
       invalidateEntry(queryClient, id);
       invalidateMovieHome(queryClient);
     },
-    onError: () => alert('Could not save', 'Check your connection and try again.'),
+    onError: () => alert(t('browse.movie.couldNotSave'), t('browse.tryAgain')),
   });
 
   // "Remove from library": the diary goes with the entry (removeMovieEntry), so
@@ -112,7 +116,7 @@ export function MoviePageScreen() {
       invalidateEntry(queryClient, id);
       invalidateMovieHome(queryClient);
     },
-    onError: () => alert('Could not remove it', 'Check your connection and try again.'),
+    onError: () => alert(t('browse.movie.couldNotRemove'), t('browse.tryAgain')),
   });
 
   const openLog = (rank = false) =>
@@ -131,7 +135,7 @@ export function MoviePageScreen() {
         headerRight: () => (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="More"
+            accessibilityLabel={t('browse.movie.more')}
             hitSlop={10}
             onPress={() =>
               select({
@@ -139,7 +143,7 @@ export function MoviePageScreen() {
                   ...(data?.tmdbId
                     ? [
                         {
-                          label: 'Open on TMDB',
+                          label: t('browse.movie.openOnTmdb'),
                           onPress: () => void Linking.openURL(`https://www.themoviedb.org/movie/${data.tmdbId}`),
                         },
                       ]
@@ -147,15 +151,15 @@ export function MoviePageScreen() {
                   ...(entry
                     ? [
                         {
-                          label: 'Remove from library',
+                          label: t('browse.movie.removeFromLibrary'),
                           destructive: true,
                           onPress: () =>
                             showDialog({
-                              title: 'Remove from library',
-                              message: 'This stops tracking the film and deletes its diary. Your ranking is not affected.',
+                              title: t('browse.movie.removeFromLibrary'),
+                              message: t('browse.movie.removeMessage'),
                               buttons: [
-                                { text: 'Cancel', style: 'cancel' },
-                                { text: 'Remove', style: 'destructive', onPress: () => removal.mutate() },
+                                { text: t('common.cancel'), style: 'cancel' },
+                                { text: t('browse.movie.remove'), style: 'destructive', onPress: () => removal.mutate() },
                               ],
                             }),
                         },
@@ -193,7 +197,7 @@ export function MoviePageScreen() {
       <View style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
         {header}
         <ErrorLine
-          message={page.isError ? "We couldn't load this film." : 'This film is not in the catalog.'}
+          message={page.isError ? t('browse.movie.loadError') : t('browse.movie.notInCatalog')}
           onRetry={page.isError ? () => void page.refetch() : undefined}
         />
       </View>
@@ -234,10 +238,10 @@ export function MoviePageScreen() {
       return;
     }
     showDialog({
-      title: 'Remove from your watchlist?',
+      title: t('browse.movie.removeFromWatchlist'),
       buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: () => watchlist.mutate(true) },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('browse.movie.remove'), style: 'destructive', onPress: () => watchlist.mutate(true) },
       ],
     });
   };
@@ -272,15 +276,15 @@ export function MoviePageScreen() {
                 disabled={line.action === null}
                 onPress={() => setDiaryOpen(true)}
                 style={[styles.row, { gap: 6 }]}>
-                <Text size={15}>{line.action === 'open' ? `${line.text} ›` : line.text}</Text>
+                <Text size={15}>{line.action === 'open' ? `${say(t, line.text)} ›` : say(t, line.text)}</Text>
                 {line.action === 'change' ? (
                   <Text size={15} color="brand/text">
-                    · Change
+                    {t('browse.movie.diaryLine.change')}
                   </Text>
                 ) : null}
               </Pressable>
             ) : null}
-            {line.rankIt ? <TextButton label="Rank it ›" size={15} color="brand/text" onPress={() => openLog(true)} /> : null}
+            {line.rankIt ? <TextButton label={t('browse.movie.diaryLine.rankIt')} size={15} color="brand/text" onPress={() => openLog(true)} /> : null}
             {/*
               Once watched the page has no primary button (question 18), so
               this is the way back to the log sheet for a rewatch, whatever
@@ -288,16 +292,20 @@ export function MoviePageScreen() {
               removed, or marked seen by the deck) has nothing else to tap.
             */}
             {line.watched ? (
-              <TextButton label="Log another watch" size={15} color="brand/text" onPress={() => openLog()} />
+              <TextButton label={t('browse.movie.diaryLine.logAnother')} size={15} color="brand/text" onPress={() => openLog()} />
             ) : null}
           </View>
         ) : null}
 
         {theatrical ? (
           <View style={[styles.row, { gap: 6 }]}>
-            <Text size={15}>{theatrical.text} ·</Text>
+            <Text size={15}>{say(t, theatrical.text)} ·</Text>
             <TextButton
-              label={theatrical.action === 'change' ? 'Change' : 'Going? ›'}
+              label={
+                theatrical.action === 'change'
+                  ? t('browse.movie.theatrical.change')
+                  : t('browse.movie.theatrical.goingQuestion')
+              }
               size={15}
               weight={400}
               color="brand/text"
@@ -308,9 +316,9 @@ export function MoviePageScreen() {
 
         {!line.watched ? (
           <View style={[styles.row, { gap: 10 }]}>
-            <Button label="I watched this" style={[styles.fill, styles.action]} onPress={() => openLog()} />
+            <Button label={t('browse.movie.watchedThis')} style={[styles.fill, styles.action]} onPress={() => openLog()} />
             <Button
-              label="Want to watch"
+              label={t('browse.movie.wantToWatch')}
               variant="secondary"
               style={[styles.fill, styles.action]}
               disabled={watchlist.isPending}
@@ -332,7 +340,7 @@ export function MoviePageScreen() {
               {rottenTomatoes !== null ? <Score value={rottenTomatoes} source="Tomatometer" /> : null}
             </View>
             <Text size={12} color="text/secondary">
-              {rottenTomatoes !== null ? 'Scores from TMDB and Wikidata' : 'Score from TMDB'}
+              {rottenTomatoes !== null ? t('browse.movie.scoresFromBoth') : t('browse.movie.scoreFromTmdb')}
             </Text>
           </View>
         ) : null}
@@ -340,26 +348,26 @@ export function MoviePageScreen() {
         {data.awards ? <Text size={15}>{data.awards}</Text> : null}
 
         <View style={{ gap: theme.space[2] }}>
-          <BlockTitle title="Where to watch" />
+          <BlockTitle title={t('browse.movie.whereToWatch.title')} />
           {chips.length > 0 ? (
             <View style={[styles.row, styles.wrap, { gap: theme.space[2] }]}>
               {chips.map((chip) => (
-                <Chip key={chip.key} label={chip.label} size={14} variant={chip.mine ? 'played' : 'surface'} />
+                <Chip key={chip.key} label={say(t, chip.label)} size={14} variant={chip.mine ? 'played' : 'surface'} />
               ))}
             </View>
           ) : (
             <Text size={15} color="text/secondary">
-              Not streaming where you are
+              {t('browse.movie.whereToWatch.notStreaming')}
             </Text>
           )}
           <Text size={12} color="text/secondary">
-            Streaming data by JustWatch
+            {t('browse.movie.whereToWatch.credit')}
           </Text>
         </View>
 
         {cast.length > 0 ? (
           <View style={{ gap: theme.space[2] }}>
-            <BlockTitle title="Cast" />
+            <BlockTitle title={t('browse.movie.cast')} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {cast.map((member, index) => (
                 <CastColumn key={`${index}:${member.name}`} member={member} />
@@ -370,7 +378,7 @@ export function MoviePageScreen() {
 
         {data.overview ? (
           <View style={{ gap: theme.space[2] }}>
-            <BlockTitle title="About" />
+            <BlockTitle title={t('browse.movie.about')} />
             <Text size={15}>{data.overview}</Text>
           </View>
         ) : null}
@@ -451,22 +459,23 @@ function CastColumn({ member }: { member: MovieCastMember }) {
   );
 }
 
-function Details({ data, streaming }: { data: MoviePage; streaming: { label: string; value: string } | null }) {
+function Details({ data, streaming }: { data: MoviePage; streaming: ReturnType<typeof streamingRow> }) {
+  const t = useT();
   const theme = useTheme();
   const rows = useMemo(
     () =>
       [
-        { label: 'Released', value: fullDate(data.releaseDate) },
-        streaming ? { label: streaming.label, value: streaming.value } : null,
-        { label: 'Runtime', value: filmRuntime(data.runtimeMinutes) },
-        { label: 'Part of', value: data.collectionName },
+        { label: t('browse.movie.details.released'), value: fullDate(data.releaseDate) },
+        streaming ? { label: t(streaming.label), value: say(t, streaming.value) } : null,
+        { label: t('browse.movie.details.runtime'), value: filmRuntime(data.runtimeMinutes) },
+        { label: t('browse.movie.details.partOf'), value: data.collectionName },
       ].filter((row): row is { label: string; value: string } => row !== null && row.value !== null && row.value !== ''),
-    [data, streaming],
+    [data, streaming, t],
   );
   if (rows.length === 0) return null;
   return (
     <View style={{ gap: theme.space[1] }}>
-      <BlockTitle title="Details" />
+      <BlockTitle title={t('browse.movie.details.title')} />
       {rows.map((row) => (
         <View key={row.label} style={[styles.row, styles.between, { paddingVertical: 8 }]}>
           <Text size={15} color="text/secondary">

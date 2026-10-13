@@ -21,12 +21,20 @@
  */
 
 import { hours, personalDate } from '../../lib/format';
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
+import type { Phrase } from './phrase';
 
 import type { Entry, ReleaseState } from '@verso/api';
 
-/** The line under the actions row: a dot, a sentence, and "Change". */
+/**
+ * The line under the actions row: a dot, a sentence, and "Change".
+ *
+ * The sentence is its parts, said and joined with ` · ` by the row (the
+ * Spanish wave: no sentence in a module the node tests load).
+ */
 export interface StatusLine {
-  text: string;
+  parts: readonly Phrase[];
   /** The dot is the brand text color while a game is being played, quiet otherwise. */
   playing: boolean;
 }
@@ -37,10 +45,13 @@ export interface StatusLine {
  * Data honesty (ui-principles): an imported figure says where it came from. A
  * hand-entered one says so too rather than reading as if the app measured it.
  */
-function hoursPart(entry: Entry): string | null {
+function hoursPart(entry: Entry): Phrase | null {
   const played = hours(entry.playtimeMinutes);
   if (played === null) return null;
-  return entry.playtimeSource === 'steam' ? `${played} on Steam` : `${played} by hand`;
+  return {
+    key: entry.playtimeSource === 'steam' ? 'browse.game.status.hoursOnSteam' : 'browse.game.status.hoursByHand',
+    vars: { hours: played },
+  };
 }
 
 /** The status sentence, or null when the caller does not track this game. */
@@ -50,32 +61,44 @@ export function statusLine(entry: Entry | null, now: Date = new Date()): StatusL
   switch (entry.status) {
     case 'playing': {
       const since = personalDate(entry.startedAt, now);
-      const parts = [since ? `Playing since ${since}` : 'Playing', hoursPart(entry)];
-      return { text: parts.filter(Boolean).join(' · '), playing: true };
+      const parts: (Phrase | null)[] = [
+        since
+          ? { key: 'browse.game.status.playingSince', vars: { date: since } }
+          : { key: 'browse.game.status.playing' },
+        hoursPart(entry),
+      ];
+      return { parts: parts.filter((part): part is Phrase => part !== null), playing: true };
     }
     case 'backlog': {
       const since = personalDate(entry.addedAt, now);
       return {
-        text: since ? `In your backlog since ${since}` : 'In your backlog',
+        parts: [
+          since ? { key: 'browse.game.status.backlogSince', vars: { date: since } } : { key: 'browse.game.status.backlog' },
+        ],
         playing: false,
       };
     }
     case 'played': {
       const finished = personalDate(entry.finishedAt, now);
-      return { text: finished ? `Finished ${finished}` : 'Played', playing: false };
+      return {
+        parts: [
+          finished ? { key: 'browse.game.status.finishedOn', vars: { date: finished } } : { key: 'browse.game.status.played' },
+        ],
+        playing: false,
+      };
     }
     case 'dropped':
-      return { text: 'Dropped', playing: false };
+      return { parts: [{ key: 'browse.game.status.dropped' }], playing: false };
   }
 }
 
 /** The four statuses, in the order the change-status sheet offers them. */
 export const STATUS_CHOICES = [
-  { status: 'backlog', label: 'Backlog' },
-  { status: 'playing', label: 'Playing' },
-  { status: 'played', label: 'Played' },
-  { status: 'dropped', label: 'Dropped' },
-] as const;
+  { status: 'backlog', label: 'browse.game.statusChoices.backlog' },
+  { status: 'playing', label: 'browse.game.statusChoices.playing' },
+  { status: 'played', label: 'browse.game.statusChoices.played' },
+  { status: 'dropped', label: 'browse.game.statusChoices.dropped' },
+] as const satisfies readonly { status: string; label: TranslationKey }[];
 
 export type StatusChoice = (typeof STATUS_CHOICES)[number];
 
@@ -90,7 +113,7 @@ export function statusChoices(release: ReleaseState): readonly StatusChoice[] {
 
 /** The primary button: "I finished this", or the score once there is one. */
 export interface PrimaryAction {
-  label: string;
+  label: Phrase;
   disabled: boolean;
 }
 
@@ -100,9 +123,11 @@ export interface PrimaryAction {
  * offer.
  */
 export function primaryAction(ranking: { score: number } | null, release: ReleaseState): PrimaryAction | null {
-  if (ranking) return { label: `Ranked · ${ranking.score.toFixed(1)}`, disabled: true };
+  if (ranking) {
+    return { label: { key: 'browse.game.actions.ranked', vars: { score: ranking.score.toFixed(1) } }, disabled: true };
+  }
   if (!release.released) return null;
-  return { label: 'I finished this', disabled: false };
+  return { label: { key: 'browse.game.actions.finished' }, disabled: false };
 }
 
 /**
@@ -122,7 +147,7 @@ export function primaryAction(ranking: { score: number } | null, release: Releas
 export type SecondaryKind = 'backlog' | 'play' | 'rank' | 'move';
 
 export interface SecondaryAction {
-  label: string;
+  label: TranslationKey;
   kind: SecondaryKind;
 }
 
@@ -131,19 +156,19 @@ export function secondaryAction(
   ranked: boolean,
   release: ReleaseState,
 ): SecondaryAction | null {
-  if (ranked) return { label: 'Move in Ranking', kind: 'move' };
+  if (ranked) return { label: 'browse.game.actions.moveInRanking', kind: 'move' };
   if (!release.released) {
-    return entry?.status === 'backlog' ? null : { label: 'Add to backlog', kind: 'backlog' };
+    return entry?.status === 'backlog' ? null : { label: 'browse.game.actions.addToBacklog', kind: 'backlog' };
   }
-  if (!entry) return { label: 'Add to backlog', kind: 'backlog' };
+  if (!entry) return { label: 'browse.game.actions.addToBacklog', kind: 'backlog' };
 
   switch (entry.status) {
     case 'backlog':
-      return { label: 'Start playing', kind: 'play' };
+      return { label: 'browse.game.actions.startPlaying', kind: 'play' };
     case 'played':
-      return { label: 'Rank it', kind: 'rank' };
+      return { label: 'browse.game.actions.rankIt', kind: 'rank' };
     case 'playing':
     case 'dropped':
-      return { label: 'Add to backlog', kind: 'backlog' };
+      return { label: 'browse.game.actions.addToBacklog', kind: 'backlog' };
   }
 }

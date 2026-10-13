@@ -19,6 +19,7 @@
 import { useRef, useState, type RefObject } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon, TextButton } from '@/ui';
 import { fontFamilyFor, useTheme } from '@/ui/theme';
 
@@ -34,8 +35,10 @@ export interface SearchFieldProps {
   placeholder?: string;
 }
 
-export function SearchField({ value, onChangeValue, inputRef, placeholder = 'Search games' }: SearchFieldProps) {
+export function SearchField({ value, onChangeValue, inputRef, placeholder: given }: SearchFieldProps) {
+  const t = useT();
   const theme = useTheme();
+  const placeholder = given ?? t('browse.search.placeholderGames');
   const ownRef = useRef<TextInput>(null);
   const input = inputRef ?? ownRef;
   const [focused, setFocused] = useState(false);
@@ -87,7 +90,7 @@ export function SearchField({ value, onChangeValue, inputRef, placeholder = 'Sea
         {value === '' ? null : (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Clear search"
+            accessibilityLabel={t('browse.search.clearSearch')}
             hitSlop={10}
             onPress={() => onChangeValue('')}
             style={({ pressed }) => (pressed ? styles.pressed : null)}>
@@ -98,7 +101,7 @@ export function SearchField({ value, onChangeValue, inputRef, placeholder = 'Sea
 
       {showCancel ? (
         <TextButton
-          label="Cancel"
+          label={t('common.cancel')}
           size={17}
           weight={400}
           onPress={() => {

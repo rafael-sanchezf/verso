@@ -21,9 +21,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
 import { filmFactsLine } from '@/lib/film';
+import { useT } from '@/lib/i18n';
 import { invalidateEntry, invalidateMovieHome } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
+import { say } from '@/screens/game/phrase';
 import { watchOrdinal } from '@/screens/movie/diary-line';
 import type { MovieFacts } from '@/screens/movie/reads';
 import { Button, Cover, DateField, fontFamilyFor, Text, useTheme } from '@/ui';
@@ -36,6 +38,7 @@ export function MovieLogStep({
   /** After the write: `rank` when "Save and rank" was tapped and the film is not ranked yet. */
   onSaved: (rank: boolean) => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -57,7 +60,7 @@ export function MovieLogStep({
       invalidateMovieHome(queryClient);
       onSaved(rank && !result.alreadyRanked);
     },
-    onError: () => alert("That didn't save", 'Check your connection and try again.'),
+    onError: () => alert(t('browse.log.movie.didNotSave'), t('browse.tryAgain')),
   });
 
   return (
@@ -82,7 +85,7 @@ export function MovieLogStep({
         </View>
       </View>
 
-      <DateField label="Date" value={day} max={today} onChange={(next) => next !== null && setDay(next)} />
+      <DateField label={t('browse.log.movie.date')} value={day} max={today} onChange={(next) => next !== null && setDay(next)} />
 
       <View
         style={[
@@ -93,28 +96,28 @@ export function MovieLogStep({
         <TextInput
           value={note}
           onChangeText={setNote}
-          placeholder="Notes"
+          placeholder={t('browse.log.movie.notes')}
           placeholderTextColor={theme.colors['text/secondary']}
-          accessibilityLabel="Notes, optional"
+          accessibilityLabel={t('browse.log.movie.notesLabel')}
           // One line, as the frame draws it: a note, not a review.
           maxLength={280}
           returnKeyType="done"
           style={[styles.input, { color: theme.colors['text/primary'], fontFamily: fontFamilyFor(400) }]}
         />
         <Text size={13} color="text/secondary">
-          Optional
+          {t('browse.log.movie.optional')}
         </Text>
       </View>
 
       {ordinal ? (
         <Text size={13} color="text/secondary" align="center">
-          {ordinal}
+          {say(t, ordinal)}
         </Text>
       ) : null}
 
       <View style={{ gap: 10 }}>
-        <Button label="Save and rank" disabled={save.isPending} onPress={() => save.mutate(true)} />
-        <Button label="Save" variant="secondary" disabled={save.isPending} onPress={() => save.mutate(false)} />
+        <Button label={t('browse.log.movie.saveAndRank')} disabled={save.isPending} onPress={() => save.mutate(true)} />
+        <Button label={t('common.save')} variant="secondary" disabled={save.isPending} onPress={() => save.mutate(false)} />
       </View>
     </View>
   );

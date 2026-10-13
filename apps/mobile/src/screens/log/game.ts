@@ -12,6 +12,8 @@
 import { coverCandidates, type GamePage, type TierListRow } from '@verso/api';
 import type { RankableItem, Tier } from '@verso/core';
 
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
 export interface LogGame {
   /** `media_items.id`, the same id the engine ranks by. */
   readonly id: string;
@@ -50,13 +52,22 @@ export function rankable(game: LogGame): RankableItem {
  * Not `TIER_LABELS` ("Liked it"), which is the chip's wording (and, since
  * decision 29, the Ranking divider's) and does not fit in a sentence. That
  * lives in `src/ui`, which belongs to the shell, so this form is spelled here
- * rather than added there (specs/log-flow.md, step 3).
+ * rather than added there (specs/log-flow.md, step 3). Dictionary keys, which
+ * the steps say (the Spanish wave).
  */
-export const TIER_IN_SENTENCE: Readonly<Record<Tier, string>> = {
-  loved: 'Loved',
-  liked: 'Liked',
-  fine: 'Fine',
-  disliked: "Didn't like",
+export const TIER_IN_SENTENCE: Readonly<Record<Tier, TranslationKey>> = {
+  loved: 'browse.log.tierInSentence.loved',
+  liked: 'browse.log.tierInSentence.liked',
+  fine: 'browse.log.tierInSentence.fine',
+  disliked: 'browse.log.tierInSentence.disliked',
+};
+
+/** The tier step's rows, the chip's words, as dictionary keys. */
+export const TIER_ROW_LABELS: Readonly<Record<Tier, TranslationKey>> = {
+  loved: 'browse.log.tiers.loved',
+  liked: 'browse.log.tiers.liked',
+  fine: 'browse.log.tiers.fine',
+  disliked: 'browse.log.tiers.disliked',
 };
 
 /** One decimal, as every score in the app is written. */

@@ -11,6 +11,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { coverCandidates, type EntryRow } from '@verso/api';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Cover, coverHeight, EmptyState, EmptyStateCard, ErrorLine, Pressed, Skeleton, Text, TextButton, useTheme } from '@/ui';
 import { BlockTitle } from './block';
 
@@ -31,17 +32,18 @@ export interface UpNextBlockProps {
 }
 
 export function UpNextBlock({ query, onSeeAll, onSearch, onOpenGame }: UpNextBlockProps) {
+  const t = useT();
   const theme = useTheme();
   const rows = query.data ?? [];
 
   return (
     <View style={{ gap: theme.space[3] }}>
       <View style={[styles.header, { paddingHorizontal: theme.space[4] }]}>
-        <BlockTitle>Up next</BlockTitle>
+        <BlockTitle>{t('browse.home.upNext.title')}</BlockTitle>
         {/* No "See all" when there is nothing to see all of (home.md, empty
             backlog). It comes back the moment the backlog does. */}
         {rows.length > 0 ? (
-          <TextButton label="See all" color="text/secondary" size={15} weight={400} onPress={onSeeAll} />
+          <TextButton label={t('browse.home.upNext.seeAll')} color="text/secondary" size={15} weight={400} onPress={onSeeAll} />
         ) : null}
       </View>
 
@@ -55,6 +57,7 @@ function UpNextBody({
   onSearch,
   onOpenGame,
 }: Omit<UpNextBlockProps, 'onSeeAll'>) {
+  const t = useT();
   const theme = useTheme();
 
   if (query.isPending) {
@@ -73,7 +76,7 @@ function UpNextBody({
   if (query.isError) {
     return (
       <View style={{ paddingHorizontal: theme.space[4] }}>
-        <ErrorLine message="Couldn't load your backlog." onRetry={() => void query.refetch()} />
+        <ErrorLine message={t('browse.home.upNext.loadError')} onRetry={() => void query.refetch()} />
       </View>
     );
   }
@@ -84,9 +87,9 @@ function UpNextBody({
         <EmptyStateCard>
           <EmptyState
             icon="layers"
-            title="Your backlog is empty"
-            body="Add games you want to play from Search."
-            action={{ label: 'Search games', onPress: onSearch }}
+            title={t('browse.home.upNext.emptyTitle')}
+            body={t('browse.home.upNext.emptyBody')}
+            action={{ label: t('browse.home.upNext.emptyAction'), onPress: onSearch }}
           />
         </EmptyStateCard>
       </View>

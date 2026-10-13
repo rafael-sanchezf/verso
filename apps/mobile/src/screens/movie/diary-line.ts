@@ -27,12 +27,20 @@
 import type { DiaryRow, Entry } from '@verso/api';
 
 import { personalDate } from '../../lib/format';
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
+import { MONTH_KEYS, WEEKDAY_KEYS, type Phrase } from '../game/phrase';
 
 export type DiaryAction = 'change' | 'open' | null;
 
+/**
+ * Every line here is a phrase the page says (the Spanish wave): the words are
+ * in the dictionary, and the dates are `format.ts`'s or the dictionary's
+ * short month and weekday names, put in each language's order.
+ */
 export interface DiaryLine {
   /** The words, or null when there is nothing to say (an untracked film). */
-  text: string | null;
+  text: Phrase | null;
   /** "Change" on one watch, "›" opening the rows on several. */
   action: DiaryAction;
   /** "Rank it ›": watched, not ranked. */
@@ -52,30 +60,44 @@ export function diaryLine(
 
   const latest = diary.find((row) => row.watchedOn !== null)?.watchedOn ?? null;
   if (diary.length > 0 && latest === null) {
-    const text = diary.length === 1 ? 'Seen before Verso' : `Seen ${diary.length}× before Verso`;
+    const text: Phrase =
+      diary.length === 1
+        ? { key: 'browse.movie.diaryLine.seenBeforeVerso' }
+        : { key: 'browse.movie.diaryLine.seenTimesBeforeVerso', vars: { count: diary.length } };
     return { text, action: 'open', rankIt, watched };
   }
   if (diary.length === 1 && latest !== null) {
-    return { text: `Watched ${personalDate(latest, now) ?? latest}`, action: 'change', rankIt, watched };
+    const date = personalDate(latest, now) ?? latest;
+    return { text: { key: 'browse.movie.diaryLine.watchedOn', vars: { date } }, action: 'change', rankIt, watched };
   }
   if (diary.length > 1 && latest !== null) {
-    return { text: `Watched ${diary.length}× · last ${personalDate(latest, now) ?? latest}`, action: 'open', rankIt, watched };
+    const date = personalDate(latest, now) ?? latest;
+    return {
+      text: { key: 'browse.movie.diaryLine.watchedTimes', vars: { count: diary.length, date } },
+      action: 'open',
+      rankIt,
+      watched,
+    };
   }
-  if (watched) return { text: 'Watched', action: null, rankIt, watched };
-  if (entry?.status === 'backlog') return { text: 'On your watchlist', action: null, rankIt: false, watched: false };
+  if (watched) return { text: { key: 'browse.movie.diaryLine.watched' }, action: null, rankIt, watched };
+  if (entry?.status === 'backlog') {
+    return { text: { key: 'browse.movie.diaryLine.onWatchlist' }, action: null, rankIt: false, watched: false };
+  }
   return { text: null, action: null, rankIt: false, watched: false };
 }
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 function local(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
 }
 
+/** `Oct 24`, in the language's order (`24 oct`). */
+function monthDay(date: Date): Phrase {
+  return { key: 'browse.dates.monthDay', vars: { month: { key: MONTH_KEYS[date.getMonth()]! }, day: date.getDate() } };
+}
+
 export interface TheatricalLine {
-  text: string;
+  text: Phrase;
   /** "Going? ›" or "Change"; both open the day picker. */
   action: 'going?' | 'change';
 }
@@ -94,15 +116,24 @@ export function theatricalLine(
 ): TheatricalLine | null {
   if (plannedOn !== null && plannedOn >= today) {
     const date = local(plannedOn);
-    const when = date ? `${WEEKDAYS[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()}` : plannedOn;
-    return { text: `Going ${when}`, action: 'change' };
+    const when: Phrase | string = date
+      ? {
+          key: 'browse.dates.weekdayMonthDay',
+          vars: {
+            weekday: { key: WEEKDAY_KEYS[date.getDay()]! },
+            month: { key: MONTH_KEYS[date.getMonth()]! },
+            day: date.getDate(),
+          },
+        }
+      : plannedOn;
+    return { text: { key: 'browse.movie.theatrical.going', vars: { date: when } }, action: 'change' };
   }
   if (placement === 'opening' && placementOn !== null) {
     const date = local(placementOn);
-    const when = date ? `${MONTHS[date.getMonth()]} ${date.getDate()}` : placementOn;
-    return { text: `In theaters ${when}`, action: 'going?' };
+    const when: Phrase | string = date ? monthDay(date) : placementOn;
+    return { text: { key: 'browse.movie.theatrical.inTheatersOn', vars: { date: when } }, action: 'going?' };
   }
-  if (placement === 'in_theaters') return { text: 'In theaters now', action: 'going?' };
+  if (placement === 'in_theaters') return { text: { key: 'browse.movie.theatrical.inTheatersNow' }, action: 'going?' };
   return null;
 }
 
@@ -111,19 +142,36 @@ export function theatricalLine(
  * digital date has passed ("May 2022"), "Streaming from" with the day while it
  * is ahead ("Dec 3"). Null with no digital date.
  */
-export function streamingRow(digitalOn: string | null, today: string): { label: string; value: string } | null {
+export function streamingRow(digitalOn: string | null, today: string): { label: TranslationKey; value: Phrase } | null {
   if (digitalOn === null) return null;
   const date = local(digitalOn);
   if (!date) return null;
-  if (digitalOn <= today) return { label: 'Streaming since', value: `${MONTHS[date.getMonth()]} ${date.getFullYear()}` };
-  return { label: 'Streaming from', value: `${MONTHS[date.getMonth()]} ${date.getDate()}` };
+  if (digitalOn <= today) {
+    return {
+      label: 'browse.movie.details.streamingSince',
+      value: { key: 'browse.dates.monthYear', vars: { month: { key: MONTH_KEYS[date.getMonth()]! }, year: date.getFullYear() } },
+    };
+  }
+  return { label: 'browse.movie.details.streamingFrom', value: monthDay(date) };
 }
 
-/** "2nd watch" above the log sheet's buttons when a diary row exists; null for the first. */
-export function watchOrdinal(existingWatches: number): string | null {
+/**
+ * "2nd watch" above the log sheet's buttons when a diary row exists; null for
+ * the first. English's suffix picks the key; Spanish says all four alike.
+ */
+export function watchOrdinal(existingWatches: number): Phrase | null {
   if (existingWatches <= 0) return null;
   const n = existingWatches + 1;
   const mod100 = n % 100;
-  const suffix = mod100 >= 11 && mod100 <= 13 ? 'th' : n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th';
-  return `${n}${suffix} watch`;
+  const key: TranslationKey =
+    mod100 >= 11 && mod100 <= 13
+      ? 'browse.log.movie.watchTh'
+      : n % 10 === 1
+        ? 'browse.log.movie.watchSt'
+        : n % 10 === 2
+          ? 'browse.log.movie.watchNd'
+          : n % 10 === 3
+            ? 'browse.log.movie.watchRd'
+            : 'browse.log.movie.watchTh';
+  return { key, vars: { count: n } };
 }

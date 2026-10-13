@@ -28,6 +28,7 @@ import { useEffect, useRef } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { t as translateNow, useT } from '@/lib/i18n';
 import { invalidateEntry, invalidateRanking } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { ErrorLine, Icon, useTheme } from '@/ui';
@@ -38,7 +39,9 @@ import { ActionsRow, StatusRow } from './game-actions';
 import { AboutSection, DetailsSection } from './game-details';
 import { GameHeader, ScoreLine } from './game-header';
 import { PlatformsSection } from './game-platforms';
+import { backTitle } from './back-title';
 import { confirmDestructive, showActionSheet, showInfo, type SheetChoice } from './native-menus';
+import { say } from './phrase';
 import { scoreLineItems } from './score-line';
 import { primaryAction, secondaryAction, statusChoices, statusLine } from './status';
 import { useEntryWrite, useGamePage, usePlayedPlatforms, usePlayerCount } from './use-game';
@@ -50,13 +53,14 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 
 /** Everything that fails the same way says so the same way. */
 function writeFailed() {
-  Alert.alert('Could not save', 'Check your connection and try again.');
+  Alert.alert(translateNow('browse.game.couldNotSave'), translateNow('browse.tryAgain'));
 }
 
 export function GamePageScreen() {
   const params = useLocalSearchParams<{ id: string; from?: string; log?: string }>();
   const id = firstParam(params.id) ?? '';
-  const from = firstParam(params.from);
+  const t = useT();
+  const from = backTitle(firstParam(params.from), t);
   const opensLog = firstParam(params.log) === '1';
 
   const theme = useTheme();
@@ -100,10 +104,10 @@ export function GamePageScreen() {
         return;
       }
 
-      Alert.alert('Already ranked', 'This game is already in your ranking.', [
-        { text: 'Keep', style: 'cancel' },
+      Alert.alert(t('browse.game.alreadyRankedTitle'), t('browse.game.alreadyRankedMessage'), [
+        { text: t('browse.game.keep'), style: 'cancel' },
         {
-          text: 'Re-rank',
+          text: t('browse.game.reRank'),
           onPress: () => {
             void removeRankingEntry(supabase, id)
               .then(() => {
@@ -138,13 +142,13 @@ export function GamePageScreen() {
     page?.entry
       ? [
           {
-            label: 'Remove from library',
+            label: t('browse.game.removeFromLibrary'),
             destructive: true,
             onPress: () =>
               confirmDestructive({
-                title: 'Remove from library',
-                message: 'This stops tracking the game. Your ranking is not affected.',
-                confirmLabel: 'Remove',
+                title: t('browse.game.removeFromLibrary'),
+                message: t('browse.game.removeMessage'),
+                confirmLabel: t('browse.game.remove'),
                 onConfirm: () => run(() => removeEntry(supabase, id)),
               }),
           },
@@ -156,7 +160,7 @@ export function GamePageScreen() {
       title: page?.title,
       choices: [
         ...statusChoices(release).map(({ status, label }) => ({
-          label,
+          label: t(label),
           onPress: () => run(() => setStatus(supabase, id, status)),
         })),
         ...removeChoice(),
@@ -166,12 +170,12 @@ export function GamePageScreen() {
   const openEllipsisMenu = () =>
     showActionSheet({
       choices: [
-        { label: 'Change status…', onPress: openStatusMenu },
+        { label: t('browse.game.changeStatus'), onPress: openStatusMenu },
         ...removeChoice(),
         ...(page
           ? [
               {
-                label: 'Open on IGDB',
+                label: t('browse.game.openOnIgdb'),
                 onPress: () => {
                   void Linking.openURL(
                     `https://www.igdb.com/search?type=1&q=${encodeURIComponent(page.title)}`,
@@ -194,7 +198,7 @@ export function GamePageScreen() {
         headerRight: () => (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="More"
+            accessibilityLabel={t('browse.game.more')}
             hitSlop={10}
             onPress={openEllipsisMenu}
             style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
@@ -219,7 +223,7 @@ export function GamePageScreen() {
       <View style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
         {header}
         <ErrorLine
-          message={query.isError ? "We couldn't load this game." : 'This game is not in the catalog.'}
+          message={query.isError ? t('browse.game.loadError') : t('browse.game.notInCatalog')}
           onRetry={query.isError ? () => void query.refetch() : undefined}
         />
       </View>
@@ -304,7 +308,9 @@ export function GamePageScreen() {
           <DetailsSection
             rows={rows}
             onAdd={openDetailsSheet}
-            onTimeToBeat={() => showInfo('Time to beat', breakdown.join('\n'))}
+            onTimeToBeat={() =>
+              showInfo(t('browse.game.timeToBeat.title'), breakdown.map((line) => say(t, line)).join('\n'))
+            }
             onHours={openHours}
           />
         ) : null}

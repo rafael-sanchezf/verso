@@ -19,14 +19,18 @@
 import type { ReleaseState } from '@verso/api';
 
 import { releaseDate } from '../../lib/format';
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
+import type { Phrase } from '../game/phrase';
 
 /** Which row was tapped. */
 export type Choice = 'backlog' | 'playing' | 'finished' | 'watched';
 
+/** The words are dictionary keys and phrases the sheet says (the Spanish wave). */
 export interface AddOption {
   choice: Choice;
-  title: string;
-  description: string;
+  title: TranslationKey;
+  description: Phrase;
   /** The filled `brand/primary` row: the one that starts the ranking loop. */
   filled: boolean;
 }
@@ -37,9 +41,24 @@ export interface AddSheetRows {
 
 const RELEASED: AddSheetRows = {
   options: [
-    { choice: 'backlog', title: 'Backlog', description: 'Play it later', filled: false },
-    { choice: 'playing', title: 'Playing now', description: 'Started it', filled: false },
-    { choice: 'finished', title: 'I finished this', description: 'Rank it now', filled: true },
+    {
+      choice: 'backlog',
+      title: 'browse.search.addSheet.backlog',
+      description: { key: 'browse.search.addSheet.backlogBody' },
+      filled: false,
+    },
+    {
+      choice: 'playing',
+      title: 'browse.search.addSheet.playing',
+      description: { key: 'browse.search.addSheet.playingBody' },
+      filled: false,
+    },
+    {
+      choice: 'finished',
+      title: 'browse.search.addSheet.finished',
+      description: { key: 'browse.search.addSheet.finishedBody' },
+      filled: true,
+    },
   ],
 };
 
@@ -56,7 +75,7 @@ export function addSheetRows(release: ReleaseState, now: Date = new Date()): Add
     options: [
       {
         choice: 'backlog',
-        title: 'Want to play',
+        title: 'browse.search.addSheet.wantToPlay',
         description: unreleasedDescription(release.releaseDate, now),
         filled: false,
       },
@@ -72,9 +91,11 @@ export function addSheetRows(release: ReleaseState, now: Date = new Date()): Add
  * same game: the catalog stores no precision, and a far date spelled to the
  * day would be inventing one (rule 9).
  */
-function unreleasedDescription(date: string | null, now: Date): string {
+function unreleasedDescription(date: string | null, now: Date): Phrase {
   const out = releaseDate(date, now);
-  return out === null ? 'Release date to be announced' : `Out ${out} · shows in Coming up`;
+  return out === null
+    ? { key: 'browse.search.addSheet.toBeAnnounced' }
+    : { key: 'browse.search.addSheet.outOn', vars: { date: out } };
 }
 
 /**
@@ -86,7 +107,17 @@ function unreleasedDescription(date: string | null, now: Date): string {
  */
 export const FILM_ROWS: AddSheetRows = {
   options: [
-    { choice: 'backlog', title: 'Want to watch', description: 'On your watchlist or calendar', filled: false },
-    { choice: 'watched', title: 'I watched this', description: 'Log it, then rank it if you like', filled: true },
+    {
+      choice: 'backlog',
+      title: 'browse.search.addSheet.wantToWatch',
+      description: { key: 'browse.search.addSheet.wantToWatchBody' },
+      filled: false,
+    },
+    {
+      choice: 'watched',
+      title: 'browse.search.addSheet.watched',
+      description: { key: 'browse.search.addSheet.watchedBody' },
+      filled: true,
+    },
   ],
 };

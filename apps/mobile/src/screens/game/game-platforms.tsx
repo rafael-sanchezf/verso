@@ -25,6 +25,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { platformGlyphs } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { Icon, PlatformChip, PlatformIcon, Pressed, Text, useTheme } from '@/ui';
 
 import type { PlatformPlayed } from '@verso/api';
@@ -62,6 +63,7 @@ export function PlatformsSection({
   onToggle: (name: string) => void;
   onOpenPicker: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
 
   if (platforms.length === 0) return null;
@@ -84,7 +86,7 @@ export function PlatformsSection({
   return (
     <View style={{ gap: theme.space[3] }}>
       <Text size={18} weight={700}>
-        Platforms
+        {t('browse.game.platforms.title')}
       </Text>
 
       {/*
@@ -118,7 +120,7 @@ export function PlatformsSection({
           would be a promise the line does not keep.
         */}
         <Text size={14} color="text/secondary">
-          Played on
+          {t('browse.game.platforms.playedOn')}
         </Text>
 
         <View style={styles.spacer} />
@@ -141,7 +143,7 @@ export function PlatformsSection({
           words because an empty box beside "Played on" alone reads as "no".
         */}
         <Text size={14} weight={500}>
-          {played.length === 0 ? 'Not recorded ›' : '›'}
+          {played.length === 0 ? t('browse.game.platforms.notRecorded') : '›'}
         </Text>
       </Pressed>
     </View>

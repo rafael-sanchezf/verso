@@ -11,6 +11,7 @@ import { coverCandidates } from '@verso/api';
 import { StyleSheet, View } from 'react-native';
 
 import { genres as formatGenres } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { Cover, ScoreBadge, Text, joinParts, useTheme } from '@/ui';
 
 import type { ScoreLineItem } from './score-line';
@@ -54,6 +55,7 @@ export function GameHeader({ page }: { page: GamePage }) {
  * sizes and a truncated review phrase would say something else entirely.
  */
 export function ScoreLine({ items }: { items: ScoreLineItem[] }) {
+  const t = useT();
   const theme = useTheme();
 
   if (items.length === 0) return null;
@@ -70,7 +72,7 @@ export function ScoreLine({ items }: { items: ScoreLineItem[] }) {
             </Text>
           )}
           <Text size={12} color="text/secondary">
-            {item.label}
+            {t(item.label)}
           </Text>
         </View>
       ))}

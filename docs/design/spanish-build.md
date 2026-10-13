@@ -72,6 +72,18 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | TV / Books (the held media) | TV / Libros | Verso; wave 3, the media questionnaire |
 | place (a game in the list) / placed by us | ubicar / ubicado por nosotros | Verso; wave 3, the session and the review |
 | Slide (the untouched deck slider) | Desliza | Verso; wave 3 |
+| Up next (Home's block) / Coming up | A continuación / Próximamente | Apple Music's Up Next, Apple TV's Coming Soon; wave 4 |
+| Recent / Popular (Search's sections) | Recientes / Populares | Apple; wave 4 |
+| Details / About / Clear (a field) | Detalles / Acerca de / Borrar | Apple; wave 4 |
+| Where to watch / Rent / Buy / In theaters | Dónde ver / Alquilar / Comprar / En cines | Apple TV; wave 4 |
+| Cast / Runtime | Reparto / Duración | Apple TV; wave 4 |
+| I finished this / I watched this | Lo terminé / La vi | Verso; wave 4 |
+| Want to play / Want to watch | Quiero jugarlo / Quiero verla | Verso; wave 4 |
+| Played on / Not recorded | Jugado en / Sin registrar | Verso; wave 4 |
+| Time to beat | Para terminarlo | Verso; IGDB's average; wave 4 |
+| a watch (a diary row) / Log another watch | vez / Registrar otra vez | Verso; "2.ª vez"; wave 4 |
+| Move up / Move down (the confirm step) | Subir / Bajar | Verso; wave 4 |
+| You (the score line) | Tú | Verso; wave 4 |
 | Steam / Letterboxd / Game Pass / PlayStation / Xbox / Switch | unchanged | Names |
 
 ## The rules for every wave

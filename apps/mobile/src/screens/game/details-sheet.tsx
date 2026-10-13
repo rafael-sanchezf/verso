@@ -31,6 +31,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { ErrorLine, FieldLabel, fontFamilyFor, SheetFrame, Text, TextButton, useTheme } from '@/ui';
 
@@ -93,6 +94,7 @@ function DateField({
   onChange: (date: Date) => void;
   onClear?: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const date = dateOf(value);
 
@@ -115,16 +117,19 @@ function DateField({
               if (picked) onChange(picked);
             }}
           />
-          {onClear ? <TextButton label="Clear" size={14} color="text/secondary" onPress={onClear} /> : null}
+          {onClear ? (
+            <TextButton label={t('browse.game.detailsSheet.clear')} size={14} color="text/secondary" onPress={onClear} />
+          ) : null}
         </View>
       ) : (
-        <TextButton label="Add" size={15} onPress={() => onChange(new Date())} />
+        <TextButton label={t('browse.game.detailsSheet.add')} size={15} onPress={() => onChange(new Date())} />
       )}
     </View>
   );
 }
 
 export function DetailsSheet({ id }: { id: string }) {
+  const t = useT();
   const theme = useTheme();
   const query = useGamePage(id);
   const { save, pending, dismiss } = useSheetSave(id);
@@ -143,17 +148,26 @@ export function DetailsSheet({ id }: { id: string }) {
 
   if (query.isError) {
     return (
-      <SheetFrame title="Details" onCancel={dismiss} onSave={dismiss} saveLabel="Done">
-        <ErrorLine message="We couldn't load this game." onRetry={() => void query.refetch()} />
+      <SheetFrame
+        title={t('browse.game.detailsSheet.title')}
+        onCancel={dismiss}
+        onSave={dismiss}
+        saveLabel={t('browse.game.done')}>
+        <ErrorLine message={t('browse.game.loadError')} onRetry={() => void query.refetch()} />
       </SheetFrame>
     );
   }
 
   if (!draft) {
     return (
-      <SheetFrame title="Details" onCancel={dismiss} onSave={dismiss} saveLabel="Done" saveDisabled>
+      <SheetFrame
+        title={t('browse.game.detailsSheet.title')}
+        onCancel={dismiss}
+        onSave={dismiss}
+        saveLabel={t('browse.game.done')}
+        saveDisabled>
         <Text size={15} color="text/secondary">
-          Loading…
+          {t('browse.game.detailsSheet.loading')}
         </Text>
       </SheetFrame>
     );
@@ -185,17 +199,22 @@ export function DetailsSheet({ id }: { id: string }) {
   };
 
   return (
-    <SheetFrame title="Details" onCancel={dismiss} onSave={onSave} saveDisabled={pending}>
+    <SheetFrame
+      title={t('browse.game.detailsSheet.title')}
+      onCancel={dismiss}
+      onSave={onSave}
+      saveLabel={t('common.save')}
+      saveDisabled={pending}>
       <View>
         <DateField
-          label="Started"
+          label={t('browse.game.detailsSheet.started')}
           value={draft.startedAt}
           onChange={(date) => patch({ startedAt: date.toISOString() })}
           onClear={() => patch({ startedAt: null })}
         />
         {played ? (
           <DateField
-            label="Finished"
+            label={t('browse.game.detailsSheet.finished')}
             value={draft.finishedAt}
             onChange={(date) => patch({ finishedAt: todayLocal(date) })}
           />
@@ -203,7 +222,7 @@ export function DetailsSheet({ id }: { id: string }) {
       </View>
 
       <View style={{ gap: theme.space[2] }}>
-        <FieldLabel>Hours played</FieldLabel>
+        <FieldLabel>{t('browse.game.detailsSheet.hoursPlayed')}</FieldLabel>
         <TextInput
           value={draft.hours}
           onChangeText={(hours) => patch({ hours })}
@@ -211,7 +230,7 @@ export function DetailsSheet({ id }: { id: string }) {
           inputMode="decimal"
           placeholder="0"
           placeholderTextColor={theme.colors['text/secondary']}
-          accessibilityLabel="Hours played"
+          accessibilityLabel={t('browse.game.detailsSheet.hoursPlayed')}
           style={[
             styles.input,
             {
@@ -227,14 +246,14 @@ export function DetailsSheet({ id }: { id: string }) {
       </View>
 
       <View style={{ gap: theme.space[2] }}>
-        <FieldLabel>Notes</FieldLabel>
+        <FieldLabel>{t('browse.game.detailsSheet.notes')}</FieldLabel>
         <TextInput
           value={draft.notes}
           onChangeText={(notes) => patch({ notes })}
           multiline
-          placeholder="Anything worth remembering"
+          placeholder={t('browse.game.detailsSheet.notesPlaceholder')}
           placeholderTextColor={theme.colors['text/secondary']}
-          accessibilityLabel="Notes"
+          accessibilityLabel={t('browse.game.detailsSheet.notes')}
           style={[
             styles.input,
             styles.notes,

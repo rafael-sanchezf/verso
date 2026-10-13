@@ -18,6 +18,9 @@
 import type { EntryRow } from '@verso/api';
 
 import { personalDate, platformShortName, platforms, playtime, timeToBeat } from '../../lib/format';
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
+import { MONTH_KEYS, type Words } from '../game/phrase';
 
 /**
  * The separator every subtitle in the specs is written with.
@@ -26,9 +29,11 @@ import { personalDate, platformShortName, platforms, playtime, timeToBeat } from
  * imports `react-native`, which cannot be loaded in the node environment these
  * rules are tested in. Four lines of duplication buys the tests.
  */
-function join(parts: readonly (string | null)[]): string | null {
-  const present = parts.filter((part): part is string => Boolean(part && part.trim()));
-  return present.length === 0 ? null : present.join(' · ');
+function join(parts: readonly (Words | null)[]): Words[] | null {
+  const present = parts.filter(
+    (part): part is Words => part !== null && (typeof part !== 'string' || part.trim() !== ''),
+  );
+  return present.length === 0 ? null : present;
 }
 
 /**
@@ -60,8 +65,11 @@ function first(list: readonly string[] | null | undefined): string | null {
  * missing at once — a game with nothing recorded, no catalog platforms, no
  * hours and no started date returns null, and rule 9 says the line does not
  * render rather than rendering blank.
+ *
+ * The line comes back as its parts, data or a phrase, which the card says and
+ * joins with ` · ` (`sayJoined`), so "Started" can be said in Spanish.
  */
-export function playingSubtitle(row: EntryRow, now: Date = new Date()): string | null {
+export function playingSubtitle(row: EntryRow, now: Date = new Date()): Words[] | null {
   // Three, then "+2", as README.md's platform rule has it; Home joins with ", ".
   const played = platforms(row.entry.playedPlatforms, ', ');
   const where = played ?? first(row.platforms);
@@ -70,9 +78,9 @@ export function playingSubtitle(row: EntryRow, now: Date = new Date()): string |
   if (hours) return join([where, hours]);
 
   const started = personalDate(row.entry.startedAt, now);
-  if (started) return join([where, `Started ${started}`]);
+  if (started) return join([where, { key: 'browse.home.playing.started', vars: { date: started } }]);
 
-  return where;
+  return join([where]);
 }
 
 /**
@@ -104,21 +112,6 @@ export function comingUpSubtitle(row: EntryRow): string | null {
   return first(row.platforms);
 }
 
-const MONTHS = [
-  'JAN',
-  'FEB',
-  'MAR',
-  'APR',
-  'MAY',
-  'JUN',
-  'JUL',
-  'AUG',
-  'SEP',
-  'OCT',
-  'NOV',
-  'DEC',
-] as const;
-
 /**
  * The two lines of a Coming up date column. A null month leaves the year alone.
  *
@@ -128,8 +121,12 @@ const MONTHS = [
  * and every cover in the block sits at the same x (phone-feedback entry 13).
  */
 export interface DateColumn {
-  /** `SEP`, or null when the catalog's date is not precise enough to name a month. */
-  month: string | null;
+  /**
+   * The month's short name as a dictionary key (`browse.dates.months.sep`),
+   * which the column says in capitals (`SEP`), or null when the catalog's date
+   * is not precise enough to name a month.
+   */
+  month: TranslationKey | null;
   /** The day of the month, when the date is close enough to trust the day. */
   day: string | null;
   /** The year, when that is all the second line is worth. */
@@ -164,7 +161,7 @@ export function comingUpDate(value: string | null | undefined, now: Date = new D
   const date = parseLocalDate(value);
   if (!date) return null;
 
-  const month = MONTHS[date.getMonth()]!;
+  const month = MONTH_KEYS[date.getMonth()]!;
   const year = String(date.getFullYear());
   const years = date.getFullYear() - now.getFullYear();
   if (years <= 0) return { month, day: String(date.getDate()), year: null };
@@ -224,15 +221,16 @@ export type PlayingEmptyAction = 'pick-from-backlog' | 'search-new';
 
 /** The empty Playing card: its sentence, and none, one or two buttons. */
 export interface PlayingEmptyCard {
-  body: string;
+  /** The sentence and the buttons' words are dictionary keys the block says. */
+  body: TranslationKey;
   /** The green button, or null for the first-run card, which has none. */
-  primary: { action: PlayingEmptyAction; label: string } | null;
+  primary: { action: PlayingEmptyAction; label: TranslationKey } | null;
   /** The quiet button under it, or null. */
-  secondary: { action: PlayingEmptyAction; label: string } | null;
+  secondary: { action: PlayingEmptyAction; label: TranslationKey } | null;
 }
 
-const PICK_FROM_BACKLOG = { action: 'pick-from-backlog', label: 'Pick from backlog' } as const;
-const SEARCH_NEW = { action: 'search-new', label: 'Search a new game' } as const;
+const PICK_FROM_BACKLOG = { action: 'pick-from-backlog', label: 'browse.home.playing.pickFromBacklog' } as const;
+const SEARCH_NEW = { action: 'search-new', label: 'browse.home.playing.searchNewGame' } as const;
 
 /**
  * What the Playing block says when nothing is playing (home.md, Playing empty,
@@ -258,15 +256,15 @@ const SEARCH_NEW = { action: 'search-new', label: 'Search a new game' } as const
 export function playingEmptyCard(state: { firstRun: boolean; backlog: number | null }): PlayingEmptyCard {
   if (state.firstRun) {
     return {
-      body: 'Start a game from your backlog and it shows up here.',
+      body: 'browse.home.playing.emptyFirstRun',
       primary: null,
       secondary: null,
     };
   }
   if (state.backlog === 0) {
-    return { body: "Search for the game you're playing.", primary: SEARCH_NEW, secondary: null };
+    return { body: 'browse.home.playing.emptyNoBacklog', primary: SEARCH_NEW, secondary: null };
   }
-  return { body: 'Start a game from your backlog.', primary: PICK_FROM_BACKLOG, secondary: SEARCH_NEW };
+  return { body: 'browse.home.playing.emptyBacklog', primary: PICK_FROM_BACKLOG, secondary: SEARCH_NEW };
 }
 
 /** The Playing block's two shapes: the hero, and the small cards under it. */

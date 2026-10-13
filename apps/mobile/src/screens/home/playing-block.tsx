@@ -10,6 +10,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import type { EntryRow } from '@verso/api';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { coverHeight, EmptyState, EmptyStateCard, ErrorLine, Skeleton, useTheme } from '@/ui';
 import { BlockTitle } from './block';
 
@@ -45,11 +46,12 @@ export interface PlayingBlockProps {
 }
 
 export function PlayingBlock(props: PlayingBlockProps) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <View style={{ paddingHorizontal: theme.space[4], gap: theme.space[3] }}>
-      <BlockTitle>Playing</BlockTitle>
+      <BlockTitle>{t('browse.home.playing.title')}</BlockTitle>
       <PlayingBody {...props} />
     </View>
   );
@@ -63,6 +65,7 @@ function PlayingBody({
   onPickFromBacklog,
   onSearchNew,
 }: PlayingBlockProps) {
+  const t = useT();
   const theme = useTheme();
 
   if (query.isPending) {
@@ -78,7 +81,7 @@ function PlayingBody({
   }
 
   if (query.isError) {
-    return <ErrorLine message="Couldn't load what you're playing." onRetry={() => void query.refetch()} />;
+    return <ErrorLine message={t('browse.home.playing.loadError')} onRetry={() => void query.refetch()} />;
   }
 
   const { hero, alsoPlaying } = splitPlaying(query.data);
@@ -90,14 +93,14 @@ function PlayingBody({
       'search-new': onSearchNew,
     };
     const button = (spec: typeof card.primary) =>
-      spec ? { label: spec.label, onPress: handlers[spec.action] } : undefined;
+      spec ? { label: t(spec.label), onPress: handlers[spec.action] } : undefined;
 
     return (
       <EmptyStateCard>
         <EmptyState
           icon="play"
-          title="Nothing playing"
-          body={card.body}
+          title={t('browse.home.playing.emptyTitle')}
+          body={t(card.body)}
           action={button(card.primary)}
           secondaryAction={button(card.secondary)}
         />

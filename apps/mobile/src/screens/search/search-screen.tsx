@@ -43,6 +43,7 @@ import { Pressable, ScrollView, StyleSheet, View, type TextInput } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -50,6 +51,7 @@ import { releaseDateOf, whenReleased } from '@/lib/when-released';
 import { SESSION_HREF } from '@/screens/onboarding/session/routes';
 import { fromPopularRow, fromSearchRow } from '@/screens/onboarding/rows';
 import { startSession } from '@/screens/onboarding/session/session-store';
+import { say as sayWords } from '@/screens/game/phrase';
 import { Button, EmptyState, ErrorLine, Icon, ListRow, MediumChip, ScreenHeader, Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -83,6 +85,7 @@ const RESULT_LIMIT = 20;
 const POPULAR_COUNT = 5;
 
 export function SearchScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -223,7 +226,7 @@ export function SearchScreen() {
           invalidateEntry(queryClient, row.mediaItemId);
           setAddMany((current) => afterMarked(current, row, outcome.value.alreadyRanked));
         })
-        .catch(() => alert("Couldn't add it", 'Check your connection and try again.'))
+        .catch(() => alert(t('browse.search.couldNotAdd'), t('browse.tryAgain')))
         .finally(() =>
           setAdding((current) => {
             const next = new Set(current);
@@ -232,7 +235,7 @@ export function SearchScreen() {
           }),
         );
     },
-    [openAdd, queryClient, remember, trimmed],
+    [openAdd, queryClient, remember, t, trimmed],
   );
 
   const rankAdded = () => {
@@ -279,20 +282,20 @@ export function SearchScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors['bg/canvas'], paddingTop: insets.top }]}>
       <ScreenHeader
-        title={intent === 'addmany' ? 'Add many' : 'Search'}
+        title={intent === 'addmany' ? t('browse.search.addManyTitle') : t('browse.search.title')}
         right={intent === 'addmany' ? <AddedChip count={addMany.added.length} /> : <MediumChip />}
       />
 
-      {intent === 'playing' ? <IntentHint text="Pick the game you're playing" /> : null}
+      {intent === 'playing' ? <IntentHint text={t('browse.search.playingHint')} /> : null}
       {intent === 'addmany' && addMany.alreadyRanked ? (
-        <IntentHint text={alreadyRankedLine(addMany.alreadyRanked)} />
+        <IntentHint text={sayWords(t, alreadyRankedLine(addMany.alreadyRanked))} />
       ) : null}
 
       <SearchField
         value={query}
         onChangeValue={setQuery}
         inputRef={input}
-        placeholder={film ? 'Search films' : 'Search games'}
+        placeholder={film ? t('browse.search.placeholderFilms') : t('browse.search.placeholderGames')}
       />
 
       {searching && !loading && !results.isError && hits.length === 0 ? (
@@ -327,14 +330,14 @@ export function SearchScreen() {
           ) : (
             <>
               {recent.length > 0 ? (
-                <Section title="Recent">
+                <Section title={t('browse.search.recent')}>
                   {recent.slice(0, RECENT_SHOWN).map((entry) => (
                     <RecentRow key={entry} query={entry} onPress={() => setQuery(entry)} />
                   ))}
                 </Section>
               ) : null}
 
-              <Section title="Popular">
+              <Section title={t('browse.search.popular')}>
                 <Popular
                   film={film}
                   rows={popular.data}
@@ -357,7 +360,7 @@ export function SearchScreen() {
 
       {intent === 'addmany' && addMany.added.length > 0 ? (
         <View style={{ paddingHorizontal: theme.space[4], paddingVertical: theme.space[3] }}>
-          <Button label={rankAddedLabel(addMany.added.length)} onPress={rankAdded} />
+          <Button label={sayWords(t, rankAddedLabel(addMany.added.length))} onPress={rankAdded} />
         </View>
       ) : null}
     </View>
@@ -374,11 +377,13 @@ interface AddManyControls {
 
 /** The add-many header's counter: "{n} added" on the brand green. */
 function AddedChip({ count }: { count: number }) {
+  const t = useT();
   const theme = useTheme();
+  const label = sayWords(t, addedChipLabel(count));
 
   return (
     <View
-      accessibilityLabel={addedChipLabel(count)}
+      accessibilityLabel={label}
       style={{
         backgroundColor: theme.colors['brand/primary'],
         borderRadius: theme.radius.pill,
@@ -386,7 +391,7 @@ function AddedChip({ count }: { count: number }) {
         paddingVertical: 6,
       }}>
       <Text size={13} weight={600} color="brand/on-primary">
-        {addedChipLabel(count)}
+        {label}
       </Text>
     </View>
   );
@@ -394,12 +399,13 @@ function AddedChip({ count }: { count: number }) {
 
 /** ADDED, under the results: what "Rank {n} games" will take into the session. */
 function AddedList({ rows }: { rows: readonly OnboardingGameRow[] }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <View style={{ gap: theme.space[1] }}>
       <Text size={12} weight={600} color="text/secondary">
-        ADDED
+        {t('browse.search.added')}
       </Text>
       {rows.map((row) => (
         <ListRow
@@ -434,12 +440,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** One remembered query: the clock, the words, and a tap that runs it again. */
 function RecentRow({ query, onPress }: { query: string; onPress: () => void }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Search for ${query}`}
+      accessibilityLabel={t('browse.search.searchFor', { query })}
       onPress={onPress}
       style={({ pressed }) => [
         styles.recent,
@@ -560,8 +567,9 @@ function Results({
   hits: SearchGameRow[];
   onRetry: () => void;
 }) {
+  const t = useT();
   if (loading) return <GameRowSkeletons count={6} />;
-  if (error) return <ErrorLine message="Couldn't search just now." onRetry={onRetry} />;
+  if (error) return <ErrorLine message={t('browse.search.loadError')} onRetry={onRetry} />;
 
   return (
     <View>
@@ -606,12 +614,13 @@ function IntentHint({ text }: { text: string }) {
  * already looking at.
  */
 function NoResults({ query, film }: { query: string; film: boolean }) {
+  const t = useT();
   return (
     <View style={[styles.fill, styles.centre, { paddingBottom: 120 }]}>
       <EmptyState
         icon="search"
-        title={`No ${film ? 'films' : 'games'} match “${query}”`}
-        body="Check the spelling or try a shorter title."
+        title={t(film ? 'browse.search.noFilms' : 'browse.search.noGames', { query })}
+        body={t('browse.search.noResultsBody')}
       />
     </View>
   );

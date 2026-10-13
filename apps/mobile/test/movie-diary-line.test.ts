@@ -5,7 +5,35 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { diaryLine, streamingRow, theatricalLine, watchOrdinal } from '../src/screens/movie/diary-line';
+import {
+  diaryLine as diaryPhrase,
+  streamingRow as streamingPhrase,
+  theatricalLine as theatricalPhrase,
+  watchOrdinal as watchOrdinalPhrase,
+} from '../src/screens/movie/diary-line';
+
+import { english } from './english';
+
+/** The lines as the page says them in English (the module returns phrases). */
+function diaryLine(...args: Parameters<typeof diaryPhrase>) {
+  const line = diaryPhrase(...args);
+  return { ...line, text: line.text && english(line.text) };
+}
+
+function theatricalLine(...args: Parameters<typeof theatricalPhrase>) {
+  const line = theatricalPhrase(...args);
+  return line && { ...line, text: english(line.text) };
+}
+
+function streamingRow(...args: Parameters<typeof streamingPhrase>) {
+  const row = streamingPhrase(...args);
+  return row && { label: english(row.label), value: english(row.value) };
+}
+
+function watchOrdinal(existingWatches: number): string | null {
+  const ordinal = watchOrdinalPhrase(existingWatches);
+  return ordinal && english(ordinal);
+}
 
 const NOW = new Date(2026, 9, 12);
 

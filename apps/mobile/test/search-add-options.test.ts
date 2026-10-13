@@ -3,13 +3,22 @@ import { describe, expect, it } from 'vitest';
 
 import { addSheetRows } from '../src/screens/search/add-options';
 
+import { english } from './english';
+
 /** A fixed "now" so nothing here depends on the day the suite runs. */
 const NOW = new Date(2026, 8, 23, 14, 30); // Wednesday 23 September 2026
 const TODAY = '2026-09-23';
 
-/** The rows for a game with this release date, as the sheet builds them. */
+/** The rows for a game with this release date, as the sheet builds them and says them in English. */
 function rowsFor(date: string | null, status?: 'released' | 'unreleased') {
-  return addSheetRows(releaseState(date, { today: TODAY, status }), NOW);
+  const rows = addSheetRows(releaseState(date, { today: TODAY, status }), NOW);
+  return {
+    options: rows.options.map((option) => ({
+      ...option,
+      title: english(option.title),
+      description: english(option.description),
+    })),
+  };
 }
 
 describe('addSheetRows for a released game', () => {

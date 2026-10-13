@@ -27,6 +27,7 @@ import { setStatus } from '@verso/api';
 import { useRouter } from 'expo-router';
 
 import { alert } from '@/lib/dialog';
+import { t } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -60,6 +61,6 @@ export function useStartPlaying() {
     // Nothing moved, so nothing to undo: the row is still there to tap again.
     // The iOS convention for a write that did not happen, as Home's long-press
     // menu does it (rule 7).
-    onError: () => alert("Couldn't mark it playing", 'Check your connection and try again.'),
+    onError: () => alert(t('browse.search.couldNotMarkPlaying'), t('browse.tryAgain')),
   });
 }

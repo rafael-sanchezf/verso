@@ -16,6 +16,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { ErrorLine, FieldLabel, fontFamilyFor, SheetFrame, Text, TextButton, useTheme } from '@/ui';
 
@@ -23,6 +24,7 @@ import { hoursFieldValue, minutesFromField } from './hours';
 import { useGamePage, useSheetSave } from './use-game';
 
 export function HoursSheet({ id }: { id: string }) {
+  const t = useT();
   const theme = useTheme();
   const query = useGamePage(id);
   const { save, pending, dismiss } = useSheetSave(id);
@@ -34,7 +36,8 @@ export function HoursSheet({ id }: { id: string }) {
 
   return (
     <SheetFrame
-      title="Hours played"
+      title={t('browse.game.hoursSheet.title')}
+      saveLabel={t('common.save')}
       scroll={false}
       onCancel={dismiss}
       onSave={() => save([() => logPlaytime(supabase, id, minutes, 'manual')])}
@@ -43,7 +46,7 @@ export function HoursSheet({ id }: { id: string }) {
         stored === null ? null : (
           <View style={styles.footer}>
             <TextButton
-              label="Clear"
+              label={t('browse.game.hoursSheet.clear')}
               color="text/destructive"
               onPress={() => save([() => logPlaytime(supabase, id, null)])}
             />
@@ -51,11 +54,11 @@ export function HoursSheet({ id }: { id: string }) {
         )
       }>
       {query.isError ? (
-        <ErrorLine message="We couldn't load this game." onRetry={() => void query.refetch()} />
+        <ErrorLine message={t('browse.game.loadError')} onRetry={() => void query.refetch()} />
       ) : null}
 
       <View style={{ gap: theme.space[2] }}>
-        <FieldLabel>Hours</FieldLabel>
+        <FieldLabel>{t('browse.game.hoursSheet.hours')}</FieldLabel>
         <View style={[styles.field, { gap: theme.space[2] }]}>
           <TextInput
             value={text}
@@ -66,7 +69,7 @@ export function HoursSheet({ id }: { id: string }) {
             placeholderTextColor={theme.colors['text/secondary']}
             autoFocus
             selectTextOnFocus
-            accessibilityLabel="Hours played"
+            accessibilityLabel={t('browse.game.hoursSheet.title')}
             style={[
               styles.input,
               {
@@ -80,11 +83,11 @@ export function HoursSheet({ id }: { id: string }) {
             ]}
           />
           <Text size={15} color="text/secondary">
-            h
+            {t('browse.game.hoursSheet.unit')}
           </Text>
         </View>
         <Text size={13} color="text/secondary">
-          Entered by hand. A figure imported from Steam says so instead.
+          {t('browse.game.hoursSheet.hint')}
         </Text>
       </View>
     </SheetFrame>

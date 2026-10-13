@@ -11,6 +11,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { coverCandidates, type EntryRow } from '@verso/api';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { coverHeight, ErrorLine, ListRow, Skeleton, Text, useTheme } from '@/ui';
 import { BlockTitle } from './block';
 
@@ -25,6 +26,7 @@ export interface ComingUpBlockProps {
 }
 
 export function ComingUpBlock({ query, onOpenGame }: ComingUpBlockProps) {
+  const t = useT();
   const theme = useTheme();
 
   // Nothing on the way, nothing to draw — not even the title.
@@ -32,7 +34,7 @@ export function ComingUpBlock({ query, onOpenGame }: ComingUpBlockProps) {
 
   return (
     <View style={{ paddingHorizontal: theme.space[4], gap: 6 }}>
-      <BlockTitle>Coming up</BlockTitle>
+      <BlockTitle>{t('browse.home.comingUp.title')}</BlockTitle>
 
       {query.isPending ? (
         <View style={{ gap: 6 }}>
@@ -42,7 +44,7 @@ export function ComingUpBlock({ query, onOpenGame }: ComingUpBlockProps) {
       ) : null}
 
       {query.isError ? (
-        <ErrorLine message="Couldn't load what's coming up." onRetry={() => void query.refetch()} />
+        <ErrorLine message={t('browse.home.comingUp.loadError')} onRetry={() => void query.refetch()} />
       ) : null}
 
       {query.data?.map((row) => (
@@ -91,6 +93,7 @@ const DATE_COLUMN_WIDTH = 44;
  * both lines shrink to fit rather than widen the column at large text sizes.
  */
 function ReleaseDate({ value }: { value: string | null }) {
+  const t = useT();
   const theme = useTheme();
   const date = comingUpDate(value);
 
@@ -104,7 +107,7 @@ function ReleaseDate({ value }: { value: string | null }) {
           color="text/secondary"
           numberOfLines={1}
           adjustsFontSizeToFit>
-          {date.month}
+          {t(date.month).toUpperCase()}
         </Text>
       ) : null}
       {date ? (

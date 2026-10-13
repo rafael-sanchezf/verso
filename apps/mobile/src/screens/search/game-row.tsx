@@ -18,6 +18,7 @@
 
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon, ListRow } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -110,14 +111,15 @@ function ControlPill({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
 
   const label =
     control === 'play'
-      ? `Mark ${title} as playing`
+      ? t('browse.search.row.markPlaying', { title })
       : tracked
-        ? `${title} is in your library. Change it`
-        : `Add ${title}`;
+        ? t('browse.search.row.inLibrary', { title })
+        : t('browse.search.row.add', { title });
 
   return (
     <Pressable
@@ -169,12 +171,15 @@ function AddManyCircle({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={added ? `${title}, added` : `Add ${title} as played`}
+      accessibilityLabel={
+        added ? t('browse.search.row.addedLabel', { title }) : t('browse.search.row.addAsPlayed', { title })
+      }
       accessibilityState={{ disabled: disabled || pending || added, busy: pending, selected: added }}
       disabled={disabled || pending || added}
       // A 28pt circle; the slop brings it to 44.

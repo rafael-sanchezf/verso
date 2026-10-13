@@ -14,14 +14,16 @@
 
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { coverHeight, Skeleton, useTheme } from '@/ui';
 
 /** The page's own shape in grey, while `['game', id]` is in flight. */
 export function GamePageSkeleton() {
+  const t = useT();
   const theme = useTheme();
 
   return (
-    <View style={{ padding: theme.space[4], gap: 18 }} accessibilityLabel="Loading">
+    <View style={{ padding: theme.space[4], gap: 18 }} accessibilityLabel={t('browse.game.loading')}>
       <View style={[styles.row, { gap: 14 }]}>
                 <Skeleton width={100} height={coverHeight(100)} radius={10} />
         <View style={[styles.column, { gap: theme.space[2] }]}>

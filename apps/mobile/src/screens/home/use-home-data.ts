@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { alert } from '@/lib/dialog';
+import { t } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -102,7 +103,7 @@ export interface PlayingActions {
  * (rule 7). Nothing in the frames covers this.
  */
 function failed(what: string): void {
-  alert(what, 'Check your connection and try again.');
+  alert(what, t('browse.tryAgain'));
 }
 
 export function usePlayingActions(): PlayingActions {
@@ -120,7 +121,7 @@ export function usePlayingActions(): PlayingActions {
       // (README.md, Params). Home does not open it itself.
       router.push({ pathname: '/game/[id]', params: { id, from: 'Home', log: '1' } });
     },
-    onError: () => failed("Couldn't mark it finished"),
+    onError: () => failed(t('browse.home.playing.couldNotFinish')),
   });
 
   const backlogMove = useMutation({
@@ -128,7 +129,7 @@ export function usePlayingActions(): PlayingActions {
     // The card leaves Playing on its own: `invalidateEntry` refetches
     // `['playing']` and the row is no longer in it.
     onSuccess: (_entry, id) => invalidateEntry(queryClient, id),
-    onError: () => failed("Couldn't move it to your backlog"),
+    onError: () => failed(t('browse.home.playing.couldNotMove')),
   });
 
   const logHours = useCallback(

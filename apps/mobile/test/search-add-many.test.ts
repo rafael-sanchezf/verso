@@ -4,12 +4,19 @@ import { describe, expect, it } from 'vitest';
 import {
   EMPTY_ADD_MANY,
   addManyPill,
-  addedChipLabel,
+  addedChipLabel as addedChipPhrase,
   afterMarked,
-  alreadyRankedLine,
+  alreadyRankedLine as alreadyRankedPhrase,
   isAdded,
-  rankAddedLabel,
+  rankAddedLabel as rankAddedPhrase,
 } from '../src/screens/search/add-many';
+
+import { english } from './english';
+
+/** The words as Search says them in English (the module returns phrases). */
+const addedChipLabel = (count: number) => english(addedChipPhrase(count));
+const rankAddedLabel = (count: number) => english(rankAddedPhrase(count));
+const alreadyRankedLine = (title: string) => english(alreadyRankedPhrase(title));
 
 describe('addManyPill', () => {
   const today = '2026-09-23';

@@ -16,6 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 
+import { t } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -99,7 +100,7 @@ export function useSheetSave(id: string) {
         },
         {
           onSuccess: dismiss,
-          onError: () => Alert.alert('Could not save', 'Check your connection and try again.'),
+          onError: () => Alert.alert(t('browse.game.couldNotSave'), t('browse.tryAgain')),
         },
       );
     },

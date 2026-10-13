@@ -17,8 +17,14 @@ import {
   filmSearchLine,
   tmdbScoreText,
 } from '../src/lib/film';
-import { whereToWatch } from '../src/screens/movie/where-to-watch';
+import { whereToWatch as watchChips } from '../src/screens/movie/where-to-watch';
 import { cardWidth, columnsAfterPinch, columnsStorageKey, parseColumns } from '../src/screens/watchlist/zoom';
+
+import { english } from './english';
+
+/** The chips as the page says them in English (a label may be a phrase). */
+const whereToWatch = (...args: Parameters<typeof watchChips>) =>
+  watchChips(...args).map((chip) => ({ ...chip, label: english(chip.label) }));
 
 describe('film genres', () => {
   it("names TMDB's genres the site's way and drops TV Movie", () => {
