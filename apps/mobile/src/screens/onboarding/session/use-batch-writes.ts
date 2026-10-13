@@ -15,11 +15,12 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { finishInsertion, logEvent } from '@verso/api';
+import { finishInsertion } from '@verso/api';
 import type { BatchFinishArgs } from '@verso/core';
 import { useRef, useState } from 'react';
 
 import { invalidateRanking } from '@/lib/invalidate';
+import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 
@@ -68,7 +69,7 @@ export function useBatchWrites(): BatchWrites {
     // Once, when the count first reaches ten (onboarding.md, "Events"). An
     // event that does not land is a lost data point, never a reason to hold
     // the user (events.ts), so it is neither awaited nor reported.
-    if (tenRanked) logEvent(supabase, 'ten_ranked', {}).catch(() => undefined);
+    if (tenRanked) logAppEvent('ten_ranked').catch(() => undefined);
     return true;
   };
 

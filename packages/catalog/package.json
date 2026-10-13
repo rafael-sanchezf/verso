@@ -16,6 +16,7 @@
     "opencritic-scores": "tsx src/cli.ts opencritic-scores",
     "availability": "tsx src/cli.ts availability",
     "tmdb-sync": "tsx src/cli.ts tmdb-sync",
+    "funnel": "tsx src/funnel-cli.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

@@ -13,12 +13,11 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { logEvent } from '@verso/api';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { APP_OPEN_KEY, appOpenDue, appOpenStamp, localDay } from './app-open';
-import { supabase } from './supabase';
+import { logAppEvent } from './log-event';
 
 export function useAppOpenEvent(userId: string | null): void {
   useEffect(() => {
@@ -32,7 +31,7 @@ export function useAppOpenEvent(userId: string | null): void {
         const day = localDay(new Date());
         const stored = await AsyncStorage.getItem(APP_OPEN_KEY).catch(() => null);
         if (!appOpenDue(stored, userId, day)) return;
-        await logEvent(supabase, 'app_open');
+        await logAppEvent('app_open');
         await AsyncStorage.setItem(APP_OPEN_KEY, appOpenStamp(userId, day));
       } catch {
         // Dropped on purpose: see the header.

@@ -439,6 +439,27 @@ Check after the merge: `curl -s https://rankverso.com | grep -c noindex` prints 
 - A bad commit: Instant Rollback on the production deployment's menu in project `rankverso` returns to the deployment before it (Hobby reaches only that one); merges then stay off production until Undo Rollback. Or revert the commit on `main`, which deploys like any other.
 - Back to the holding page: there is no one-step path any more. It would take setting the Root Directory back to `apps/holding` and redeploying, or a second project for the site as first planned here.
 
+## 12. The funnel report (about 5 minutes, after VER-21 merges)
+
+Unblocks: reading the onboarding funnel (signed up, first session, ten ranked, first pick, day-7 return), overall and by week of sign-up. `20261012120000_funnel_report.sql` adds `funnel_report` and `funnel_report_by_cohort`, which only the service role and the database owner may call; `pnpm funnel` connects as the owner with the database connection string and only reads. [specs/onboarding.md](../design/specs/onboarding.md), "Events", says what each number means.
+
+- [ ] Push the migration, then check the types match what the PR committed from the local stack (the diff should be empty):
+
+  ```bash
+  supabase db push
+  pnpm db:types && git diff --stat packages/api/src/database.types.ts
+  ```
+
+- [ ] Run the report. The connection string: the dashboard, the **Connect** button at the top of the project, **Session pooler**, the URI (`postgresql://postgres.<project-ref>:[YOUR-PASSWORD]@<pooler-host>:5432/postgres`); the password is the database password (Project Settings, Database, reset it if it is lost). `read -s` keeps it out of your shell history; it is never put in `.env` or any file in the repo.
+
+  ```bash
+  read -s 'DATABASE_URL?Connection string: '; echo; export DATABASE_URL
+  pnpm funnel --since 2026-10-13
+  unset DATABASE_URL
+  ```
+
+  `--since` is the first day of sign-ups to count (a UTC midnight); use the day the friends' build went out, so your own and the test accounts stay out. `--until` (exclusive) closes the window, for example `--since 2026-12-01 --until 2027-01-01` for the December cohort alone. Without either flag every account is counted. It prints two tables: the steps with their share of sign-ups, and one row per week of sign-up. The newest week's day-7 count reads low until that week is seven days old. The same numbers in the SQL editor: `select * from public.funnel_report('2026-10-13');` and `select * from public.funnel_report_by_cohort('2026-10-13');`.
+
 ## Reporting back
 
 One message listing the boxes ticked is enough; Claude records the dates in the roadmap and runs its own checks from the outside (the Steam link redirect, the RPCs, the workflow logs). If a step fails, paste the error text with any key blanked out.

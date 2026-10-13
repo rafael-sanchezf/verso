@@ -12,9 +12,10 @@
  * data point, never a reason to hold the user (events.ts).
  */
 
-import { logEvent, profileStats } from '@verso/api';
+import { profileStats } from '@verso/api';
 import type { QueryClient } from '@tanstack/react-query';
 
+import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 
@@ -25,7 +26,7 @@ export function logTenRankedIfReached(queryClient: QueryClient, added: number): 
   void queryClient
     .fetchQuery({ queryKey: queryKeys.profileStats(), queryFn: () => profileStats(supabase), staleTime: 0 })
     .then((stats) => {
-      if (crossesTenRanked(stats.ranked - added, stats.ranked)) return logEvent(supabase, 'ten_ranked');
+      if (crossesTenRanked(stats.ranked - added, stats.ranked)) return logAppEvent('ten_ranked');
       return undefined;
     })
     .catch(() => undefined);

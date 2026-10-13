@@ -23,6 +23,7 @@
     "catalog:availability": "pnpm --filter @verso/catalog run availability",
     "catalog:tmdb-sync": "pnpm --filter @verso/catalog run tmdb-sync",
     "catalog:tmdb-sync:full": "pnpm --filter @verso/catalog run tmdb-sync -- --full",
+    "funnel": "pnpm --filter @verso/catalog run funnel",
     "tokens:build": "pnpm --filter @verso/tokens run build",
     "tokens:check": "pnpm --filter @verso/tokens run check",
     "typecheck": "pnpm -r --if-present run typecheck",

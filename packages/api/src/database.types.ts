@@ -1219,6 +1219,36 @@ export type Database = {
         Returns: number
       }
       forget_steam_link_attempts: { Args: never; Returns: undefined }
+      funnel_report: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: {
+          step: string
+          step_order: number
+          users: number
+        }[]
+      }
+      funnel_report_by_cohort: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: {
+          cohort_week: string
+          day_7_return: number
+          first_pick: number
+          first_session: number
+          signed_up: number
+          ten_ranked: number
+        }[]
+      }
+      funnel_users: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: {
+          day_7_return: boolean
+          first_pick: boolean
+          first_session: boolean
+          signed_up_at: string
+          ten_ranked: boolean
+          user_id: string
+        }[]
+      }
       insert_ranking_entry: {
         Args: {
           p_media_item_id: string

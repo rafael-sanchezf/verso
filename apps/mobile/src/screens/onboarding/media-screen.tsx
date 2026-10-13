@@ -17,7 +17,7 @@
  * registered and the navigation would go nowhere.
  */
 
-import { getMyProfile, logEvent, setProfileMedia } from '@verso/api';
+import { getMyProfile, setProfileMedia } from '@verso/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -25,6 +25,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { invalidateProfile } from '@/lib/invalidate';
+import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { Button, Chip, ErrorLine, Icon, Text, useTheme } from '@/ui';
@@ -65,7 +66,7 @@ export function MediaScreen() {
       queryClient.setQueryData(queryKeys.profileMe(), stored);
       invalidateProfile(queryClient);
       // A lost event is a lost data point, never a reason to stop the user.
-      void logEvent(supabase, 'first_session').catch(() => undefined);
+      void logAppEvent('first_session').catch(() => undefined);
       if (afterMedia(new Set(media)) === 'platforms') router.push('/onboarding/platforms');
       else setToTabs(true);
     },
@@ -78,7 +79,7 @@ export function MediaScreen() {
   const onHeld = (medium: HeldMedium) => {
     const { notified: next, log } = tapHeld(notified, medium);
     setNotified(next);
-    if (log) void logEvent(supabase, 'media_interest', { medium }).catch(() => undefined);
+    if (log) void logAppEvent('media_interest', { medium }).catch(() => undefined);
   };
 
   return (

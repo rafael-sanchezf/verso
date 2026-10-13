@@ -68,7 +68,14 @@ A **new user** has no `profiles.media`. A **returning user** has media and platf
 
 ## Events (the funnel, wave A)
 
-`logEvent(client, kind, payload)` from `@verso/api`: `first_session` at Media's Continue; `ten_ranked` once, when the ranked count first reaches ten (the review's Done, or the single log flow); `media_interest` per held medium; `app_open` once per calendar day on foreground (a `lib/` hook, owner-only rows). `first_pick` waits for the finder.
+`logEvent(client, kind, payload)` from `@verso/api`, called through `logAppEvent` in `apps/mobile/src/lib/log-event.ts`, which adds `{ platform: Platform.OS }` ("ios", "android" or "web") to every payload so the web cohort can be told apart (web brief, question 10): `first_session` at Media's Continue; `ten_ranked` once, when the ranked count first reaches ten (the review's Done, or the single log flow); `media_interest` per held medium; `app_open` once per calendar day on foreground (a `lib/` hook, owner-only rows). `first_pick` waits for the finder.
+
+**The report** (2026-10-12, VER-21). `supabase/migrations/20261012120000_funnel_report.sql` adds `funnel_report(since, until)`, one row per step with the count of distinct users, and `funnel_report_by_cohort(since, until)`, the same steps by week of sign-up (Monday, UTC), so each wave of testers reads as its own rows. Service role only, like the recommendation harness; nothing in the app calls them. Rafa runs `DATABASE_URL='<connection string>' pnpm funnel --since <date>` ([hosted-setup.md](../../process/hosted-setup.md), section 12), which prints both as plain tables.
+
+- **The steps**, in order: `signed_up` (a profile created in the window), `first_session`, `ten_ranked`, `first_pick` (0 until the finder logs it), `day_7_return`.
+- **A cohort funnel.** The window picks people by sign-up, half-open; each step counts those of them who reached it before `until`. Each step counts everyone who reached it, not only those who reached every earlier step, so an account from before the events table (ranked, no `first_session`) shows as what it is; `--since` leaves those out.
+- **Day 7 is derived, never logged**: an `app_open` on a UTC calendar day at least seven days after the sign-up day. Anchored on the sign-up day rather than the first `app_open`, because an event is never older than its account and the first open can be lost or, for an older account, weeks late. `day_7_return` stays reserved in `EventKind` and is not sent.
+- **Not split by platform yet.** The key is in every new row's payload; the split is a filter on the report when the web cohort exists.
 
 ## Copy rules (guidelines, principles 11 to 13)
 
