@@ -70,6 +70,10 @@ import Heart from 'lucide-react-native/icons/heart';
 import ThumbsDown from 'lucide-react-native/icons/thumbs-down';
 import ThumbsUp from 'lucide-react-native/icons/thumbs-up';
 
+// The ask (movies-build.md, PR 3): Home's button and the sheet's send.
+import ArrowUp from 'lucide-react-native/icons/arrow-up';
+import Sparkles from 'lucide-react-native/icons/sparkles';
+
 import { useTheme, type ColorToken } from './theme';
 
 /** The set the frames use, in the order shell.md lists them. */
@@ -132,6 +136,10 @@ const ICONS = {
   meh: Meh,
   'thumbs-up': ThumbsUp,
   heart: Heart,
+
+  // The ask: Home's button (Lucide's sparkles, never the mark; decision 31) and the send.
+  sparkles: Sparkles,
+  'arrow-up': ArrowUp,
 } as const;
 
 export type IconName = keyof typeof ICONS;

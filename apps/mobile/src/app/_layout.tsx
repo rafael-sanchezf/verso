@@ -177,6 +177,13 @@ export default function RootLayout() {
               />
               <Stack.Screen name="steam/linked" />
 
+              {/*
+                The ask (movies-build.md, PR 3): the question, the trace and the
+                picks, full height over the tabs, opened by Home's button. Its
+                own close at the top left; no grabber, no header.
+              */}
+              <Stack.Screen name="ask" options={{ presentation: 'fullScreenModal' }} />
+
               {FORM_SHEETS.map(({ name, detents }) => (
                 <Stack.Screen
                   key={name}
@@ -229,6 +236,8 @@ export default function RootLayout() {
                   headerBackButtonDisplayMode: 'minimal',
                 }}
               />
+              {/* The ask sheet's four states on fixtures, for a browser with no stack (screens/ask). */}
+              <Stack.Screen name="ask-preview" />
             </Stack.Protected>
           </Stack>
 

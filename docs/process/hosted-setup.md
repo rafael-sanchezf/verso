@@ -231,7 +231,7 @@ Unblocks: the whole movie and TV catalog on the hosted project. Until the token 
   pnpm catalog:tmdb-sync:full
   ```
 
-- [ ] Nothing more: the nightly run is scheduled at 14:00 UTC and takes over from here.
+- [ ] Nothing more: the nightly run is scheduled at 14:00 UTC and takes over from here. It mirrors movies only (2026-10-12): TV is held until its ranking unit is decided, and the free tier's 500 MB would not hold the series. When TV is scheduled, drop the default in `tmdb-sync.yml` and raise its popularity threshold first.
 
 ## 5. Optional keys (5 minutes each, any time)
 

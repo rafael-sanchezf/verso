@@ -6,6 +6,10 @@
  * pull to refresh and the navigation; each block owns its own loading, error
  * and empty states, because two lists can be fine while the third is not and
  * the screen should show what it has.
+ *
+ * Above the blocks, under the switcher, the ask button opens the question
+ * sheet (`/ask`, movies-build.md PR 3) for games and movies alike; on movies
+ * it sits over the placeholder until the rows by reason land.
  */
 
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -13,9 +17,11 @@ import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { askQuestion } from '@/screens/ask/trace';
 import { searchHref } from '@/screens/search/intent';
 import { EmptyState, useTheme } from '@/ui';
 
+import { AskButton } from './ask-button';
 import { ComingUpBlock } from './coming-up-block';
 import { MediaSwitcher, mediumFor, type MediumDescriptor, type MediumKey } from './media-switcher';
 import { PlayingBlock } from './playing-block';
@@ -48,6 +54,12 @@ export function HomeScreen() {
   // "Search a new game" on the empty Playing card: Search for that one visit
   // marks a result Playing in one tap and comes back here.
   const searchNewGame = useCallback(() => router.navigate(searchHref('playing')), [router]);
+  // The ask (movies-build.md, PR 3): games and movies have one; the held media do not.
+  const askMedium = medium === 'games' ? 'game' : medium === 'movies' ? 'movie' : null;
+  const openAsk = useCallback(
+    () => askMedium && router.push({ pathname: '/ask', params: { medium: askMedium } }),
+    [askMedium, router],
+  );
 
   // Only once all three have answered. A screen that has read nothing yet is
   // not a first run, and showing the welcome card to someone with a backlog
@@ -65,11 +77,18 @@ export function HomeScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
       <MediaSwitcher active={medium} onSelect={setMedium} />
+      {askMedium ? (
+        <AskButton
+          label={askQuestion(askMedium)}
+          onPress={openAsk}
+        />
+      ) : null}
 
       {medium === 'games' ? (
         <ScrollView
           contentContainerStyle={{
-            paddingTop: theme.space[2],
+            // The site's 20 between the ask button and the first block.
+            paddingTop: theme.space[5],
             paddingBottom: theme.space[6],
             gap: theme.space[6],
           }}
