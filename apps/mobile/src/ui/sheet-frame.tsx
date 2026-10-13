@@ -21,6 +21,8 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
+
 import { TextButton } from './button';
 import { Text } from './text';
 import { useTheme } from './theme';
@@ -41,12 +43,13 @@ export function SheetFrame({
   title,
   onCancel,
   onSave,
-  saveLabel = 'Save',
+  saveLabel,
   saveDisabled = false,
   footer,
   scroll = true,
   children,
 }: SheetFrameProps) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -83,13 +86,13 @@ export function SheetFrame({
           },
         ]}>
         <View style={styles.side}>
-          <TextButton label="Cancel" size={17} weight={400} onPress={onCancel} />
+          <TextButton label={t('common.cancel')} size={17} weight={400} onPress={onCancel} />
         </View>
         <Text size={17} weight={600}>
           {title}
         </Text>
         <View style={[styles.side, styles.right]}>
-          <TextButton label={saveLabel} size={17} weight={600} disabled={saveDisabled} onPress={onSave} />
+          <TextButton label={saveLabel ?? t('common.save')} size={17} weight={600} disabled={saveDisabled} onPress={onSave} />
         </View>
       </View>
 

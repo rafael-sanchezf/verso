@@ -5,6 +5,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+import { translate } from '../src/lib/i18n/dictionary';
 import {
   addableMedia,
   createMediumStore,
@@ -72,9 +73,11 @@ describe('the switcher lists', () => {
   });
 
   it('names the fourth tab by the medium', () => {
-    expect(MEDIUM_WORDS.game.listTab).toBe('Next');
-    expect(MEDIUM_WORDS.movie.listTab).toBe('Watchlist');
-    expect(MEDIUM_WORDS.movie.plural).toBe('Movies');
+    expect(translate('en', MEDIUM_WORDS.game.listTab)).toBe('Next');
+    expect(translate('en', MEDIUM_WORDS.movie.listTab)).toBe('Watchlist');
+    expect(translate('en', MEDIUM_WORDS.movie.plural)).toBe('Movies');
+    expect(translate('es', MEDIUM_WORDS.game.listTab)).toBe('Próximos');
+    expect(translate('es', MEDIUM_WORDS.movie.listTab)).toBe('Por ver');
   });
 });
 

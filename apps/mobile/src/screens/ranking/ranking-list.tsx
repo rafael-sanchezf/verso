@@ -32,6 +32,7 @@ import type Animated from 'react-native-reanimated';
 import { runOnUI, scrollTo, type AnimatedRef } from 'react-native-reanimated';
 import Sortable from 'react-native-sortables';
 
+import { useT } from '@/lib/i18n';
 import {
   ListRow,
   ScoreBadge,
@@ -206,6 +207,7 @@ export function RankingList({
  * the chip's words as the header.
  */
 export function TierDivider({ tier }: { tier: Tier }) {
+  const t = useT();
   const theme = useTheme();
   const color = theme.colors[tierColor(tier)];
 
@@ -213,7 +215,7 @@ export function TierDivider({ tier }: { tier: Tier }) {
     <View
       accessible
       accessibilityRole="header"
-      accessibilityLabel={TIER_LABELS[tier]}
+      accessibilityLabel={t(TIER_LABELS[tier])}
       style={[styles.divider, { paddingVertical: theme.space[2], gap: 10 }]}>
       <View style={[styles.rule, { backgroundColor: color }]} />
       <TierChip tier={tier} style={styles.dividerChip} />

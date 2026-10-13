@@ -28,6 +28,8 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { useT } from '@/lib/i18n';
+
 import { Icon } from './icon';
 import { interactionStyle, type InteractionState } from './interaction';
 import { Sheet } from './sheet';
@@ -49,6 +51,7 @@ export interface FilterChipProps {
 
 /** `Chip` with the caret after the label, and filled once it carries a value. */
 export function FilterChip({ label, active, onPress, icon }: FilterChipProps) {
+  const t = useT();
   const theme = useTheme();
   const labelColor: ColorToken = active ? 'bg/canvas' : 'text/primary';
 
@@ -56,7 +59,7 @@ export function FilterChip({ label, active, onPress, icon }: FilterChipProps) {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityHint="Opens a list to choose from"
+      accessibilityHint={t('shell.filterChip.hint')}
       onPress={onPress}
       style={(state: InteractionState) => [
         styles.chip,
@@ -78,7 +81,11 @@ export function FilterChip({ label, active, onPress, icon }: FilterChipProps) {
   );
 }
 
-/** "Any" is how the list says "no filter"; it is not a value any row can have. */
+/**
+ * "Any" is how the list says "no filter"; it is not a value any row can have.
+ * The sentinel stays this string whatever the language; the row shows
+ * `shell.filterChip.any`.
+ */
 const ANY = 'Any';
 
 export interface MenuChipProps {
@@ -104,6 +111,7 @@ export interface MenuChipProps {
  * closes, the way a menu does; the backdrop closes without choosing.
  */
 export function MenuChip({ name, value, options, onChange, formatOption, renderIcon }: MenuChipProps) {
+  const t = useT();
   const theme = useTheme();
   const { height } = useWindowDimensions();
   const [open, setOpen] = useState(false);
@@ -111,7 +119,7 @@ export function MenuChip({ name, value, options, onChange, formatOption, renderI
 
   // `Any` is the list's own word and never goes through the caller's formatter.
   const label = (choice: string) =>
-    choice === ANY || !formatOption ? choice : formatOption(choice);
+    choice === ANY ? t('shell.filterChip.any') : formatOption ? formatOption(choice) : choice;
 
   const choose = (choice: string) => {
     setOpen(false);

@@ -23,6 +23,7 @@ import type { Tier } from '@verso/core';
 import { StyleSheet, View } from 'react-native';
 import Sortable from 'react-native-sortables';
 
+import { useT } from '@/lib/i18n';
 import { Cover, ScoreBadge, Text, TierChip, TIER_LABELS, useTheme } from '@/ui';
 
 import { scoreText } from '../../log/game';
@@ -140,13 +141,14 @@ export function StretchRow({ token, onExpand }: { token: StretchToken; onExpand:
  * edge (specs/batch-session.md: "the `TierChip` and a hairline").
  */
 export function ReviewDivider({ tier }: { tier: Tier }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <View
       accessible
       accessibilityRole="header"
-      accessibilityLabel={TIER_LABELS[tier]}
+      accessibilityLabel={t(TIER_LABELS[tier])}
       style={[styles.divider, { gap: 10, paddingTop: theme.space[4], paddingBottom: theme.space[2] }]}>
       <TierChip tier={tier} />
       <View style={[styles.hairline, { backgroundColor: theme.colors['border/separator'] }]} />

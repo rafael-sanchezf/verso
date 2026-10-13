@@ -11,6 +11,8 @@
 import type { ActivityEvent, ActivityKind, ProfileStats } from '@verso/api';
 import type { Medium } from '@verso/core';
 
+import { translate } from '../../lib/i18n/dictionary';
+import { languageStore } from '../../lib/i18n/store';
 import { LIVE_MEDIA, MEDIUM_WORDS, trackedMedia, type LiveMedium } from '../../state/medium-model';
 
 // ---------------------------------------------------------------------------
@@ -74,7 +76,7 @@ export function mediumOf(view: ProfileView): LiveMedium | undefined {
 /** The switcher's word and icon for a view. */
 export function viewWords(view: ProfileView): { word: string; icon: 'layers' | 'gamepad-2' | 'film' } {
   if (view === 'all') return { word: 'All', icon: 'layers' };
-  return { word: MEDIUM_WORDS[view].plural, icon: MEDIUM_WORDS[view].icon };
+  return { word: translate(languageStore.language(), MEDIUM_WORDS[view].plural), icon: MEDIUM_WORDS[view].icon };
 }
 
 // ---------------------------------------------------------------------------
@@ -329,7 +331,7 @@ export function profileShareText(sections: readonly ShareSection[], handle: stri
     const lines = section.items
       .slice(0, 10)
       .map((item, index) => `${index + 1}. ${item.title} — ${item.score.toFixed(1)}`);
-    return filled.length > 1 ? [`My top ${MEDIUM_WORDS[section.medium].plural.toLowerCase()}`, ...lines].join('\n') : lines.join('\n');
+    return filled.length > 1 ? [`My top ${translate(languageStore.language(), MEDIUM_WORDS[section.medium].plural).toLowerCase()}`, ...lines].join('\n') : lines.join('\n');
   });
 
   const signature = handle ? `Ranked with Verso · @${handle}` : 'Ranked with Verso';

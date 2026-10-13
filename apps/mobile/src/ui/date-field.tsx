@@ -21,6 +21,7 @@ import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from 
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { fullDate } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 
 import { TextButton } from './button';
 import { dateOnly, localDateOf, type DateFieldProps } from './date-field-value';
@@ -30,6 +31,7 @@ import { useTheme } from './theme';
 export type { DateFieldProps } from './date-field-value';
 
 export function DateField({ label, value, onChange, max, min, clearable = false }: DateFieldProps) {
+  const t = useT();
   const theme = useTheme();
   const date = localDateOf(value);
   const maximumDate = localDateOf(max) ?? undefined;
@@ -75,10 +77,12 @@ export function DateField({ label, value, onChange, max, min, clearable = false 
               }
             />
           )}
-          {clearable ? <TextButton label="Clear" size={14} color="text/secondary" onPress={() => onChange(null)} /> : null}
+          {clearable ? (
+            <TextButton label={t('shell.dateField.clear')} size={14} color="text/secondary" onPress={() => onChange(null)} />
+          ) : null}
         </View>
       ) : (
-        <TextButton label="Add" size={15} onPress={() => onChange(dateOnly(new Date()))} />
+        <TextButton label={t('shell.dateField.add')} size={15} onPress={() => onChange(dateOnly(new Date()))} />
       )}
     </View>
   );

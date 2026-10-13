@@ -12,6 +12,7 @@
 import type { Tier } from '@verso/core';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon, Pressed, Skeleton, Text, TIER_ICONS, TIER_LABELS, TIER_ORDER, tierColor } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -60,6 +61,7 @@ function TierRow({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -80,7 +82,7 @@ function TierRow({
         <Icon name={TIER_ICONS[tier]} size={16} color="tier/label" />
       </View>
       <Text size={17} weight={600} layout={styles.label}>
-        {TIER_LABELS[tier]}
+        {t(TIER_LABELS[tier])}
       </Text>
       {busy ? (
         <ActivityIndicator color={theme.colors['text/secondary']} />

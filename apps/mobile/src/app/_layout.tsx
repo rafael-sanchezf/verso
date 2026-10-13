@@ -197,11 +197,11 @@ export default function RootLayout() {
               <Stack.Screen name="settings/steam/index" options={{ headerShown: true, title: 'Steam' }} />
               <Stack.Screen
                 name="settings/steam/privacy"
-                options={{ headerShown: true, title: 'Steam privacy' }}
+                options={{ headerShown: true, title: t('shell.stack.steamPrivacy') }}
               />
               <Stack.Screen
                 name="settings/steam/candidates"
-                options={{ headerShown: true, title: 'From Steam' }}
+                options={{ headerShown: true, title: t('shell.stack.fromSteam') }}
               />
               <Stack.Screen name="steam/linked" />
 
@@ -257,7 +257,8 @@ export default function RootLayout() {
                 name="preview"
                 options={{
                   headerShown: true,
-                  title: 'Primitives',
+                  // Settings' Developer row's word, so the row and the screen it opens agree.
+                  title: t('settings.primitives'),
                   // Whatever route it was opened from, the back label would be
                   // that route's name — "(auth)/sign-in" and the like. Just the
                   // chevron.

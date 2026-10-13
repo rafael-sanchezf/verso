@@ -21,6 +21,8 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
+
 import { TextButton } from './button';
 import { dateOnlyOf, type DateFieldProps } from './date-field-value';
 import { Text } from './text';
@@ -29,6 +31,7 @@ import { fontFamilyFor, useTheme } from './theme';
 export type { DateFieldProps } from './date-field-value';
 
 export function DateField({ label, value, onChange, max, min, clearable = false }: DateFieldProps) {
+  const t = useT();
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const current = dateOnlyOf(value) ?? '';
@@ -70,7 +73,7 @@ export function DateField({ label, value, onChange, max, min, clearable = false 
           }}
         />
         {clearable && current ? (
-          <TextButton label="Clear" size={14} color="text/secondary" onPress={() => onChange(null)} />
+          <TextButton label={t('shell.dateField.clear')} size={14} color="text/secondary" onPress={() => onChange(null)} />
         ) : null}
       </View>
     </View>

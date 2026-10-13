@@ -63,6 +63,10 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | Diary | Diario | Verso |
 | Library | Biblioteca | Verso |
 | Owned | En tu colección | Verso |
+| medium (games, movies) / track a medium | medio / seguir | Verso, wave 2: "Agregar un medio", "Síguelo junto a lo que ya sigues" |
+| Switch to (a medium) | Cambiar a | Verso, wave 2 |
+| Clear (a field's value) | Borrar | Apple es-419, wave 2 |
+| Any (a filter's no-choice row) | Cualquiera | Verso, wave 2 |
 | Steam / Letterboxd / Game Pass / PlayStation / Xbox / Switch | unchanged | Names |
 
 ## The rules for every wave

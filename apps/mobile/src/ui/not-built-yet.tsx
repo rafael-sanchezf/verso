@@ -15,6 +15,8 @@
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
+
 import { Text } from './text';
 import { useTheme } from './theme';
 
@@ -26,6 +28,7 @@ export interface NotBuiltYetProps {
 }
 
 export function NotBuiltYet({ name, detail }: NotBuiltYetProps) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -35,7 +38,7 @@ export function NotBuiltYet({ name, detail }: NotBuiltYetProps) {
           {name}
         </Text>
         <Text size={15} color="text/secondary" align="center">
-          not built yet
+          {t('shell.notBuiltYet.notBuiltYet')}
         </Text>
         {detail ? (
           <Text size={13} color="text/secondary" align="center">

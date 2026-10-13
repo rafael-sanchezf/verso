@@ -12,12 +12,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
+import { useT } from '@/lib/i18n';
 import { useDocumentTitle } from '@/lib/use-document-title';
 import { NextScreen } from '@/screens/next/next-screen';
 import { WatchlistScreen } from '@/screens/watchlist/watchlist-screen';
 import { MEDIUM_WORDS, useActiveMedium } from '@/state/medium';
 
 export default function Next() {
+  const t = useT();
   const { medium } = useActiveMedium();
   const router = useRouter();
   const params = useLocalSearchParams<{ genre?: string | string[]; scope?: string | string[] }>();
@@ -26,6 +28,6 @@ export default function Next() {
     if (stale) router.setParams({ genre: undefined, scope: undefined });
   }, [stale, router]);
 
-  useDocumentTitle(MEDIUM_WORDS[medium].listTab);
+  useDocumentTitle(t(MEDIUM_WORDS[medium].listTab));
   return medium === 'movie' ? <WatchlistScreen /> : <NextScreen />;
 }

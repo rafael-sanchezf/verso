@@ -27,6 +27,7 @@ import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { assembleRanking } from '@/screens/ranking/model';
 import { MEDIUM_WORDS, setActiveMedium, trackedMedia, type LiveMedium } from '@/state/medium';
@@ -61,6 +62,7 @@ import { ActivityRow, FriendsDoor, MediumSection, ProfileSwitcher, SectionHeader
 import { StatTile } from './stat-tile';
 
 export function ProfileScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -231,7 +233,7 @@ export function ProfileScreen() {
               <MediumSection
                 key={each}
                 medium={each}
-                title={MEDIUM_WORDS[each].plural}
+                title={t(MEDIUM_WORDS[each].plural)}
                 counts={sectionCounts(each, counts.stats[each])}
                 onSeeAll={() => seeRanking(each)}
                 onOpen={openItem}

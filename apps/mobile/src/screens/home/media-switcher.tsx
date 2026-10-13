@@ -29,6 +29,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 
 import { alert, select } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { invalidateProfile } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import {
@@ -43,6 +44,7 @@ import {
 import { Icon, Text, useTheme } from '@/ui';
 
 export function MediaSwitcher() {
+  const t = useT();
   const theme = useTheme();
   const queryClient = useQueryClient();
   const { medium, setMedium } = useActiveMedium();
@@ -59,15 +61,15 @@ export function MediaSwitcher() {
       invalidateProfile(queryClient);
       setMedium(next);
     },
-    onError: () => alert("Couldn't add it", 'Check your connection and try again.'),
+    onError: () => alert(t('shell.mediaSwitcher.couldNotAdd'), t('shell.mediaSwitcher.checkConnection')),
   });
 
   const offerToAdd = () =>
     select({
-      title: 'Add a medium',
-      message: 'Track it beside what you track now. Each one keeps its own list.',
+      title: t('shell.mediaSwitcher.addMedium'),
+      message: t('shell.mediaSwitcher.addMessage'),
       choices: addable.map((next) => ({
-        label: MEDIUM_WORDS[next].plural,
+        label: t(MEDIUM_WORDS[next].plural),
         onPress: () => add.mutate(next),
       })),
     });
@@ -87,7 +89,7 @@ export function MediaSwitcher() {
       */}
       <Animated.View key={medium} entering={FadeInLeft.duration(220)} style={styles.active}>
         <Text size={30} weight={700} color="brand/text" numberOfLines={1}>
-          {word.plural}
+          {t(word.plural)}
         </Text>
       </Animated.View>
 
@@ -96,8 +98,8 @@ export function MediaSwitcher() {
           <Pressable
             key={other}
             accessibilityRole="button"
-            accessibilityLabel={MEDIUM_WORDS[other].plural}
-            accessibilityHint={`Switch to ${MEDIUM_WORDS[other].plural}`}
+            accessibilityLabel={t(MEDIUM_WORDS[other].plural)}
+            accessibilityHint={t('shell.mediaSwitcher.switchTo', { medium: t(MEDIUM_WORDS[other].plural) })}
             // A 28pt icon is under the 44pt target iOS asks for, and these sit
             // 10pt apart; the slop makes them reachable without spacing them out.
             hitSlop={8}
@@ -109,7 +111,7 @@ export function MediaSwitcher() {
         {addable.length > 0 ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Add a medium"
+            accessibilityLabel={t('shell.mediaSwitcher.addMedium')}
             hitSlop={8}
             disabled={add.isPending}
             onPress={offerToAdd}

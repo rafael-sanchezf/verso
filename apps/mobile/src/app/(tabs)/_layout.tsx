@@ -11,13 +11,15 @@
 
 import { Tabs } from 'expo-router/js-tabs';
 
+import { useT } from '@/lib/i18n';
 import { TABS, TabBar } from '@/ui/tab-bar';
 
 export default function TabsLayout() {
+  const t = useT();
   return (
     <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
       {TABS.map((tab) => (
-        <Tabs.Screen key={tab.name} name={tab.name} options={{ title: tab.label }} />
+        <Tabs.Screen key={tab.name} name={tab.name} options={{ title: t(tab.label) }} />
       ))}
     </Tabs>
   );

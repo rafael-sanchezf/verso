@@ -13,16 +13,22 @@
 import { TIERS, type Tier } from '@verso/core';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { useT, type TranslationKey } from '@/lib/i18n';
+
 import { Icon, type IconName } from './icon';
 import { Text } from './text';
 import { useTheme, type ColorToken } from './theme';
 
-/** The words for each tier. The single source; nothing else spells these. */
-export const TIER_LABELS: Readonly<Record<Tier, string>> = {
-  loved: 'Loved it',
-  liked: 'Liked it',
-  fine: 'It was fine',
-  disliked: "Didn't like it",
+/**
+ * The words for each tier, as dictionary keys (`shell.tiers`, spanish-build.md
+ * wave 2): a screen shows one through `t(TIER_LABELS[tier])`. The single
+ * source; nothing else spells these.
+ */
+export const TIER_LABELS: Readonly<Record<Tier, TranslationKey>> = {
+  loved: 'shell.tiers.loved',
+  liked: 'shell.tiers.liked',
+  fine: 'shell.tiers.fine',
+  disliked: 'shell.tiers.disliked',
 };
 
 /**
@@ -49,6 +55,7 @@ export interface TierChipProps {
 }
 
 export function TierChip({ tier, style }: TierChipProps) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -67,7 +74,7 @@ export function TierChip({ tier, style }: TierChipProps) {
       ]}>
       <Icon name={TIER_ICONS[tier]} size={14} color="tier/label" />
       <Text size={13} weight={600} color="tier/label">
-        {TIER_LABELS[tier]}
+        {t(TIER_LABELS[tier])}
       </Text>
     </View>
   );

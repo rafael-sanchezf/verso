@@ -9,6 +9,7 @@ import { coverCandidates, type ActivityEvent } from '@verso/api';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { MEDIUM_WORDS, type LiveMedium } from '@/state/medium';
 import { assembleRanking } from '@/screens/ranking/model';
 import { Button, Chip, Cover, Icon, PosterCard, Sheet, Skeleton, Text, textStyles } from '@/ui';
@@ -194,10 +195,11 @@ export function MediumSection({
   onSeeAll: () => void;
   onOpen: (id: string, medium: LiveMedium) => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const ranking = useRanking(medium);
   const items = ranking.data ? assembleRanking(ranking.data).slice(0, SECTION_ROW_LIMIT) : null;
-  const noun = MEDIUM_WORDS[medium].noun;
+  const noun = t(MEDIUM_WORDS[medium].noun);
 
   return (
     <View style={{ gap: 12 }}>
@@ -205,7 +207,7 @@ export function MediumSection({
         title={title}
         trailing={counts ?? 'See all'}
         onPress={onSeeAll}
-        accessibilityLabel={`See all ranked ${MEDIUM_WORDS[medium].plural.toLowerCase()}`}
+        accessibilityLabel={`See all ranked ${t(MEDIUM_WORDS[medium].plural).toLowerCase()}`}
       />
       {items === null ? (
         <View style={[styles.row, { gap: 8 }]}>

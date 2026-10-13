@@ -22,6 +22,7 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT, type TranslationKey } from '@/lib/i18n';
 import { MEDIUM_WORDS, useActiveMedium } from '@/state/medium';
 
 import { Icon, type IconName } from './icon';
@@ -37,16 +38,20 @@ import { useTheme } from './theme';
  * fourth tab is the medium's own list (rule 18; movies-brief.md, "Tabs for
  * movies"): "Next" for games and "Watchlist" for films, one route that draws
  * either (`app/(tabs)/next.tsx`), the label from the active medium.
+ *
+ * `label` is a dictionary key (spanish-build.md, wave 2); whoever shows it
+ * calls `t`.
  */
-export const TABS: readonly { name: string; label: string; icon: IconName }[] = [
-  { name: 'index', label: 'Home', icon: 'house' },
-  { name: 'search', label: 'Search', icon: 'search' },
-  { name: 'ranking', label: 'Ranking', icon: 'trophy' },
-  { name: 'next', label: 'Next', icon: 'layers' },
-  { name: 'profile', label: 'Profile', icon: 'user' },
+export const TABS: readonly { name: string; label: TranslationKey; icon: IconName }[] = [
+  { name: 'index', label: 'shell.tabs.home', icon: 'house' },
+  { name: 'search', label: 'shell.tabs.search', icon: 'search' },
+  { name: 'ranking', label: 'shell.tabs.ranking', icon: 'trophy' },
+  { name: 'next', label: 'shell.tabs.next', icon: 'layers' },
+  { name: 'profile', label: 'shell.tabs.profile', icon: 'user' },
 ];
 
 export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
+  const t = useT();
   const theme = useTheme();
   const safeArea = useSafeAreaInsets();
   const { medium } = useActiveMedium();
@@ -70,7 +75,7 @@ export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarP
       {state.routes.map((route, index) => {
         const found = TABS.find((candidate) => candidate.name === route.name);
         if (!found) return null;
-        const tab = found.name === 'next' ? { ...found, label: MEDIUM_WORDS[medium].listTab } : found;
+        const tab = { ...found, label: t(found.name === 'next' ? MEDIUM_WORDS[medium].listTab : found.label) };
 
         const focused = state.index === index;
         const { options } = descriptors[route.key] ?? {};

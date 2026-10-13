@@ -22,6 +22,8 @@
 
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { useT } from '@/lib/i18n';
+
 import { TextButton } from './button';
 import { Text } from './text';
 import { useTheme } from './theme';
@@ -40,6 +42,7 @@ export interface ErrorLineProps {
 }
 
 export function ErrorLine({ message, onRetry, align = 'start', style }: ErrorLineProps) {
+  const t = useT();
   const theme = useTheme();
   const centered = align === 'center';
 
@@ -59,7 +62,7 @@ export function ErrorLine({ message, onRetry, align = 'start', style }: ErrorLin
       <Text size={15} color="text/secondary" layout={centered ? styles.shrink : styles.fill}>
         {message}
       </Text>
-      {onRetry ? <TextButton label="Retry" onPress={onRetry} /> : null}
+      {onRetry ? <TextButton label={t('shell.errorLine.retry')} onPress={onRetry} /> : null}
     </View>
   );
 }

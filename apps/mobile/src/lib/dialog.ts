@@ -22,6 +22,7 @@ import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
 import {
   buttonsFromAlert,
+  dialogWord,
   enqueueDialog,
   type DialogButton,
   type DialogChoice,
@@ -77,7 +78,7 @@ export function showDialog(options: DialogOptions): void {
   const buttons: DialogButton[] =
     options.buttons && options.buttons.length > 0
       ? [...options.buttons]
-      : [{ text: 'OK', style: 'default' }];
+      : [{ text: dialogWord('common.ok'), style: 'default' }];
 
   if (Platform.OS !== 'web') {
     Alert.alert(options.title ?? '', options.message, buttons, { onDismiss: options.onDismiss });
@@ -104,7 +105,7 @@ export interface SelectOptions {
  * may open another dialog.
  */
 export function select(options: SelectOptions): void {
-  const { title, message, choices, cancelLabel = 'Cancel' } = options;
+  const { title, message, choices, cancelLabel = dialogWord('common.cancel') } = options;
 
   if (Platform.OS === 'ios') {
     const labels = [...choices.map((choice) => choice.label), cancelLabel];

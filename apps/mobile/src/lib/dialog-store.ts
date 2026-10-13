@@ -19,6 +19,19 @@
 
 import type { MenuItem } from '@/ui/menu';
 
+import { translate, type TranslationKey } from './i18n/dictionary';
+import { languageStore } from './i18n/store';
+
+/**
+ * A dialog's own word ("OK", "Cancel") in the app's language, read when the
+ * dialog is built (spanish-build.md, wave 2). The pure halves of the language
+ * layer rather than `t` from `@/lib/i18n`, which binds the device and would
+ * take this file out of the node tests; `lib/format.ts` does the same.
+ */
+export function dialogWord(key: TranslationKey): string {
+  return translate(languageStore.language(), key);
+}
+
 export type DialogButtonStyle = 'default' | 'cancel' | 'destructive';
 
 /** One button, as `Alert.alert` describes one. */
@@ -67,12 +80,12 @@ export interface AlertButtonLike {
  * `default`. Order is kept; the dialog decides where each one sits.
  */
 export function buttonsFromAlert(buttons?: readonly AlertButtonLike[]): DialogButton[] {
-  if (!buttons || buttons.length === 0) return [{ text: 'OK', style: 'default' }];
+  if (!buttons || buttons.length === 0) return [{ text: dialogWord('common.ok'), style: 'default' }];
 
   return buttons.map((button) => {
     const press = button.onPress;
     return {
-      text: button.text || (buttons.length === 1 ? 'OK' : ''),
+      text: button.text || (buttons.length === 1 ? dialogWord('common.ok') : ''),
       style: button.style ?? 'default',
       ...(press ? { onPress: () => press() } : null),
     };

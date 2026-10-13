@@ -13,6 +13,7 @@
 
 import type { Medium } from '@verso/core';
 
+import type { TranslationKey } from '../lib/i18n/dictionary';
 import { createHolder } from '../screens/onboarding/session/holder';
 
 /** The media the app can be in now. */
@@ -24,20 +25,36 @@ export const LIVE_MEDIA: readonly LiveMedium[] = ['game', 'movie'];
 /** Where the choice is kept on the device. */
 export const MEDIUM_STORAGE_KEY = 'verso.medium';
 
+/**
+ * Each medium's words, as dictionary keys (spanish-build.md, wave 2): a screen
+ * shows one through `t(MEDIUM_WORDS[medium].plural)`. Keys rather than words
+ * because this module stays free of the device binding in `@/lib/i18n`, which
+ * the node tests cannot load.
+ */
 export interface MediumWords {
   /** The switcher's and the chip's word: "Games", "Movies". */
-  plural: string;
+  plural: TranslationKey;
   /** Inside a sentence: "game", "film". */
-  noun: string;
+  noun: TranslationKey;
   /** The fourth tab's word (rule 8 and 18): "Next" for games, "Watchlist" for films. */
-  listTab: string;
+  listTab: TranslationKey;
   /** The Lucide icon the switcher draws for it. */
   icon: 'gamepad-2' | 'film';
 }
 
 export const MEDIUM_WORDS: Readonly<Record<LiveMedium, MediumWords>> = {
-  game: { plural: 'Games', noun: 'game', listTab: 'Next', icon: 'gamepad-2' },
-  movie: { plural: 'Movies', noun: 'film', listTab: 'Watchlist', icon: 'film' },
+  game: {
+    plural: 'shell.medium.game.plural',
+    noun: 'shell.medium.game.noun',
+    listTab: 'shell.medium.game.listTab',
+    icon: 'gamepad-2',
+  },
+  movie: {
+    plural: 'shell.medium.movie.plural',
+    noun: 'shell.medium.movie.noun',
+    listTab: 'shell.medium.movie.listTab',
+    icon: 'film',
+  },
 };
 
 export function isLiveMedium(value: unknown): value is LiveMedium {

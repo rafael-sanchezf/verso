@@ -12,6 +12,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { MEDIUM_WORDS, useActiveMedium } from '@/state/medium';
 
 import { Text } from './text';
@@ -55,9 +56,10 @@ export function ScreenHeader({ title, right, paddingBottom = 12, style }: Screen
  * whatever the switch says.
  */
 export function MediumChip({ label }: { label?: string }) {
+  const t = useT();
   const theme = useTheme();
   const { medium } = useActiveMedium();
-  const word = label ?? MEDIUM_WORDS[medium].plural;
+  const word = label ?? t(MEDIUM_WORDS[medium].plural);
 
   return (
     <View

@@ -19,6 +19,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, TextInput
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { invalidateProfile } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { MEDIUM_WORDS, LIVE_MEDIA } from '@/state/medium';
@@ -32,6 +33,7 @@ import { pickAndUploadAvatar } from './photo';
 import { Separator } from './settings-row';
 
 export function EditProfileScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -225,7 +227,7 @@ export function EditProfileScreen() {
                     accessibilityHint={onlyOne ? 'You track at least one' : undefined}
                     onPress={() => update({ media: toggleMedium(form.media, medium) })}
                     style={({ pressed }) => (pressed && !onlyOne ? styles.pressed : undefined)}>
-                    <Row label={MEDIUM_WORDS[medium].plural}>
+                    <Row label={t(MEDIUM_WORDS[medium].plural)}>
                       {checked ? <Icon name="check" size={18} color="brand/text" /> : null}
                     </Row>
                   </Pressable>

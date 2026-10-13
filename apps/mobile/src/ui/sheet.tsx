@@ -15,6 +15,8 @@ import type { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
+
 import { useTheme } from './theme';
 
 /**
@@ -34,6 +36,7 @@ export interface SheetProps {
 }
 
 export function Sheet({ visible, onDismiss, children, dismissOnBackdropPress = true }: SheetProps) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -41,7 +44,7 @@ export function Sheet({ visible, onDismiss, children, dismissOnBackdropPress = t
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onDismiss}>
       <View style={styles.fill}>
         <Pressable
-          accessibilityLabel="Close"
+          accessibilityLabel={t('shell.sheet.close')}
           style={styles.dim}
           onPress={dismissOnBackdropPress ? onDismiss : undefined}
         />
