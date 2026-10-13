@@ -21,7 +21,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Pressed } from './button';
 import { Cover, posterHeight } from './cover';
 import { Text } from './text';
-import { useTheme } from './theme';
+import { ThemeScope, themeFor, useTheme } from './theme';
 
 export interface PosterCardProps {
   /** Points; the height is 3/2 of it. */
@@ -38,6 +38,9 @@ export interface PosterCardProps {
   onLongPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }
+
+/** The light theme the pills always draw in. */
+const LIGHT = themeFor('light');
 
 export function PosterCard({
   width,
@@ -64,19 +67,26 @@ export function PosterCard({
             styles.scrim,
             { borderBottomLeftRadius: corner, borderBottomRightRadius: corner, padding: inset, gap: 3 },
           ]}>
-          {facts.map((fact) => (
-            <View
-              key={fact}
-              style={{
-                backgroundColor: theme.colors['bg/canvas'],
-                borderRadius: theme.radius.pill,
-                paddingHorizontal: large ? 5 : 4.5,
-              }}>
-              <Text size={large ? 9.5 : 8.5} weight={600} numberOfLines={1}>
-                {fact}
-              </Text>
-            </View>
-          ))}
+          {/*
+            The pills are light in both schemes, as the site draws them: a
+            light pill over the scrim reads on any poster, and the dark canvas
+            made them black blots in dark mode.
+          */}
+          <ThemeScope scheme="light">
+            {facts.map((fact) => (
+              <View
+                key={fact}
+                style={{
+                  backgroundColor: LIGHT.colors['bg/canvas'],
+                  borderRadius: theme.radius.pill,
+                  paddingHorizontal: large ? 5 : 4.5,
+                }}>
+                <Text size={large ? 9.5 : 8.5} weight={600} numberOfLines={1}>
+                  {fact}
+                </Text>
+              </View>
+            ))}
+          </ThemeScope>
         </View>
       ) : null}
     </Pressed>

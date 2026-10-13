@@ -4,8 +4,9 @@
  * conventions... and listed in the PR") since profile.md says the screen is
  * "not drawn".
  *
- * Four sections (profile.md, "Behavior"): Profile (edit display name and
- * username), Account (email, sign out, delete account), Data (the two exports
+ * Four sections (profile.md, "Behavior"): Profile (Edit profile, which
+ * pushes `/profile/edit` since the joint Profile, movies-build.md PR 5),
+ * Account (email, sign out, delete account), Data (the two exports
  * and import), About (app version). A dev build adds a fifth, a link to
  * `/preview`.
  *
@@ -45,8 +46,6 @@ import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/use-session';
 import { useTheme } from '@/ui/theme';
 
-import { useProfileIdentity } from './data';
-import { EditProfileSheet } from './edit-profile-sheet';
 import {
   exportCsv,
   exportJson,
@@ -64,9 +63,7 @@ export function SettingsScreen() {
   const router = useRouter();
   const session = useSession();
   const queryClient = useQueryClient();
-  const identity = useProfileIdentity();
 
-  const [editVisible, setEditVisible] = useState(false);
   const [busy, setBusy] = useState<Busy>(null);
 
   const email = session.status === 'signed-in' ? (session.user.email ?? null) : null;
@@ -185,7 +182,7 @@ export function SettingsScreen() {
               key: 'edit',
               label: 'Edit profile',
               navigates: true,
-              onPress: identity.data ? () => setEditVisible(true) : undefined,
+              onPress: () => router.push('/profile/edit'),
             },
           ]}
         />
@@ -258,10 +255,6 @@ export function SettingsScreen() {
           />
         ) : null}
       </ScrollView>
-
-      {identity.data ? (
-        <EditProfileSheet visible={editVisible} onDismiss={() => setEditVisible(false)} profile={identity.data} />
-      ) : null}
     </SafeAreaView>
   );
 }

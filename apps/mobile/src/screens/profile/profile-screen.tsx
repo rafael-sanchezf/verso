@@ -1,74 +1,130 @@
 /**
- * The Profile tab (docs/design/specs/profile.md).
+ * The Profile tab: one page for every medium (docs/design/profile-brief.md
+ * with Rafa's letters of 2026-10-12 applied; movies-build.md, PR 5; frames
+ * `Profile · Every medium` 266:135 and `Profile · One medium` 267:112).
  *
- * Header, identity row, four stat tiles, "Share my top 10", and Recent —
- * dated by `placedAt` and numbered by global rank, never `updatedAt` (see
- * `recentRankings`'s own doc comment for why: a neighbour's insert moving a
- * row is not activity).
+ * Top to bottom: the identity row with Edit; the switcher (All, then one icon
+ * per tracked medium, only when there is more than one); the tiles in Beli's
+ * shape; the Friends door; a section per medium on All, or "Your top films"
+ * (games) on one; Share; Recent at two rows with "See all ›" to Activity.
  *
- * "Share my top 10" is the share sheet on the phone. In a browser
- * react-native-web's `Share` is `navigator.share`, which most desktop browsers
- * do not have, and it rejects there (W0 finding 12); the web convention is to
- * copy the text and say so, so that is what happens when it is missing.
+ * The tab bar stays the active medium's; this page has no medium chip and
+ * its switcher is its own, defaulting to All every time the tab is opened
+ * fresh, and never changing the app's medium (only a section's "See all"
+ * does, since it lands on that medium's Ranking).
+ *
+ * Share is the plain-text top tens on the share sheet, or copied in a browser
+ * without `navigator.share` (W0 finding 12). The public link replaces it once
+ * the public page exists (web brief, item 8); until then it is the text
+ * whatever `profiles.public` says.
  */
 
+import type { TierRows } from '@/screens/ranking/model';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
-import { useSession } from '@/lib/use-session';
-import {
-  Button,
-  EmptyState,
-  EmptyStateCard,
-  ErrorLine,
-  Icon,
-  Pressed,
-  ScreenHeader,
-  Skeleton,
-  Text,
-} from '@/ui';
+import { queryKeys } from '@/lib/query-keys';
+import { assembleRanking } from '@/screens/ranking/model';
+import { MEDIUM_WORDS, setActiveMedium, trackedMedia, type LiveMedium } from '@/state/medium';
+import { Button, EmptyState, EmptyStateCard, ErrorLine, Icon, ScreenHeader, Skeleton, Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
-import { useProfileIdentity, useProfileRanking, useProfileRecent, useProfileStats } from './data';
-import { displayNameFor, subtitleFor } from './identity';
 import { ProfileAvatar } from './avatar';
-import { EMPTY_TIERS, globalRank, tierSizes, toRankedList } from './ranking-math';
-import { RecentRow } from './recent-row';
+import {
+  RECENT_ROWS,
+  useMediumStats,
+  useProfileHours,
+  useProfileIdentity,
+  useRankerPercentile,
+  useRecentActivity,
+} from './data';
+import { subtitleFor } from './identity';
+import {
+  initialsFor,
+  mediumOf,
+  nameLine,
+  profileShareText,
+  profileTiles,
+  profileView,
+  sectionCounts,
+  shownMedia,
+  shortAgo,
+  switcherOptions,
+  topTitle,
+  type ProfileView,
+} from './model';
+import { ActivityRow, FriendsDoor, MediumSection, ProfileSwitcher, SectionHeader } from './pieces';
 import { StatTile } from './stat-tile';
-import { topTenShareText } from './share-text';
 
 export function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const session = useSession();
+  const queryClient = useQueryClient();
 
   const identity = useProfileIdentity();
-  const stats = useProfileStats();
-  const recent = useProfileRecent();
-  const ranking = useProfileRanking();
+  const profile = identity.data ?? null;
+  const tracked = trackedMedia(profile?.media);
+  const counts = useMediumStats(tracked);
+  // The media the page shows: tracked and holding an entry. Null until the
+  // profile and every tracked medium's counts are in, and the page holds
+  // skeletons rather than drawing the games-only layout first.
+  const shown = profile ? shownMedia(profile.media, counts.stats) : null;
 
-  const email = session.status === 'signed-in' ? (session.user.email ?? null) : null;
+  const [picked, setPicked] = useState<ProfileView>('all');
+  const view = profileView(picked, shown ?? []);
+  const options = switcherOptions(shown ?? []);
+  const medium = mediumOf(view);
 
-  const rankedTiers = ranking.data ?? EMPTY_TIERS;
-  const sizes = useMemo(() => tierSizes(rankedTiers), [rankedTiers]);
-  const topTen = useMemo(() => toRankedList(rankedTiers).slice(0, 10), [rankedTiers]);
+  const percentile = useRankerPercentile(medium);
+  const hours = useProfileHours(medium);
+  const recent = useRecentActivity(medium);
 
-  const hasRankings = (recent.data?.length ?? 0) > 0;
+  const tiles = shown
+    ? profileTiles(view, shown, {
+        stats: counts.stats,
+        percentile: percentile.isError ? null : percentile.data,
+        hours: hours.data,
+      })
+    : null;
+  const tilesFailed = counts.isError || hours.isError;
+  const retryTiles = () => {
+    counts.refetch();
+    if (hours.isError) void hours.refetch();
+  };
+
+  const scope: LiveMedium[] = medium ? [medium] : (shown ?? []);
+  const rankedInScope = scope.reduce((total, each) => total + (counts.stats[each]?.ranked ?? 0), 0);
+
+  const openItem = (id: string, itemMedium: string) => {
+    if (itemMedium === 'movie') router.push({ pathname: '/movie/[id]', params: { id, from: 'Profile' } });
+    else router.push({ pathname: '/game/[id]', params: { id, from: 'Profile' } });
+  };
+
+  const seeRanking = (each: LiveMedium) => {
+    setActiveMedium(each);
+    router.navigate('/ranking');
+  };
 
   async function onShare() {
-    if (topTen.length === 0) return;
-    const message = topTenShareText(topTen);
+    const message = profileShareText(
+      scope.map((each) => {
+        const tiers = queryClient.getQueryData<TierRows>(queryKeys.ranking(each));
+        return { medium: each, items: tiers ? assembleRanking(tiers) : [] };
+      }),
+      profile?.username ?? null,
+    );
+    if (!message) return;
 
     if (Platform.OS === 'web' && typeof navigator.share !== 'function') {
       try {
         await navigator.clipboard.writeText(message);
-        alert('Top 10 copied', 'Paste it wherever you want to share it.');
+        alert('Copied', 'Paste it wherever you want to share it.');
       } catch {
-        // No clipboard either (an insecure origin, a denied permission).
-        alert('Could not copy your top 10', 'Your browser did not allow it.');
+        alert('Could not copy it', 'Your browser did not allow it.');
       }
       return;
     }
@@ -80,6 +136,8 @@ export function ProfileScreen() {
     }
   }
 
+  const name = profile ? nameLine(profile) : null;
+
   return (
     <SafeAreaView style={styles.fill} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: theme.space[10] }}>
@@ -87,23 +145,39 @@ export function ProfileScreen() {
           title="Profile"
           paddingBottom={8}
           right={
-            <Pressed onPress={() => router.push('/settings')} style={styles.settingsButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+              hitSlop={10}
+              onPress={() => router.push('/settings')}
+              style={({ pressed }) => [styles.settingsButton, pressed ? styles.pressed : undefined]}>
               <Icon name="settings" size={24} />
-            </Pressed>
+            </Pressable>
           }
         />
 
         <View style={{ paddingHorizontal: theme.space[4], paddingTop: theme.space[1], gap: 20 }}>
-          <View style={[styles.identityRow, { gap: 14 }]}>
-            <ProfileAvatar avatarUrl={identity.data?.avatarUrl ?? null} />
+          <View style={[styles.row, { gap: 14 }]}>
+            <ProfileAvatar avatarUrl={profile?.avatarUrl ?? null} initials={profile ? initialsFor(profile) : ''} />
             <View style={{ flex: 1, gap: 2 }}>
-              {identity.data ? (
+              {profile ? (
                 <>
-                  <Text style="title-2" numberOfLines={1}>
-                    {displayNameFor(identity.data, email)}
-                  </Text>
+                  {name ? (
+                    <Text size={22} weight={700} numberOfLines={1}>
+                      {name}
+                    </Text>
+                  ) : (
+                    <Pressable
+                      accessibilityRole="button"
+                      hitSlop={8}
+                      onPress={() => router.push('/profile/edit')}>
+                      <Text size={22} weight={700} color="brand/text" numberOfLines={1}>
+                        Set your name
+                      </Text>
+                    </Pressable>
+                  )}
                   <Text size={15} color="text/secondary" numberOfLines={1}>
-                    {subtitleFor(identity.data)}
+                    {subtitleFor(profile)}
                   </Text>
                 </>
               ) : identity.isError ? (
@@ -115,72 +189,119 @@ export function ProfileScreen() {
                 </>
               )}
             </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
+              hitSlop={8}
+              onPress={() => router.push('/profile/edit')}
+              style={({ pressed }) => [
+                styles.editPill,
+                { backgroundColor: theme.colors['bg/surface'], borderRadius: theme.radius.pill },
+                pressed ? styles.pressed : undefined,
+              ]}>
+              <Text size={14} weight={600}>
+                Edit
+              </Text>
+            </Pressable>
           </View>
 
-          <View style={[styles.statsRow, { gap: 8 }]}>
-            <StatTile
-              value={stats.data ? String(stats.data.ranked) : '—'}
-              label="Ranked"
-              onPress={() => router.navigate('/ranking')}
-            />
-            <StatTile
-              value={stats.data ? String(stats.data.backlog) : '—'}
-              label="Backlog"
-              onPress={() => router.navigate('/next')}
-            />
-            <StatTile
-              value={stats.data ? String(stats.data.upcoming) : '—'}
-              label="Upcoming"
-              onPress={() => router.navigate({ pathname: '/next', params: { segment: 'upcoming' } })}
-            />
-            <StatTile value="—" label="Friends" />
-          </View>
+          <ProfileSwitcher options={options} value={view} onChange={setPicked} />
 
-          {hasRankings ? (
+          {tilesFailed ? (
+            <ErrorLine message="Couldn't load your numbers." onRetry={retryTiles} />
+          ) : tiles ? (
+            <View style={[styles.row, { gap: 8 }]}>
+              {tiles.map((tile) => (
+                <StatTile
+                  key={tile.key}
+                  value={tile.value}
+                  label={tile.label}
+                  onPress={tile.key === 'ranked' && medium ? () => seeRanking(medium) : undefined}
+                />
+              ))}
+            </View>
+          ) : (
+            <Skeleton width="100%" height={58} radius={12} />
+          )}
+
+          <FriendsDoor />
+
+          {!shown ? null : view === 'all' ? (
+            shown.map((each) => (
+              <MediumSection
+                key={each}
+                medium={each}
+                title={MEDIUM_WORDS[each].plural}
+                counts={sectionCounts(each, counts.stats[each])}
+                onSeeAll={() => seeRanking(each)}
+                onOpen={openItem}
+              />
+            ))
+          ) : (
+            <MediumSection
+              medium={view}
+              title={topTitle(view)}
+              counts={null}
+              onSeeAll={() => seeRanking(view)}
+              onOpen={openItem}
+            />
+          )}
+
+          {rankedInScope > 0 ? (
             <Button
-              label="Share my top 10"
-              variant="contrast"
+              label={view === 'all' ? 'Share my profile' : 'Share my top 10'}
+              variant="secondary"
               onPress={onShare}
-              // profile.md asks for 17 semibold (the `regular` size's label)
-              // at 12pt vertical padding; `regular` pads 14 by default, so the
-              // 12 is applied as a style override rather than forking Button.
               style={styles.shareButton}
             />
           ) : null}
 
-          <View style={{ gap: 12 }}>
-            <Text size={20} weight={700}>
-              Recent
-            </Text>
+          <View style={{ gap: 4 }}>
+            <SectionHeader
+              title="Recent"
+              trailing={recent.data && recent.data.length > 0 ? 'See all ›' : null}
+              trailingColor="brand/text"
+              onPress={() =>
+                router.push({ pathname: '/profile/activity', params: medium ? { medium } : {} })
+              }
+              accessibilityLabel="See all activity"
+            />
 
             {recent.isError ? (
               <ErrorLine message="Something went wrong." onRetry={() => void recent.refetch()} />
             ) : !recent.data ? (
-              <View style={{ gap: 12 }}>
-                <Skeleton width="100%" height={52} radius={8} />
-                <Skeleton width="100%" height={52} radius={8} />
-                <Skeleton width="100%" height={52} radius={8} />
+              <View style={{ gap: 12, paddingTop: 8 }}>
+                {Array.from({ length: RECENT_ROWS }, (_, index) => (
+                  <Skeleton key={index} width="100%" height={48} radius={8} />
+                ))}
               </View>
             ) : recent.data.length > 0 ? (
               <View>
-                {recent.data.map((row) => (
-                  <RecentRow
-                    key={row.mediaItemId}
-                    row={row}
-                    rank={globalRank(sizes, row.placement)}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/game/[id]',
-                        params: { id: row.mediaItemId, from: 'Profile' },
-                      })
-                    }
+                {recent.data.map((event, index) => (
+                  <ActivityRow
+                    key={`${event.kind}:${event.mediaItemId}:${event.onDate}:${event.occurredAt ?? ''}:${index}`}
+                    event={event}
+                    trailing={shortAgo(event.onDate)}
+                    onPress={() => openItem(event.mediaItemId, event.medium)}
                   />
                 ))}
               </View>
             ) : (
-              <EmptyStateCard>
-                <EmptyState icon="trophy" title="No rankings yet" body="Rank your first game from its page." />
-              </EmptyStateCard>
+              <View style={{ paddingTop: 8 }}>
+                <EmptyStateCard>
+                  <EmptyState
+                    icon="trophy"
+                    title="Nothing yet"
+                    body={
+                      medium === 'movie'
+                        ? 'Log or rank a film and it shows up here.'
+                        : medium === 'game'
+                          ? 'Rank a game from its page and it shows up here.'
+                          : 'What you rank, watch and finish shows up here.'
+                    }
+                  />
+                </EmptyStateCard>
+              </View>
             )}
           </View>
         </View>
@@ -191,8 +312,9 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  identityRow: { flexDirection: 'row', alignItems: 'center' },
-  statsRow: { flexDirection: 'row' },
+  row: { flexDirection: 'row', alignItems: 'center' },
   settingsButton: { padding: 4 },
+  editPill: { paddingVertical: 6, paddingHorizontal: 12 },
   shareButton: { paddingVertical: 12 },
+  pressed: { opacity: 0.7 },
 });

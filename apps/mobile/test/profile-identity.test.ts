@@ -1,28 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { displayNameFor, joinedLabel, subtitleFor } from '../src/screens/profile/identity';
-
-describe('displayNameFor', () => {
-  it('uses the display name when there is one', () => {
-    expect(displayNameFor({ displayName: 'Mara Quill' }, 'mara@example.com')).toBe('Mara Quill');
-  });
-
-  it('trims a display name with stray whitespace', () => {
-    expect(displayNameFor({ displayName: '  Mara  ' }, null)).toBe('Mara');
-  });
-
-  it("falls back to the email's local part when there is no display name", () => {
-    expect(displayNameFor({ displayName: null }, 'maraquill88@example.com')).toBe('maraquill88');
-  });
-
-  it('treats a blank display name the same as none', () => {
-    expect(displayNameFor({ displayName: '   ' }, 'mara@example.com')).toBe('mara');
-  });
-
-  it('never invents a name when neither fact is there', () => {
-    expect(displayNameFor({ displayName: null }, null)).toBe('Player');
-  });
-});
+import { joinedLabel, subtitleFor } from '../src/screens/profile/identity';
 
 describe('joinedLabel', () => {
   it('reads the month and year off an ISO timestamp', () => {

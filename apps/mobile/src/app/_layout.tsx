@@ -169,6 +169,19 @@ export default function RootLayout() {
                 options={{ headerShown: true, headerTransparent: false, title: '' }}
               />
               <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
+              {/*
+                The joint Profile's two pushed pages (movies-build.md, PR 5):
+                Recent's calendar and Edit profile, each with the native back
+                to Profile; each screen sets its own title and right button.
+              */}
+              <Stack.Screen
+                name="profile/activity"
+                options={{ headerShown: true, headerTransparent: false, title: '' }}
+              />
+              <Stack.Screen
+                name="profile/edit"
+                options={{ headerShown: true, headerTransparent: false, title: '' }}
+              />
               {/* Pushed from Settings → Data. Its own screen, not a sheet: the review list is long and dragged. */}
               <Stack.Screen name="import/letterboxd" options={{ headerShown: true, title: 'Letterboxd' }} />
 
@@ -251,6 +264,8 @@ export default function RootLayout() {
               />
               {/* The ask sheet's four states on fixtures, for a browser with no stack (screens/ask). */}
               <Stack.Screen name="ask-preview" />
+              {/* The joint Profile's screens on fixtures (screens/profile); Activity and Edit turn the header on. */}
+              <Stack.Screen name="preview-profile" options={{ headerShown: false }} />
             </Stack.Protected>
           </Stack>
 

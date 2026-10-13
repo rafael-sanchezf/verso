@@ -110,7 +110,9 @@ export function usePlayingActions(): PlayingActions {
   const router = useRouter();
 
   const finish = useMutation({
-    mutationFn: (id: string) => markFinished(supabase, id),
+    // A Playing card, so the log flow's playing-to-played write: Profile reads
+    // "Finished X" on this day (movies-build.md, PR 5).
+    mutationFn: (id: string) => markFinished(supabase, id, { finishedFrom: 'playing' }),
     onSuccess: (_result, id) => {
       invalidateEntry(queryClient, id);
       // The tier sheet belongs to the log flow over the game page, and `log=1`

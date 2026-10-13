@@ -1,6 +1,8 @@
 /**
- * Name and subtitle fallbacks for the Profile identity row
- * (docs/design/specs/profile.md, "Data").
+ * The subtitle for the Profile identity row (docs/design/specs/profile.md,
+ * "Data"). The name line is `nameLine` in model.ts since the joint Profile:
+ * the display name, else the handle, else "Set your name", and the email's
+ * local part never stands in for a name again (profile-brief, the page).
  *
  * Pure and free of React Native imports on purpose, so the fallback chain is
  * unit tested directly (apps/mobile/test) rather than only eyeballed on the
@@ -32,31 +34,6 @@ export interface IdentityProfile {
   username: string | null;
   /** ISO timestamp; `profiles.created_at`. */
   createdAt: string;
-}
-
-/**
- * The name line: `displayName`, else the email's local part.
- *
- * Rule 9 (show what you know, say what you don't) rules out inventing a name,
- * but a blank line at the top of the screen is worse than the part of the
- * email before the `@`, which is what every other product does here too.
- */
-export function displayNameFor(
-  profile: Pick<IdentityProfile, 'displayName'>,
-  email: string | null,
-): string {
-  const trimmed = profile.displayName?.trim();
-  if (trimmed) return trimmed;
-
-  if (email) {
-    const at = email.indexOf('@');
-    return at > 0 ? email.slice(0, at) : email;
-  }
-
-  // Never reached from a signed-in session in practice (Supabase always
-  // carries an email in V0's email-only auth), but a screen still needs a
-  // string rather than an empty title.
-  return 'Player';
 }
 
 /** `Sep 2026` from an ISO timestamp, or null if it does not parse. */

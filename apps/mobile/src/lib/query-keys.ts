@@ -42,8 +42,25 @@ export const queryKeys = {
 
   /** `profileStats(client)`. */
   profileStats: () => ['profile', 'stats'] as const,
+  /**
+   * `profileStats(client, { medium })`: games under the bare key above, any
+   * other medium with the medium after it, the shape the onboarding's tenth
+   * ranking check already reads (ten-ranked.ts), so the two share a cache.
+   */
+  profileStatsFor: (medium: Medium) =>
+    medium === 'game' ? (['profile', 'stats'] as const) : (['profile', 'stats', medium] as const),
   /** `recentRankings(client, n)`. */
   profileRecent: () => ['profile', 'recent'] as const,
+  /**
+   * The joint Profile's reads (movies-build.md, PR 5), under `['profile']` so
+   * every entry and ranking write refetches them (`invalidateEntry`). `'all'`
+   * is the read across media.
+   */
+  profileActivity: (medium: Medium | 'all', limit: number) => ['profile', 'activity', medium, limit] as const,
+  profileActivityMonth: (year: number, month: number, medium: Medium | 'all') =>
+    ['profile', 'activity-month', year, month, medium] as const,
+  profilePercentile: (medium: Medium | 'all') => ['profile', 'percentile', medium] as const,
+  profileHours: (medium: Medium | 'all') => ['profile', 'hours', medium] as const,
   /** `getMyProfile(client)`. */
   profileMe: () => ['profile', 'me'] as const,
 

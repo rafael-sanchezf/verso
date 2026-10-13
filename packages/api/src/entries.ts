@@ -255,6 +255,15 @@ export interface MarkFinishedResult {
 export interface MarkFinishedOptions {
   /** The day it was finished, `YYYY-MM-DD`. Defaults to today where the user is. */
   finishedAt?: string;
+  /**
+   * `'playing'` when the log flow moves a game from Playing to played (the
+   * game page's "I finished this" and Home's long press, which both open it):
+   * written as `user_entries.finished_from` in the same write, so Profile reads
+   * "Finished X" on that day (20261014100000_profile_reads.sql). The database
+   * keeps it only when the entry really was in Playing, and clears it on every
+   * other path, so sending it from a backlog game is harmless.
+   */
+  finishedFrom?: 'playing';
 }
 
 /**
@@ -272,7 +281,16 @@ export async function markFinished(
   assertDate(finishedAt, 'finishedAt');
 
   const [entry, alreadyRanked] = await Promise.all([
-    writeEntry(client, mediaItemId, { status: 'played', finished_at: finishedAt }, 'markFinished'),
+    writeEntry(
+      client,
+      mediaItemId,
+      {
+        status: 'played',
+        finished_at: finishedAt,
+        ...(options.finishedFrom ? { finished_from: options.finishedFrom } : {}),
+      },
+      'markFinished',
+    ),
     isRanked(client, mediaItemId),
   ]);
 

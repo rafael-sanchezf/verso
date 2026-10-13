@@ -77,6 +77,10 @@ import Sparkles from 'lucide-react-native/icons/sparkles';
 // The movie screens (movies-build.md, PR 2): the Watchlist's Filters chip.
 import SlidersHorizontal from 'lucide-react-native/icons/sliders-horizontal';
 
+// The joint Profile (movies-build.md, PR 5): Find friends, the Activity month's chevrons.
+import ChevronLeft from 'lucide-react-native/icons/chevron-left';
+import UserPlus from 'lucide-react-native/icons/user-plus';
+
 import { useTheme, type ColorToken } from './theme';
 
 /** The set the frames use, in the order shell.md lists them. */
@@ -146,6 +150,10 @@ const ICONS = {
 
   // The movie screens: the Watchlist's Filters chip.
   'sliders-horizontal': SlidersHorizontal,
+
+  // The joint Profile: Find friends, and the Activity month's chevrons.
+  'user-plus': UserPlus,
+  'chevron-left': ChevronLeft,
 } as const;
 
 export type IconName = keyof typeof ICONS;

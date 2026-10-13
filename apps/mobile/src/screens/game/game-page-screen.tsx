@@ -88,7 +88,12 @@ export function GamePageScreen() {
    * one thing the entry cannot say.
    */
   const finishing = useMutation({
-    mutationFn: () => markFinished(supabase, id),
+    // The log flow's playing-to-played write says so (`finished_from`), so
+    // Profile reads "Finished X" on this day (movies-build.md, PR 5). Only
+    // from Playing: a fresh entry is an insert the before-update trigger
+    // never sees, so the app must not send it for one.
+    mutationFn: () =>
+      markFinished(supabase, id, page?.entry?.status === 'playing' ? { finishedFrom: 'playing' } : {}),
     onSuccess: (result) => {
       if (!result.alreadyRanked) {
         openLog();

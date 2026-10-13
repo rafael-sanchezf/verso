@@ -31,7 +31,7 @@ import { crossesTenRanked } from './gate';
  */
 export function logTenRankedIfReached(queryClient: QueryClient, added: number, medium: Medium = 'game'): void {
   if (added <= 0) return;
-  const queryKey = medium === 'game' ? queryKeys.profileStats() : [...queryKeys.profileStats(), medium];
+  const queryKey = queryKeys.profileStatsFor(medium);
   void queryClient
     .fetchQuery({ queryKey, queryFn: () => profileStats(supabase, { medium }), staleTime: 0 })
     .then((stats) => {
