@@ -8,3 +8,4 @@ export * from './score-color';
 export * from './platforms';
 export * from './batch';
 export * from './deck';
+export * from './letterboxd';

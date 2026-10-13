@@ -252,6 +252,108 @@ export type Database = {
           },
         ]
       }
+      letterboxd_import_films: {
+        Row: {
+          id: string
+          import_id: string
+          letterboxd_uri: string | null
+          media_item_id: string | null
+          outcome: string
+          position: number | null
+          rating: number | null
+          rewatches: number
+          tier: Database["public"]["Enums"]["tier"] | null
+          title: string
+          user_id: string
+          watched_dates: string[]
+          year: number | null
+        }
+        Insert: {
+          id?: string
+          import_id: string
+          letterboxd_uri?: string | null
+          media_item_id?: string | null
+          outcome: string
+          position?: number | null
+          rating?: number | null
+          rewatches?: number
+          tier?: Database["public"]["Enums"]["tier"] | null
+          title: string
+          user_id: string
+          watched_dates?: string[]
+          year?: number | null
+        }
+        Update: {
+          id?: string
+          import_id?: string
+          letterboxd_uri?: string | null
+          media_item_id?: string | null
+          outcome?: string
+          position?: number | null
+          rating?: number | null
+          rewatches?: number
+          tier?: Database["public"]["Enums"]["tier"] | null
+          title?: string
+          user_id?: string
+          watched_dates?: string[]
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "letterboxd_import_films_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "letterboxd_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "letterboxd_import_films_media_item_id_fkey"
+            columns: ["media_item_id"]
+            isOneToOne: false
+            referencedRelation: "media_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      letterboxd_imports: {
+        Row: {
+          diary_count: number
+          file_names: string[]
+          film_count: number
+          id: string
+          imported_at: string
+          ranked_count: number
+          skipped_count: number
+          unmatched_count: number
+          user_id: string
+          watched_count: number
+        }
+        Insert: {
+          diary_count?: number
+          file_names?: string[]
+          film_count?: number
+          id?: string
+          imported_at?: string
+          ranked_count?: number
+          skipped_count?: number
+          unmatched_count?: number
+          user_id: string
+          watched_count?: number
+        }
+        Update: {
+          diary_count?: number
+          file_names?: string[]
+          film_count?: number
+          id?: string
+          imported_at?: string
+          ranked_count?: number
+          skipped_count?: number
+          unmatched_count?: number
+          user_id?: string
+          watched_count?: number
+        }
+        Relationships: []
+      }
       list_items: {
         Row: {
           list_id: string
@@ -1163,6 +1265,22 @@ export type Database = {
       }
     }
     Functions: {
+      apply_letterboxd_import: {
+        Args: {
+          p_file_names: string[]
+          p_films: Json
+          p_moved?: string[]
+          p_tiers?: Json
+        }
+        Returns: {
+          diary: number
+          import_id: string
+          ranked: number
+          skipped: number
+          unmatched: number
+          watched: number
+        }[]
+      }
       apply_steam_played_platforms: {
         Args: { p_user_id: string }
         Returns: number
@@ -1258,6 +1376,19 @@ export type Database = {
           p_tier: Database["public"]["Enums"]["tier"]
         }
         Returns: number
+      }
+      match_letterboxd_films: {
+        Args: { p_films: Json }
+        Returns: {
+          cover_image_id: string
+          external_ids: Json
+          genres: string[]
+          key: string
+          match: string
+          media_item_id: string
+          title: string
+          year: number
+        }[]
       }
       move_backlog_entry: {
         Args: { p_entry_id: string; p_new_position: number }

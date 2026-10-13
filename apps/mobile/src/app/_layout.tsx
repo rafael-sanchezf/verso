@@ -156,6 +156,8 @@ export default function RootLayout() {
                 options={{ headerShown: true, headerTransparent: false, title: '' }}
               />
               <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
+              {/* Pushed from Settings → Data. Its own screen, not a sheet: the review list is long and dragged. */}
+              <Stack.Screen name="import/letterboxd" options={{ headerShown: true, title: 'Letterboxd' }} />
 
               {/*
                 Settings → Steam and the two screens it pushes (specs/steam.md),

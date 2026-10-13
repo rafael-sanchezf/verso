@@ -51,6 +51,7 @@ app/(tabs)/ranking.tsx          Ranking, list and grid                          
 app/(tabs)/next.tsx             Next, Backlog and Upcoming; accepts ?segment=upcoming         Next agent
 app/(tabs)/profile.tsx          Profile                                                       Profile agent
 app/settings.tsx                Settings list, pushed from Profile                            Profile agent
+app/import/letterboxd.tsx       Import from Letterboxd, pushed from Settings → Data           letterboxd-import.md
 app/game/[id]/index.tsx         Game page, pushed over the tabs (no tab bar)                  Game page agent
 app/game/[id]/hours.tsx         Log-hours sheet (Home links here too)                         Game page agent
 app/game/[id]/details.tsx       Add-detail sheet                                              Game page agent

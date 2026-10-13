@@ -60,6 +60,27 @@ export type IgdbImageSize = IgdbImageBaseSize | `${IgdbImageBaseSize}_2x`;
 export const DEFAULT_COVER_SIZE: IgdbImageSize = 't_cover_big_2x';
 
 const IGDB_IMAGE_BASE = 'https://images.igdb.com/igdb/image/upload';
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
+
+/**
+ * TMDB's poster widths. `w342` is the one a 40 to 120pt row wants on a retina
+ * phone; `w500` for a page; `original` is whatever was uploaded.
+ */
+export type TmdbPosterSize = 'w185' | 'w342' | 'w500' | 'w780' | 'original';
+
+export const DEFAULT_POSTER_SIZE: TmdbPosterSize = 'w342';
+
+/**
+ * The URL for one TMDB poster at one size.
+ *
+ * The film and TV mirror writes `poster_path` verbatim into `cover_image_id`,
+ * leading slash included (docs/design/film-tv-catalog.md, the column table),
+ * and that slash is also how `coverCandidates` tells a TMDB path from an IGDB
+ * image id, which never starts with one.
+ */
+export function tmdbPosterUrl(posterPath: string, size: TmdbPosterSize = DEFAULT_POSTER_SIZE): string {
+  return `${TMDB_IMAGE_BASE}/${size}${posterPath}`;
+}
 const STEAM_APP_BASE = 'https://cdn.cloudflare.steamstatic.com/steam/apps';
 
 /**
@@ -154,6 +175,9 @@ function coverFieldsOf(item: AnyCoverSource): CoverSource {
  * placeholder, which is a real case: an IGDB game with no cover and no Steam
  * page has nothing to show.
  *
+ * A film or a series carries a TMDB poster path in the same column, with its
+ * leading slash, and gets a TMDB URL instead of an IGDB one.
+ *
  * `size` applies to the IGDB URL only. Steam's paths are fixed sizes, which is
  * the other reason IGDB goes first: it is the only source that can answer the
  * question the screen actually asked.
@@ -171,7 +195,7 @@ export function coverCandidates(
   const urls: string[] = [];
 
   const imageId = coverImageId?.trim();
-  if (imageId) urls.push(igdbCoverUrl(imageId, size));
+  if (imageId) urls.push(imageId.startsWith('/') ? tmdbPosterUrl(imageId) : igdbCoverUrl(imageId, size));
 
   const appId = steamAppIdOf(externalIds);
   if (appId !== null) urls.push(...steamCoverUrls(appId));

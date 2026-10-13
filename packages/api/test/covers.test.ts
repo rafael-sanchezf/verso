@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { tmdbPosterUrl } from '../src/covers';
 import {
   coverCandidates,
   DEFAULT_COVER_SIZE,
@@ -180,5 +181,20 @@ describe('coverCandidates', () => {
         `${IGDB}/t_cover_big_2x/co1r7f.jpg`,
       ]);
     });
+  });
+});
+
+describe('tmdbPosterUrl and a film in coverCandidates', () => {
+  it('builds the documented path, the stored leading slash included', () => {
+    expect(tmdbPosterUrl('/kqjL17yufvn9OVLyXYpvtyrFfak.jpg')).toBe(
+      'https://image.tmdb.org/t/p/w342/kqjL17yufvn9OVLyXYpvtyrFfak.jpg',
+    );
+    expect(tmdbPosterUrl('/a.jpg', 'w500')).toBe('https://image.tmdb.org/t/p/w500/a.jpg');
+  });
+
+  it('is what coverCandidates returns for a row whose cover is a TMDB path', () => {
+    expect(coverCandidates({ cover_image_id: '/dune.jpg', external_ids: { tmdb: 438631 } })).toEqual([
+      'https://image.tmdb.org/t/p/w342/dune.jpg',
+    ]);
   });
 });

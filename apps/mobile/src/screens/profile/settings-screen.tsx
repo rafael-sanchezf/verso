@@ -240,6 +240,12 @@ export function SettingsScreen() {
               busy: busy === 'import',
               onPress: busy ? undefined : onImport,
             },
+            {
+              key: 'letterboxd',
+              label: 'Import from Letterboxd',
+              navigates: true,
+              onPress: busy ? undefined : () => router.push('/import/letterboxd'),
+            },
           ]}
         />
 

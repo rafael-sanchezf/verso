@@ -33,3 +33,4 @@ export * from './diary';
 // Movies: the streaming-service directory, the watchlist, the calendar, the unranked count.
 export * from './movies';
 export type { Database, Json } from './database.types';
+export * from './letterboxd';
