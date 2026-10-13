@@ -1,0 +1,30 @@
+/** Signed out, and every step of getting in (screens/sign-in). Wave 1. */
+
+export const signIn = {
+  tagline: 'Your games, ranked by you.',
+  emailPlaceholder: 'Email',
+  continueWithEmail: 'Continue with email',
+  continueWithGoogle: 'Continue with Google',
+  change: 'Change',
+  passwordPlaceholder: 'Password',
+  newHere: 'New here? Creating an account needs at least {min} characters.',
+  signIn: 'Sign in',
+  createAccount: 'Create account',
+  forgotPassword: 'Forgot password?',
+  checkYourEmail: 'Check your email',
+  confirmationSent: 'We sent a confirmation link to {email}. Open it, then come back and sign in.',
+  resetSent: 'Check your email for a link to reset your password.',
+  backToSignIn: 'Back to sign in',
+  setNewPassword: 'Set a new password',
+  newPasswordPlaceholder: 'New password',
+  atLeast: 'At least {min} characters.',
+  useAtLeast: 'Use at least {min} characters',
+  signingYouIn: 'Signing you in…',
+  errors: {
+    wrongEmailOrPassword: 'Wrong email or password',
+    alreadyRegistered: 'That email is already registered, sign in instead',
+    checkConnection: 'Check your connection',
+    googleNoLink: 'Google did not return a sign-in link.',
+    googleUnreachable: 'Could not reach Google.',
+  },
+} as const;

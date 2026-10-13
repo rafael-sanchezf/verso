@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import '@/global.css';
+import { useT } from '@/lib/i18n';
 import { usePasswordRecovery } from '@/lib/password-recovery';
 import { useAppOpenEvent } from '@/lib/use-app-open-event';
 import { useSession } from '@/lib/use-session';
@@ -76,6 +77,7 @@ const FORM_SHEETS: { name: string; detents: number[] | 'fitToContents' }[] = [
 ];
 
 export default function RootLayout() {
+  const t = useT();
   const theme = useTheme();
   const session = useSession();
 
@@ -168,7 +170,7 @@ export default function RootLayout() {
                 name="home/row"
                 options={{ headerShown: true, headerTransparent: false, title: '' }}
               />
-              <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
+              <Stack.Screen name="settings" options={{ headerShown: true, title: t('settings.title') }} />
               {/*
                 The joint Profile's two pushed pages (movies-build.md, PR 5):
                 Recent's calendar and Edit profile, each with the native back

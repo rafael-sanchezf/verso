@@ -92,6 +92,7 @@ After a mutation call the shell's helpers: `invalidateEntry(queryClient, id)` af
 - Relative: `Today`, `Yesterday`, the weekday name within seven days, else `Sep 3`.
 - Platforms: joined with `, ` in Search rows and on the game page ownership line, with ` · ` in Next rows; at most three, then `+2`.
 - Genres: `genreDisplayName` from core, nulls skipped, at most two joined with `, `.
+- In Spanish (decision 36, [spanish-build.md](../spanish-build.md)): the same shapes with the day first and the RAE's lowercase month, `24 sept`, `feb 2027`, `2 sept 2025`, `17 sept 2020`; `Hoy`, `Ayer`, then `Lunes`; `14 h jugadas`, `40 min jugados`. Platforms and `~30 h` are the same.
 
 ## Global rank
 

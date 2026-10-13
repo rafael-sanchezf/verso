@@ -10,17 +10,19 @@
 
 import type { AuthError } from '@verso/api';
 
+import { t } from '@/lib/i18n';
+
 export function authErrorMessage(error: AuthError): string {
   switch (error.kind) {
     case 'invalid-credentials':
       // Deliberately covers both a wrong password and an unknown address:
       // Supabase does not distinguish them, so that an attacker cannot use the
       // form to find out which addresses have accounts.
-      return 'Wrong email or password';
+      return t('signIn.errors.wrongEmailOrPassword');
     case 'email-already-registered':
-      return 'That email is already registered, sign in instead';
+      return t('signIn.errors.alreadyRegistered');
     case 'network':
-      return 'Check your connection';
+      return t('signIn.errors.checkConnection');
     default:
       return error.message;
   }

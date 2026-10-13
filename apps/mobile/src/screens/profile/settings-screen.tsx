@@ -27,6 +27,13 @@
  * prompt anywhere else, and the phone is already unlocked and holding a
  * session.
  *
+ * Since the Spanish foundation (spanish-build.md, PR 1), an "App" section
+ * between Data and About holds one row, "Language": its value is the language
+ * the app is in, and it opens the action sheet with the device's language and
+ * each language the app speaks. Its own section because the row is about the
+ * app rather than the account or the data, and iOS puts an app's language in
+ * the same kind of list. Every sentence on this screen goes through `t`.
+ *
  * The native stack header ("Settings", with the back chevron) comes from
  * `app/_layout.tsx`'s `<Stack.Screen name="settings" ... />`, so this screen
  * draws only the list, not its own title bar.
@@ -40,7 +47,15 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { alert } from '@/lib/dialog';
+import { alert, select } from '@/lib/dialog';
+import {
+  LANGUAGES,
+  setLanguagePreference,
+  useLanguage,
+  useLanguagePreference,
+  useT,
+  type Language,
+} from '@/lib/i18n';
 import { invalidateAllEntries } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/use-session';
@@ -59,6 +74,7 @@ import { SettingsSection } from './settings-section';
 type Busy = 'json' | 'csv' | 'import' | 'sign-out' | 'delete' | null;
 
 export function SettingsScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const session = useSession();
@@ -69,24 +85,37 @@ export function SettingsScreen() {
   const email = session.status === 'signed-in' ? (session.user.email ?? null) : null;
   const version = Constants.expoConfig?.version ?? '—';
 
+  const language = useLanguage();
+  const preference = useLanguagePreference();
+  const languageName = (code: Language) => t(`language.${code}`);
+  const languageValue =
+    preference === 'system' ? t('language.systemValue', { language: languageName(language) }) : languageName(language);
+
+  function onLanguage() {
+    select({
+      title: t('language.title'),
+      cancelLabel: t('common.cancel'),
+      choices: [
+        { label: t('language.system'), onPress: () => setLanguagePreference('system') },
+        ...LANGUAGES.map((code) => ({ label: languageName(code), onPress: () => setLanguagePreference(code) })),
+      ],
+    });
+  }
+
   async function onSignOut() {
     setBusy('sign-out');
     const result = await signOut(supabase);
     setBusy(null);
-    if (!result.ok) alert('Could not sign out', result.error.message);
+    if (!result.ok) alert(t('settings.couldNotSignOut'), result.error.message);
     // On success the session store flips and the root gate swaps back to
     // sign-in; there is nothing for this screen to navigate.
   }
 
   function onDeleteAccount() {
-    alert(
-      'Delete your account?',
-      'Your rankings, backlog, and profile are removed. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => void runDelete() },
-      ],
-    );
+    alert(t('settings.deleteAccountTitle'), t('settings.deleteAccountMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: () => void runDelete() },
+    ]);
   }
 
   async function runDelete() {
@@ -105,7 +134,7 @@ export function SettingsScreen() {
       // session store flips, and the root gate swaps to the sign-in screen
       // with this screen underneath it.
     } catch (cause) {
-      alert('Could not delete your account', importErrorMessage(cause));
+      alert(t('settings.couldNotDelete'), importErrorMessage(cause));
     } finally {
       setBusy(null);
     }
@@ -116,7 +145,7 @@ export function SettingsScreen() {
     try {
       await exportJson();
     } catch (cause) {
-      alert('Export failed', importErrorMessage(cause));
+      alert(t('settings.exportFailed'), importErrorMessage(cause));
     } finally {
       setBusy(null);
     }
@@ -127,7 +156,7 @@ export function SettingsScreen() {
     try {
       await exportCsv();
     } catch (cause) {
-      alert('Export failed', importErrorMessage(cause));
+      alert(t('settings.exportFailed'), importErrorMessage(cause));
     } finally {
       setBusy(null);
     }
@@ -137,18 +166,14 @@ export function SettingsScreen() {
     const picked = await pickImportFile();
     if (!picked) return;
 
-    alert(
-      'Import from a file',
-      `This adds or overwrites entries in your library from "${picked.name}". Rankings and comparisons in the file are not restored — only entries are.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Import',
-          style: 'destructive',
-          onPress: () => void runImport(picked),
-        },
-      ],
-    );
+    alert(t('settings.importTitle'), t('settings.importMessage', { name: picked.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.import'),
+        style: 'destructive',
+        onPress: () => void runImport(picked),
+      },
+    ]);
   }
 
   async function runImport(picked: PickedFile) {
@@ -163,10 +188,13 @@ export function SettingsScreen() {
       // the file was read.
       invalidateAllEntries(queryClient);
 
-      const unmatchedNote = result.unmatched > 0 ? `, ${result.unmatched} not found in the catalog` : '';
-      alert('Import complete', `${result.created} added, ${result.updated} updated${unmatchedNote}.`);
+      const unmatched = result.unmatched > 0 ? t('settings.importUnmatched', { count: result.unmatched }) : '';
+      alert(
+        t('settings.importComplete'),
+        t('settings.importSummary', { created: result.created, updated: result.updated, unmatched }),
+      );
     } catch (cause) {
-      alert('Import failed', importErrorMessage(cause));
+      alert(t('settings.importFailed'), importErrorMessage(cause));
     } finally {
       setBusy(null);
     }
@@ -176,11 +204,11 @@ export function SettingsScreen() {
     <SafeAreaView style={styles.fill} edges={['bottom']}>
       <ScrollView contentContainerStyle={{ padding: theme.space[4], gap: theme.space[6] }}>
         <SettingsSection
-          title="Profile"
+          title={t('settings.sections.profile')}
           rows={[
             {
               key: 'edit',
-              label: 'Edit profile',
+              label: t('settings.editProfile'),
               navigates: true,
               onPress: () => router.push('/profile/edit'),
             },
@@ -188,19 +216,19 @@ export function SettingsScreen() {
         />
 
         <SettingsSection
-          title="Account"
+          title={t('settings.sections.account')}
           rows={[
-            { key: 'email', label: 'Email', value: email ?? '—' },
+            { key: 'email', label: t('settings.email'), value: email ?? '—' },
             {
               key: 'sign-out',
-              label: 'Sign out',
+              label: t('settings.signOut'),
               destructive: true,
               busy: busy === 'sign-out',
               onPress: busy ? undefined : onSignOut,
             },
             {
               key: 'delete-account',
-              label: 'Delete account',
+              label: t('settings.deleteAccount'),
               destructive: true,
               busy: busy === 'delete',
               onPress: busy ? undefined : onDeleteAccount,
@@ -209,49 +237,61 @@ export function SettingsScreen() {
         />
 
         <SettingsSection
-          title="Linked accounts"
-          rows={[{ key: 'steam', label: 'Steam', navigates: true, onPress: () => router.push('/settings/steam') }]}
+          title={t('settings.sections.linkedAccounts')}
+          rows={[
+            { key: 'steam', label: t('settings.steam'), navigates: true, onPress: () => router.push('/settings/steam') },
+          ]}
         />
 
         <SettingsSection
-          title="Data"
+          title={t('settings.sections.data')}
           rows={[
             {
               key: 'json',
-              label: 'Export as JSON',
+              label: t('settings.exportJson'),
               navigates: true,
               busy: busy === 'json',
               onPress: busy ? undefined : onExportJson,
             },
             {
               key: 'csv',
-              label: 'Export as CSV',
+              label: t('settings.exportCsv'),
               navigates: true,
               busy: busy === 'csv',
               onPress: busy ? undefined : onExportCsv,
             },
             {
               key: 'import',
-              label: 'Import from a file',
+              label: t('settings.importFromFile'),
               navigates: true,
               busy: busy === 'import',
               onPress: busy ? undefined : onImport,
             },
             {
               key: 'letterboxd',
-              label: 'Import from Letterboxd',
+              label: t('settings.importFromLetterboxd'),
               navigates: true,
               onPress: busy ? undefined : () => router.push('/import/letterboxd'),
             },
           ]}
         />
 
-        <SettingsSection title="About" rows={[{ key: 'version', label: 'Version', value: version }]} />
+        <SettingsSection
+          title={t('settings.sections.app')}
+          rows={[{ key: 'language', label: t('language.title'), value: languageValue, navigates: true, onPress: onLanguage }]}
+        />
+
+        <SettingsSection
+          title={t('settings.sections.about')}
+          rows={[{ key: 'version', label: t('settings.version'), value: version }]}
+        />
 
         {__DEV__ ? (
           <SettingsSection
-            title="Developer"
-            rows={[{ key: 'preview', label: 'Primitives', navigates: true, onPress: () => router.push('/preview') }]}
+            title={t('settings.sections.developer')}
+            rows={[
+              { key: 'preview', label: t('settings.primitives'), navigates: true, onPress: () => router.push('/preview') },
+            ]}
           />
         ) : null}
       </ScrollView>

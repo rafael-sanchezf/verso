@@ -1,0 +1,37 @@
+import type { Dictionary } from '../dictionary';
+
+export const settings: Dictionary['settings'] = {
+  title: 'Configuración',
+  sections: {
+    profile: 'Perfil',
+    account: 'Cuenta',
+    linkedAccounts: 'Cuentas vinculadas',
+    data: 'Datos',
+    app: 'Aplicación',
+    about: 'Acerca de',
+    developer: 'Desarrollador',
+  },
+  editProfile: 'Editar perfil',
+  email: 'Correo',
+  signOut: 'Cerrar sesión',
+  deleteAccount: 'Eliminar cuenta',
+  steam: 'Steam',
+  exportJson: 'Exportar como JSON',
+  exportCsv: 'Exportar como CSV',
+  importFromFile: 'Importar desde un archivo',
+  importFromLetterboxd: 'Importar desde Letterboxd',
+  version: 'Versión',
+  primitives: 'Primitivos',
+  couldNotSignOut: 'No se pudo cerrar sesión',
+  deleteAccountTitle: '¿Eliminar tu cuenta?',
+  deleteAccountMessage: 'Se eliminan tus rankings, tus pendientes y tu perfil. Esto no se puede deshacer.',
+  couldNotDelete: 'No se pudo eliminar tu cuenta',
+  exportFailed: 'La exportación falló',
+  importTitle: 'Importar desde un archivo',
+  importMessage:
+    'Esto agrega o sobrescribe entradas de tu biblioteca desde "{name}". Los rankings y las comparaciones del archivo no se restauran, solo las entradas.',
+  importComplete: 'Importación completa',
+  importSummary: '{created} agregadas, {updated} actualizadas{unmatched}.',
+  importUnmatched: ', {count} no encontradas en el catálogo',
+  importFailed: 'La importación falló',
+};

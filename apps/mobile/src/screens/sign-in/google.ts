@@ -27,6 +27,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
+import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 
 import { oauthRedirect } from './redirects';
@@ -127,7 +128,7 @@ export async function signInWithGoogle(): Promise<OAuthOutcome> {
     });
 
     if (error) return { status: 'error', message: error.message };
-    if (!data?.url) return { status: 'error', message: 'Google did not return a sign-in link.' };
+    if (!data?.url) return { status: 'error', message: t('signIn.errors.googleNoLink') };
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
@@ -142,7 +143,7 @@ export async function signInWithGoogle(): Promise<OAuthOutcome> {
   } catch (cause) {
     return {
       status: 'error',
-      message: cause instanceof Error ? cause.message : 'Could not reach Google.',
+      message: cause instanceof Error ? cause.message : t('signIn.errors.googleUnreachable'),
     };
   }
 }
@@ -165,7 +166,7 @@ async function redirectToGoogle(): Promise<OAuthOutcome> {
   } catch (cause) {
     return {
       status: 'error',
-      message: cause instanceof Error ? cause.message : 'Could not reach Google.',
+      message: cause instanceof Error ? cause.message : t('signIn.errors.googleUnreachable'),
     };
   }
 }

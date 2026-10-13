@@ -26,6 +26,7 @@ import {
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { clearPasswordRecovery, usePasswordRecovery } from '@/lib/password-recovery';
 import { supabase } from '@/lib/supabase';
 import { Button, Text, TextButton } from '@/ui';
@@ -49,6 +50,7 @@ type Step =
   | 'new-password';
 
 export function SignInScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
@@ -98,7 +100,7 @@ export function SignInScreen() {
 
   async function onCreateAccount() {
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Use at least ${MIN_PASSWORD_LENGTH} characters`);
+      setError(t('signIn.useAtLeast', { min: MIN_PASSWORD_LENGTH }));
       return;
     }
 
@@ -137,7 +139,7 @@ export function SignInScreen() {
 
   async function onSaveNewPassword() {
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Use at least ${MIN_PASSWORD_LENGTH} characters`);
+      setError(t('signIn.useAtLeast', { min: MIN_PASSWORD_LENGTH }));
       return;
     }
 
@@ -209,13 +211,13 @@ export function SignInScreen() {
                   <>
                     <Lockup />
                     <Text size={17} color="text/secondary">
-                      Your games, ranked by you.
+                      {t('signIn.tagline')}
                     </Text>
 
                     <Field
                       value={email}
                       onChangeText={setEmail}
-                      placeholder="Email"
+                      placeholder={t('signIn.emailPlaceholder')}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -229,7 +231,7 @@ export function SignInScreen() {
                     {error ? <ErrorLine message={error} /> : null}
 
                     <Button
-                      label="Continue with email"
+                      label={t('signIn.continueWithEmail')}
                       disabled={!canContinue}
                       onPress={() => {
                         setError(null);
@@ -237,7 +239,7 @@ export function SignInScreen() {
                       }}
                     />
                     <Button
-                      label="Continue with Google"
+                      label={t('signIn.continueWithGoogle')}
                       variant="secondary"
                       disabled={busy}
                       onPress={onGoogle}
@@ -252,13 +254,13 @@ export function SignInScreen() {
                       <Text size={15} color="text/secondary" numberOfLines={1} layout={styles.grow}>
                         {trimmedEmail}
                       </Text>
-                      <TextButton label="Change" onPress={backToStart} />
+                      <TextButton label={t('signIn.change')} onPress={backToStart} />
                     </View>
 
                     <Field
                       value={password}
                       onChangeText={setPassword}
-                      placeholder="Password"
+                      placeholder={t('signIn.passwordPlaceholder')}
                       secureTextEntry
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -274,20 +276,19 @@ export function SignInScreen() {
                       <ErrorLine message={error} />
                     ) : (
                       <Text size={13} color="text/secondary">
-                        New here? Creating an account needs at least {MIN_PASSWORD_LENGTH}{' '}
-                        characters.
+                        {t('signIn.newHere', { min: MIN_PASSWORD_LENGTH })}
                       </Text>
                     )}
 
-                    <Button label="Sign in" disabled={busy || !password} onPress={() => void onSignIn()} />
+                    <Button label={t('signIn.signIn')} disabled={busy || !password} onPress={() => void onSignIn()} />
                     <Button
-                      label="Create account"
+                      label={t('signIn.createAccount')}
                       variant="secondary"
                       disabled={busy || !password}
                       onPress={() => void onCreateAccount()}
                     />
                     <TextButton
-                      label="Forgot password?"
+                      label={t('signIn.forgotPassword')}
                       color="text/secondary"
                       align="center"
                       disabled={busy}
@@ -299,26 +300,26 @@ export function SignInScreen() {
                 {step === 'check-email' || step === 'check-reset' ? (
                   <>
                     <Text size={20} weight={600}>
-                      Check your email
+                      {t('signIn.checkYourEmail')}
                     </Text>
                     <Text size={15} color="text/secondary">
                       {step === 'check-email'
-                        ? `We sent a confirmation link to ${trimmedEmail}. Open it, then come back and sign in.`
-                        : `Check your email for a link to reset your password.`}
+                        ? t('signIn.confirmationSent', { email: trimmedEmail })
+                        : t('signIn.resetSent')}
                     </Text>
-                    <TextButton label="Back to sign in" onPress={backToStart} />
+                    <TextButton label={t('signIn.backToSignIn')} onPress={backToStart} />
                   </>
                 ) : null}
 
                 {step === 'new-password' ? (
                   <>
                     <Text size={20} weight={600}>
-                      Set a new password
+                      {t('signIn.setNewPassword')}
                     </Text>
                     <Field
                       value={password}
                       onChangeText={setPassword}
-                      placeholder="New password"
+                      placeholder={t('signIn.newPasswordPlaceholder')}
                       secureTextEntry
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -333,11 +334,11 @@ export function SignInScreen() {
                       <ErrorLine message={error} />
                     ) : (
                       <Text size={13} color="text/secondary">
-                        At least {MIN_PASSWORD_LENGTH} characters.
+                        {t('signIn.atLeast', { min: MIN_PASSWORD_LENGTH })}
                       </Text>
                     )}
                     <Button
-                      label="Save"
+                      label={t('common.save')}
                       disabled={busy || !password}
                       onPress={() => void onSaveNewPassword()}
                     />

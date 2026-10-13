@@ -1,5 +1,5 @@
 import { GENRE_DISPLAY_NAMES } from '@verso/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   fullDate,
@@ -16,6 +16,7 @@ import {
   releaseDate,
   timeToBeat,
 } from '../src/lib/format';
+import { languageStore } from '../src/lib/i18n/store';
 
 /** A fixed "now" so nothing here depends on the day the suite runs. */
 const NOW = new Date(2026, 8, 16, 14, 30); // Wednesday 16 September 2026
@@ -412,5 +413,40 @@ describe('genreLabel', () => {
       expect(label).not.toBeNull();
       expect(label!.charAt(0)).toBe(label!.charAt(0).toUpperCase());
     }
+  });
+});
+
+describe('in Spanish', () => {
+  afterEach(() => languageStore.setPreference('system'));
+
+  it('writes the day before the month, with the lowercase abbreviation', () => {
+    languageStore.setPreference('es');
+    expect(releaseDate('2026-09-24', NOW)).toBe('24 sept');
+    expect(releaseDate('2027-02-11', NOW)).toBe('feb 2027');
+    expect(releaseDate('2028-01-01', NOW)).toBe('2028');
+    expect(personalDate('2026-09-02', NOW)).toBe('2 sept');
+    expect(personalDate('2025-09-02', NOW)).toBe('2 sept 2025');
+    expect(fullDate('2020-09-17')).toBe('17 sept 2020');
+  });
+
+  it('names the days in Spanish', () => {
+    languageStore.setPreference('es');
+    expect(relativeDate('2026-09-16', NOW)).toBe('Hoy');
+    expect(relativeDate('2026-09-15', NOW)).toBe('Ayer');
+    expect(relativeDate('2026-09-14', NOW)).toBe('Lunes');
+    expect(relativeDate('2026-09-09', NOW)).toBe('9 sept');
+  });
+
+  it('agrees the played word with hours and minutes', () => {
+    languageStore.setPreference('es');
+    expect(playtime(14 * 60)).toBe('14 h jugadas');
+    expect(playtime(40)).toBe('40 min jugados');
+    expect(hours(14 * 60)).toBe('14 h');
+    expect(timeToBeat(30 * 3600)).toBe('~30 h');
+  });
+
+  it('leaves platforms alone', () => {
+    languageStore.setPreference('es');
+    expect(platforms(['PC (Microsoft Windows)', 'PlayStation 5'])).toBe('PC, PS5');
   });
 });

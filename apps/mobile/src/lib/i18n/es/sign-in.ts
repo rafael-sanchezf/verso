@@ -1,0 +1,30 @@
+import type { Dictionary } from '../dictionary';
+
+export const signIn: Dictionary['signIn'] = {
+  tagline: 'Tus juegos, ordenados por ti.',
+  emailPlaceholder: 'Correo electrónico',
+  continueWithEmail: 'Continuar con correo',
+  continueWithGoogle: 'Continuar con Google',
+  change: 'Cambiar',
+  passwordPlaceholder: 'Contraseña',
+  newHere: '¿Primera vez? Para crear una cuenta necesitas al menos {min} caracteres.',
+  signIn: 'Iniciar sesión',
+  createAccount: 'Crear cuenta',
+  forgotPassword: '¿Olvidaste tu contraseña?',
+  checkYourEmail: 'Revisa tu correo',
+  confirmationSent: 'Enviamos un enlace de confirmación a {email}. Ábrelo y vuelve para iniciar sesión.',
+  resetSent: 'Revisa tu correo: te enviamos un enlace para restablecer tu contraseña.',
+  backToSignIn: 'Volver a iniciar sesión',
+  setNewPassword: 'Elige una contraseña nueva',
+  newPasswordPlaceholder: 'Contraseña nueva',
+  atLeast: 'Al menos {min} caracteres.',
+  useAtLeast: 'Usa al menos {min} caracteres',
+  signingYouIn: 'Iniciando sesión…',
+  errors: {
+    wrongEmailOrPassword: 'Correo o contraseña incorrectos',
+    alreadyRegistered: 'Ese correo ya está registrado; inicia sesión',
+    checkConnection: 'Revisa tu conexión',
+    googleNoLink: 'Google no devolvió un enlace de inicio de sesión.',
+    googleUnreachable: 'No se pudo conectar con Google.',
+  },
+};

@@ -54,6 +54,15 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "es"],
+            "android": ["en", "es"]
+          }
+        }
       ]
     ],
     "experiments": {

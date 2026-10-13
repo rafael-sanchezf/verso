@@ -34,6 +34,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { usePasswordRecovery } from '@/lib/password-recovery';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/use-session';
@@ -49,6 +50,7 @@ export function AuthReturnScreen() {
 }
 
 function WebAuthReturn() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const session = useSession();
@@ -96,13 +98,13 @@ function WebAuthReturn() {
             {error}
           </Text>
           <TextButton
-            label={signedIn ? 'Continue' : 'Back to sign in'}
+            label={signedIn ? t('common.continue') : t('signIn.backToSignIn')}
             onPress={() => router.replace(destination)}
           />
         </>
       ) : (
         <Text style="subheadline" color="text/secondary" align="center">
-          Signing you in…
+          {t('signIn.signingYouIn')}
         </Text>
       )}
     </View>

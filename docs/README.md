@@ -24,6 +24,7 @@ New here? The [README's Start here](../README.md#start-here) gives a reading ord
 - [design/tmdb-setup.md](design/tmdb-setup.md) (2026-09-16): the TMDB credential and its terms.
 - [design/brand-identity.md](design/brand-identity.md) (2026-10-08): the mark, the app icon, the wordmark and lockup, the colors on each ground, the approved words.
 - [design/brand-build.md](design/brand-build.md) (2026-10-08, executed): the plan that put the mark in the app and on the site.
+- [design/spanish-build.md](design/spanish-build.md) (2026-10-13): the app in Spanish; the locale layer, the register, the rules for a wave, the waves, what stays English on purpose.
 - [design/naming.md](design/naming.md) (2026-09-15): the name shortlist with store, domain and trademark collision checks.
 - [design/usability-test-plan.md](design/usability-test-plan.md) (2026-09-16): the tasks for the three-friends test.
 - `design/assets/brand/`: the mark (SVG, both grounds), the 1024 px app icon master, the brand board.

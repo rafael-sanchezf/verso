@@ -14,38 +14,64 @@
  *   cannot be tested, and "Today" is exactly the kind of thing that is wrong
  *   for six hours a day if the timezone handling is subtly off.
  *
- * No `Intl`: the month and weekday names are fixed English, because the app is
- * not localized and a device set to another language should not produce a date
- * the rest of the (English) interface disagrees with. When localization
- * arrives this file is where it lands.
+ * No `Intl`: the month and weekday names are the app's own tables, one per
+ * language the app speaks, read against the language the app is in
+ * (`lib/i18n/store.ts`), never the device's locale on its own. A device set to
+ * a language the app does not speak would otherwise print a date the rest of
+ * the interface disagrees with. The tables are the whole of what localization
+ * changes here: the shapes (which facts, how precise, what falls back to what)
+ * are the same in every language.
+ *
+ * Spanish writes the day before the month (`24 sept`, `2 sept 2025`), with the
+ * RAE's lowercase month abbreviations, and the rest of the week's weekday as a
+ * standalone label, capitalized like `Hoy` and `Ayer` because it starts the
+ * line.
  */
 
 import { genreDisplayName } from '@verso/core';
 
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-] as const;
+import { languageStore } from './i18n/store';
+import type { Language } from './i18n/model';
 
-const WEEKDAYS = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-] as const;
+interface DateWords {
+  months: readonly [string, string, string, string, string, string, string, string, string, string, string, string];
+  weekdays: readonly [string, string, string, string, string, string, string];
+  today: string;
+  yesterday: string;
+  /** `Sep 24` or `24 sept`. */
+  monthDay(month: string, day: number): string;
+  /** `Sep 24, 2025` or `24 sept 2025`. */
+  monthDayYear(month: string, day: number, year: number): string;
+  /** `14 h played` or `14 h jugadas`; `40 min played` or `40 min jugados`. */
+  played(figure: string, unit: 'h' | 'min'): string;
+}
+
+const DATE_WORDS: Readonly<Record<Language, DateWords>> = {
+  en: {
+    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    today: 'Today',
+    yesterday: 'Yesterday',
+    monthDay: (month, day) => `${month} ${day}`,
+    monthDayYear: (month, day, year) => `${month} ${day}, ${year}`,
+    played: (figure) => `${figure} played`,
+  },
+  es: {
+    months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'],
+    weekdays: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+    today: 'Hoy',
+    yesterday: 'Ayer',
+    monthDay: (month, day) => `${day} ${month}`,
+    monthDayYear: (month, day, year) => `${day} ${month} ${year}`,
+    // Hours are feminine, minutes masculine.
+    played: (figure, unit) => `${figure} ${unit === 'h' ? 'jugadas' : 'jugados'}`,
+  },
+};
+
+/** The words for the language the app is in at the moment of the call. */
+function words(): DateWords {
+  return DATE_WORDS[languageStore.language()];
+}
 
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -72,9 +98,16 @@ function parse(value: string | null | undefined): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-/** `Sep 24`. */
+/** `Sep 24`; `24 sept` in Spanish. */
 function monthDay(date: Date): string {
-  return `${MONTHS[date.getMonth()]} ${date.getDate()}`;
+  const w = words();
+  return w.monthDay(w.months[date.getMonth()]!, date.getDate());
+}
+
+/** `Sep 24, 2025`; `24 sept 2025` in Spanish. */
+function monthDayYear(date: Date): string {
+  const w = words();
+  return w.monthDayYear(w.months[date.getMonth()]!, date.getDate(), date.getFullYear());
 }
 
 /** Whole days between two dates, counting calendar days rather than 24-hour spans. */
@@ -114,14 +147,17 @@ export function playtime(minutes: number | null | undefined): string | null {
   if (minutes === null || minutes === undefined || !Number.isFinite(minutes) || minutes <= 0) {
     return null;
   }
-  if (minutes < 60) return `${Math.round(minutes)} min played`;
-  return `${Math.round(minutes / 60)} h played`;
+  const figure = hours(minutes)!;
+  return words().played(figure, minutes < 60 ? 'min' : 'h');
 }
 
 /** The same figure without the trailing word, for the game page's Hours row: `14 h`. */
 export function hours(minutes: number | null | undefined): string | null {
-  const played = playtime(minutes);
-  return played === null ? null : played.replace(' played', '');
+  if (minutes === null || minutes === undefined || !Number.isFinite(minutes) || minutes <= 0) {
+    return null;
+  }
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+  return `${Math.round(minutes / 60)} h`;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +179,7 @@ export function releaseDate(value: string | null | undefined, now: Date = new Da
 
   const years = date.getFullYear() - now.getFullYear();
   if (years <= 0) return monthDay(date);
-  if (years === 1) return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+  if (years === 1) return `${words().months[date.getMonth()]} ${date.getFullYear()}`;
   return String(date.getFullYear());
 }
 
@@ -159,16 +195,14 @@ export function personalDate(value: string | null | undefined, now: Date = new D
   const date = parse(value);
   if (!date) return null;
 
-  return date.getFullYear() === now.getFullYear()
-    ? monthDay(date)
-    : `${monthDay(date)}, ${date.getFullYear()}`;
+  return date.getFullYear() === now.getFullYear() ? monthDay(date) : monthDayYear(date);
 }
 
 /** Always the whole date, `Sep 17, 2020`. The game page's Released row. */
 export function fullDate(value: string | null | undefined): string | null {
   const date = parse(value);
   if (!date) return null;
-  return `${monthDay(date)}, ${date.getFullYear()}`;
+  return monthDayYear(date);
 }
 
 /**
@@ -184,9 +218,10 @@ export function relativeDate(value: string | null | undefined, now: Date = new D
   if (!date) return null;
 
   const days = daysBetween(date, now);
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days > 1 && days < 7) return WEEKDAYS[date.getDay()]!;
+  const w = words();
+  if (days === 0) return w.today;
+  if (days === 1) return w.yesterday;
+  if (days > 1 && days < 7) return w.weekdays[date.getDay()]!;
   return personalDate(value, now);
 }
 
