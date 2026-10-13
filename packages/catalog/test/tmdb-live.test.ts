@@ -387,3 +387,162 @@ live('the TMDB store against a real database', () => {
     expect(later.some((target) => target.tmdb_id === FIXTURE_MOVIE_ID)).toBe(true);
   });
 });
+
+/**
+ * The batched writes the sync calls, against the per-title path they replaced
+ * (VER-163), row for row in a real Postgres.
+ *
+ * The same titles go through three runs on each path: a first write, a second
+ * in which one film has left Netflix in the US, and a third in which it is
+ * back. After each path's three runs every table is read back with the uuids
+ * swapped for TMDB ids, and the two snapshots have to be identical. That
+ * covers both branches of the `media_items` statement, the replacements, the
+ * close-out and the re-open.
+ *
+ * Its own band of ids, so it shares nothing with the suite above.
+ */
+const EQUIVALENCE_MOVIE_IDS = [99_000_101, 99_000_102, 99_000_103];
+const EQUIVALENCE_TV_IDS = [99_000_201, 99_000_202];
+
+live('the batched TMDB writes against the per-title ones', () => {
+  const store = new CatalogStore(connectionString!);
+
+  async function query<T>(text: string, values: unknown[] = []): Promise<T[]> {
+    const pool = (store as unknown as { pool: { query: Function } }).pool;
+    const result = await pool.query(text, values);
+    return result.rows as T[];
+  }
+
+  async function cleanUp(): Promise<void> {
+    await query(
+      `delete from public.media_items
+        where id in (
+          select media_item_id from public.movie_details where tmdb_id = any($1::integer[])
+          union all
+          select media_item_id from public.tv_details where tmdb_id = any($2::integer[])
+        )`,
+      [EQUIVALENCE_MOVIE_IDS, EQUIVALENCE_TV_IDS],
+    );
+  }
+
+  beforeAll(async () => {
+    await cleanUp();
+  });
+
+  afterAll(async () => {
+    await cleanUp();
+    await query(
+      `delete from public.watch_providers p
+        where p.provider_id = $1
+          and not exists (select 1 from public.watch_availability w where w.provider_id = p.provider_id)`,
+      [1899],
+    );
+    await store.end();
+  });
+
+  function films(now: Date, withoutUsNetflix = false): MappedMovie[] {
+    const names = ['tmdb-movie-normal.json', 'tmdb-movie-unvoted.json', 'tmdb-movie-dropped.json'];
+    return names.map((name, index) => {
+      const detail = fixture<TmdbMovieDetail>(name);
+      detail.id = EQUIVALENCE_MOVIE_IDS[index]!;
+      const mapped = mapMovie(detail, now, REGIONS)!;
+      if (withoutUsNetflix && index === 0) {
+        mapped.availability = mapped.availability.filter(
+          (row) => !(row.region === 'US' && row.provider_id === 8),
+        );
+      }
+      return mapped;
+    });
+  }
+
+  function series(now: Date): MappedTv[] {
+    const names = ['tmdb-tv-returning.json', 'tmdb-tv-miniseries.json'];
+    return names.map((name, index) => {
+      const detail = fixture<TmdbTvDetail>(name);
+      detail.id = EQUIVALENCE_TV_IDS[index]!;
+      return mapTv(detail, now, REGIONS)!;
+    });
+  }
+
+  const RUNS = [
+    { at: FIRST_RUN, withoutUsNetflix: false },
+    { at: SECOND_RUN, withoutUsNetflix: true },
+    { at: new Date('2026-09-18T12:00:00.000Z'), withoutUsNetflix: false },
+  ];
+
+  /** Every row the titles own, uuids replaced by TMDB ids, as sorted JSON. */
+  async function snapshot(): Promise<Record<string, string[]>> {
+    const keys = `(
+      select media_item_id, tmdb_id, 'movie' as kind from public.movie_details
+       where tmdb_id = any($1::integer[])
+      union all
+      select media_item_id, tmdb_id, 'tv' as kind from public.tv_details
+       where tmdb_id = any($2::integer[])
+    )`;
+    // fetched_at is now() on both paths, so it is the one column that differs
+    // by construction; every other timestamp is the run's own instant.
+    const tables: Record<string, string> = {
+      media_items: `select k.kind, k.tmdb_id, to_jsonb(t) - 'id' as row
+                      from public.media_items t join ${keys} k on k.media_item_id = t.id`,
+      movie_details: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' as row
+                        from public.movie_details t join ${keys} k using (media_item_id)`,
+      tv_details: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' as row
+                     from public.tv_details t join ${keys} k using (media_item_id)`,
+      external_scores: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' - 'fetched_at' as row
+                          from public.external_scores t join ${keys} k using (media_item_id)`,
+      tv_seasons: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' as row
+                     from public.tv_seasons t join ${keys} k using (media_item_id)`,
+      media_release_dates: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' as row
+                              from public.media_release_dates t join ${keys} k using (media_item_id)`,
+      media_certifications: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' as row
+                               from public.media_certifications t join ${keys} k using (media_item_id)`,
+      watch_availability: `select k.kind, k.tmdb_id, to_jsonb(t) - 'media_item_id' as row
+                             from public.watch_availability t join ${keys} k using (media_item_id)`,
+    };
+
+    const out: Record<string, string[]> = {};
+    for (const [table, sql] of Object.entries(tables)) {
+      const rows = await query<{ kind: string; tmdb_id: number; row: unknown }>(sql, [
+        EQUIVALENCE_MOVIE_IDS,
+        EQUIVALENCE_TV_IDS,
+      ]);
+      out[table] = rows.map((row) => JSON.stringify(row)).sort();
+    }
+    return out;
+  }
+
+  /** The counts both paths report, minus the stubs, which the first path leaves behind. */
+  function comparable(counts: Awaited<ReturnType<CatalogStore['upsertMovies']>>) {
+    const { providerStubs: _stubs, ...rest } = counts;
+    return rest;
+  }
+
+  it('leaves exactly the rows the per-title path left, over three runs', async () => {
+    const perTitleCounts: unknown[] = [];
+    for (const run of RUNS) {
+      perTitleCounts.push(
+        comparable(await store.upsertMoviesPerTitle(films(run.at, run.withoutUsNetflix), run.at)),
+        comparable(await store.upsertShowsPerTitle(series(run.at), run.at)),
+      );
+    }
+    const perTitle = await snapshot();
+
+    await cleanUp();
+
+    const batchedCounts: unknown[] = [];
+    for (const run of RUNS) {
+      batchedCounts.push(
+        comparable(await store.upsertMovies(films(run.at, run.withoutUsNetflix), run.at)),
+        comparable(await store.upsertShows(series(run.at), run.at)),
+      );
+    }
+    const batched = await snapshot();
+
+    expect(perTitle.media_items).toHaveLength(5);
+    expect(perTitle.watch_availability!.length).toBeGreaterThan(0);
+    expect(perTitle.media_release_dates!.length).toBeGreaterThan(0);
+    expect(perTitle.tv_seasons!.length).toBeGreaterThan(0);
+    expect(batched).toEqual(perTitle);
+    expect(batchedCounts).toEqual(perTitleCounts);
+  });
+});

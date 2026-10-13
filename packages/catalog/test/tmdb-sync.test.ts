@@ -143,9 +143,9 @@ function fakeStore(options: FakeStoreOptions = {}) {
       writes.shows.push(rows);
       return { ...emptyCounts(), mediaItems: rows.length, details: rows.length };
     },
-    async markTmdbMissing(kind: TmdbMedium, id: number) {
-      writes.missing.push({ kind, id });
-      return 1;
+    async markTmdbMissingMany(kind: TmdbMedium, ids: number[]) {
+      for (const id of ids) writes.missing.push({ kind, id });
+      return ids.length;
     },
     async mediumRowCount() {
       return 42;

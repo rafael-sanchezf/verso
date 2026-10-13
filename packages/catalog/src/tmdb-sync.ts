@@ -280,8 +280,9 @@ async function fetchTitles(
       if (shows.length > 0) addCounts(counts, await deps.store.upsertShows(shows, seenAt));
       // A 404 is an answer about an id we hold, so it is recorded; an id from
       // today's export that the catalog has never seen has no row to stamp and
-      // the update simply matches nothing.
-      for (const id of gone) await deps.store.markTmdbMissing(kind, id, seenAt);
+      // the update simply matches nothing. One statement for the batch's 404s,
+      // like every other write here (VER-163).
+      if (gone.length > 0) await deps.store.markTmdbMissingMany(kind, gone, seenAt);
     }
   }
 

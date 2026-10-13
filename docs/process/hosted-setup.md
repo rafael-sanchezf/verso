@@ -231,6 +231,8 @@ Unblocks: the whole movie and TV catalog on the hosted project. Until the token 
   pnpm catalog:tmdb-sync:full
   ```
 
+  A projection, not a measurement (VER-163, 2026-10-12): the first cloud run wrote about 100 films a minute because each title cost eight to ten database round trips, up to about 5,000 per 500-title batch; writes are now at most 12 round trips per batch, so the TMDB fetch at 20 a second sets the pace again and the whole pull should take roughly 35 minutes, well inside the workflow's two-hour timeout.
+
 - [ ] Nothing more: the nightly run is scheduled at 14:00 UTC and takes over from here. It mirrors movies only (2026-10-12): TV is held until its ranking unit is decided, and the free tier's 500 MB would not hold the series. When TV is scheduled, drop the default in `tmdb-sync.yml` and raise its popularity threshold first.
 
 ## 5. Optional keys (5 minutes each, any time)
