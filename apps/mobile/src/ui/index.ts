@@ -11,7 +11,17 @@ export { Button, Pressed, TextButton, type ButtonProps, type ButtonSize, type Bu
 export { Chip, type ChipProps, type ChipVariant } from './chip';
 // `coverHeight` is exported for the skeletons and fixed row heights that mirror
 // a cover: one ratio, read from one place (rule 29).
-export { Cover, COVER_ASPECT, coverHeight, type CoverProps } from './cover';
+export {
+  Cover,
+  COVER_ASPECT,
+  POSTER_ASPECT,
+  artHeight,
+  coverHeight,
+  posterHeight,
+  type CoverAspect,
+  type CoverProps,
+} from './cover';
+export { PosterCard, type PosterCardProps } from './poster-card';
 // The web primitives of W1 (web-brief.md): each renders on native too, as the
 // platform's own control or as nothing, so a screen imports them unguarded.
 export { DateField, type DateFieldProps } from './date-field';

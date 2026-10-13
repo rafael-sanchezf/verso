@@ -22,6 +22,8 @@ export interface DateFieldProps {
   onChange: (value: string | null) => void;
   /** The latest day that can be picked, `YYYY-MM-DD`: "today" for a day that has happened. */
   max?: string;
+  /** The earliest day that can be picked, `YYYY-MM-DD`: "today" for a day still to come (the Going sheet). */
+  min?: string;
   /** Show a Clear control while there is a value (Started and Purchased, not Finished). */
   clearable?: boolean;
 }

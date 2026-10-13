@@ -20,6 +20,7 @@
 
 import type { PopularGameRow, SearchGameRow } from '@verso/api';
 
+import { filmMeta, filmSearchLine } from '../../lib/film';
 import { platforms as formatPlatforms } from '../../lib/format';
 
 /**
@@ -59,4 +60,21 @@ export function searchSubtitle(row: Pick<SearchGameRow, 'year' | 'platforms' | '
  */
 export function popularSubtitle(row: Pick<PopularGameRow, 'year' | 'platforms'>): string | null {
   return yearAndPlatforms(row.year, row.platforms);
+}
+
+/**
+ * A film's search line: "2021 · Sci-fi" by default, "2021 · Denis Villeneuve"
+ * when the query matched a person (movies-brief.md, third pass, point 2).
+ * `person_match` arrives with PR 1's person tier on `search_games`; until it
+ * merges the row has no such field and every line is year and genre.
+ */
+export function filmResultSubtitle(
+  row: Pick<SearchGameRow, 'year' | 'genres'> & { person_match?: string | null },
+): string | null {
+  return filmSearchLine(row.year, row.genres, row.person_match ?? null);
+}
+
+/** A popular film's line: the year, since `popular_games` returns no genres. */
+export function filmPopularSubtitle(row: Pick<PopularGameRow, 'year'>): string | null {
+  return filmMeta(row.year, []);
 }

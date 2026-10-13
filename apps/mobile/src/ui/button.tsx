@@ -47,6 +47,8 @@ export interface ButtonProps {
   style?: StyleProp<ViewStyle>;
   /** Anything that is not a label — a Google mark, a spinner — before the label. */
   leading?: ReactNode;
+  /** The label's color instead of the variant's: the movie page's "Want to watch" reads in the brand green once the film is on the list. */
+  labelColor?: ColorToken;
 }
 
 /** Label size and weight, and the vertical padding, per size. */
@@ -80,11 +82,13 @@ export function Button({
   onPress,
   style,
   leading,
+  labelColor: labelOverride,
 }: ButtonProps) {
   const theme = useTheme();
   const { fontSize, weight: defaultWeight, paddingVertical } = SIZES[size];
   const labelWeight = weight ?? defaultWeight;
-  const { fill, label: labelColor } = colorsFor(variant);
+  const { fill, label: variantLabel } = colorsFor(variant);
+  const labelColor = labelOverride ?? variantLabel;
 
   return (
     <Pressable

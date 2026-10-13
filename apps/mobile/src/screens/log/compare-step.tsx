@@ -13,12 +13,13 @@
  * the space above and below it is always equal.
  */
 
-import { comparisonPrompt, genreCue, type ComparisonOutcome, type InsertionState } from '@verso/core';
+import { comparisonPrompt, genreCue, type ComparisonOutcome, type InsertionState, type Medium } from '@verso/core';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { filmComparisonWords } from '@/lib/film';
 import { Button, Icon, Text, TierChip } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -28,6 +29,8 @@ import { progress } from './machine';
 import { ProgressDots } from './pieces';
 
 export interface CompareStepProps {
+  /** Films read TMDB's genres and say "just watched"; games are the default. */
+  medium?: Medium;
   insertion: InsertionState;
   /** The game being ranked: always the left card. */
   newGame: LogGame;
@@ -40,6 +43,7 @@ export interface CompareStepProps {
 }
 
 export function CompareStep({
+  medium = 'game',
   insertion,
   newGame,
   pivot,
@@ -53,8 +57,10 @@ export function CompareStep({
   // padding rather than by guessing a number.
   const [topRowHeight, setTopRowHeight] = useState(0);
 
-  const prompt = comparisonPrompt(insertion);
-  const cue = genreCue(insertion);
+  // A film's genres are TMDB's, which core's IGDB table does not name.
+  const filmWords = medium === 'movie' ? filmComparisonWords(insertion) : null;
+  const prompt = filmWords ? filmWords.prompt : comparisonPrompt(insertion);
+  const cue = filmWords ? filmWords.cue : genreCue(insertion);
   // Every answer replaces the pair; the question number is what makes React
   // mount a new one and fade it in.
   const question = insertion.records.length;
@@ -91,7 +97,7 @@ export function CompareStep({
           style={[styles.pair, { gap: theme.space[3] }]}>
           <CompareCard
             game={newGame}
-            subtitle="just finished"
+            subtitle={medium === 'movie' ? 'just watched' : 'just finished'}
             cue={cue}
             onPress={() => onAnswer('a')}
           />

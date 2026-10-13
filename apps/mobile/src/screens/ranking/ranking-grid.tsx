@@ -12,6 +12,7 @@
  */
 
 import { coverCandidates } from '@verso/api';
+import type { Medium } from '@verso/core';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { Cover, Pressed, Text, useTheme } from '@/ui';
@@ -23,11 +24,13 @@ const GAP = 12;
 const SIDE_PADDING = 16;
 
 export interface RankingGridProps {
+  /** Films are 2:3 posters. */
+  medium?: Medium;
   items: readonly RankingItem[];
   onOpen: (mediaItemId: string) => void;
 }
 
-export function RankingGrid({ items, onOpen }: RankingGridProps) {
+export function RankingGrid({ items, onOpen, medium = 'game' }: RankingGridProps) {
   const { width } = useWindowDimensions();
 
   // specs/ranking.md gives the cells flex 1; at the frame's 402pt that is a
@@ -46,7 +49,7 @@ export function RankingGrid({ items, onOpen }: RankingGridProps) {
       {rows.map((row) => (
         <View key={row[0]?.mediaItemId ?? 'row'} style={[styles.row, { gap: GAP }]}>
           {row.map((item) => (
-            <GridCell key={item.mediaItemId} item={item} width={cell} onOpen={onOpen} />
+            <GridCell key={item.mediaItemId} item={item} width={cell} onOpen={onOpen} medium={medium} />
           ))}
         </View>
       ))}
@@ -58,9 +61,11 @@ function GridCell({
   item,
   width,
   onOpen,
+  medium,
 }: {
   item: RankingItem;
   width: number;
+  medium: Medium;
   onOpen: (mediaItemId: string) => void;
 }) {
   const theme = useTheme();
@@ -73,6 +78,7 @@ function GridCell({
           width={width}
           // Square corners: the wall reads as tiles rather than as cards.
           radius={0}
+          aspect={medium === 'movie' ? 'poster' : 'cover'}
           candidates={coverCandidates(coverSourceOf(item.row))}
           accessibilityLabel={item.title}
         />

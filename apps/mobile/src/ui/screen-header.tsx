@@ -12,6 +12,8 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { MEDIUM_WORDS, useActiveMedium } from '@/state/medium';
+
 import { Text } from './text';
 import { useTheme } from './theme';
 
@@ -43,14 +45,19 @@ export function ScreenHeader({ title, right, paddingBottom = 12, style }: Screen
 }
 
 /**
- * "Games", with its dot. Which medium you are in, at a glance (rule 4).
+ * "Games" or "Movies", with its dot. Which medium you are in, at a glance
+ * (rule 4).
  *
- * Static in V0: the app only has games, and the switcher that changes it lives
- * on Home alone (open question 8). The dot is the brand text color, the same
- * for every medium (decision 29: no color per medium); the label says which.
+ * Reads the active medium (`state/medium.ts`, movies-build.md PR 2); the
+ * switcher that changes it lives on Home alone. The dot is the brand text
+ * color, the same for every medium (decision 29: no color per medium); the
+ * label says which. `label` overrides it where a screen is about one medium
+ * whatever the switch says.
  */
-export function MediumChip({ label = 'Games' }: { label?: string }) {
+export function MediumChip({ label }: { label?: string }) {
   const theme = useTheme();
+  const { medium } = useActiveMedium();
+  const word = label ?? MEDIUM_WORDS[medium].plural;
 
   return (
     <View
@@ -67,7 +74,7 @@ export function MediumChip({ label = 'Games' }: { label?: string }) {
       ]}>
       <View style={[styles.dot, { backgroundColor: theme.colors['brand/text'] }]} />
       <Text size={13} weight={600}>
-        {label}
+        {word}
       </Text>
     </View>
   );

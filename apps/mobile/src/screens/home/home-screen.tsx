@@ -12,18 +12,19 @@
  * it sits over the placeholder until the rows by reason land.
  */
 
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { askQuestion } from '@/screens/ask/trace';
 import { searchHref } from '@/screens/search/intent';
+import { useActiveMedium } from '@/state/medium';
 import { EmptyState, useTheme } from '@/ui';
 
 import { AskButton } from './ask-button';
 import { ComingUpBlock } from './coming-up-block';
-import { MediaSwitcher, mediumFor, type MediumDescriptor, type MediumKey } from './media-switcher';
+import { MediaSwitcher } from './media-switcher';
 import { PlayingBlock } from './playing-block';
 import { homeState } from './rules';
 import { UpNextBlock } from './up-next-block';
@@ -33,12 +34,11 @@ export function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
 
-  const [medium, setMedium] = useState<MediumKey>('games');
-
-  // "The switch is visual state that resets when the tab is left" (home.md).
-  // The cleanup runs on blur, so coming back to Home is always coming back to
-  // games — nobody returns to a tab they left in a mode with nothing in it.
-  useFocusEffect(useCallback(() => () => setMedium('games'), []));
+  // The app's active medium (state/medium.ts). It used to be Home's own state
+  // and reset to games when the tab was left (home.md); since the movies build
+  // every tab reads it, so it stays where the person put it (movies-build.md,
+  // PR 2, item 1).
+  const { medium } = useActiveMedium();
 
   const data = useHomeData();
   const actions = usePlayingActions();
@@ -54,11 +54,11 @@ export function HomeScreen() {
   // "Search a new game" on the empty Playing card: Search for that one visit
   // marks a result Playing in one tap and comes back here.
   const searchNewGame = useCallback(() => router.navigate(searchHref('playing')), [router]);
-  // The ask (movies-build.md, PR 3): games and movies have one; the held media do not.
-  const askMedium = medium === 'games' ? 'game' : medium === 'movies' ? 'movie' : null;
+  // The ask (movies-build.md, PR 3): both live media have one, and the active
+  // medium is always a live one (state/medium.ts).
   const openAsk = useCallback(
-    () => askMedium && router.push({ pathname: '/ask', params: { medium: askMedium } }),
-    [askMedium, router],
+    () => router.push({ pathname: '/ask', params: { medium } }),
+    [medium, router],
   );
 
   // Only once all three have answered. A screen that has read nothing yet is
@@ -76,15 +76,10 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
-      <MediaSwitcher active={medium} onSelect={setMedium} />
-      {askMedium ? (
-        <AskButton
-          label={askQuestion(askMedium)}
-          onPress={openAsk}
-        />
-      ) : null}
+      <MediaSwitcher />
+      <AskButton label={askQuestion(medium)} onPress={openAsk} />
 
-      {medium === 'games' ? (
+      {medium === 'game' ? (
         <ScrollView
           contentContainerStyle={{
             // The site's 20 between the ask button and the first block.
@@ -117,30 +112,29 @@ export function HomeScreen() {
           <ComingUpBlock query={data.comingUp} onOpenGame={openGame} />
         </ScrollView>
       ) : (
-        <MediumPlaceholder medium={mediumFor(medium)} />
+        <MoviesHomePlaceholder onOpenWatchlist={goToBacklog} />
       )}
     </SafeAreaView>
   );
 }
 
 /**
- * What the other three media have on Home until they have anything.
+ * Movies Home until its rows land.
  *
- * Bare and centred rather than in a card, because it stands in for the whole
- * content area rather than for one block (shell.md, EmptyState). The tab bar
- * does not change: the tabs are the same five whichever medium is showing, and
- * this is a look ahead rather than a place to be.
- *
- * home.md writes the line as "{Books, Movies, TV} arrive after games." and
- * `EmptyState` takes a title and a body. Substituting the name into the
- * sentence and using it for both would say the name twice and, for one of the
- * three, say "TV arrive"; so the name is the title and the body is the rest of
- * the spec's own sentence. Listed in the PR.
+ * Decision 28's rows by reason come from `movie_home_rows` (PR 1's read in
+ * the movies build); the ask button above already works (PR 3). Until the
+ * rows land Home says so plainly and points at the Watchlist, which is real. Bare and centred, as an `EmptyState` that stands
+ * in for the whole content area (shell.md).
  */
-function MediumPlaceholder({ medium }: { medium: MediumDescriptor }) {
+function MoviesHomePlaceholder({ onOpenWatchlist }: { onOpenWatchlist: () => void }) {
   return (
     <View style={styles.placeholder}>
-      <EmptyState icon={medium.icon} title={medium.label} body="Arrives after games." />
+      <EmptyState
+        icon="film"
+        title="Our recommendations arrive here soon"
+        body="Your watchlist and calendar are ready now."
+        action={{ label: 'Open Watchlist', onPress: onOpenWatchlist }}
+      />
     </View>
   );
 }

@@ -74,6 +74,10 @@ export function invalidateEntry(queryClient: QueryClient, id: string): void {
   // The deck leaves out every game with an entry, and the drain is the played
   // games with no ranking: a status write can move a game into or out of both.
   invalidateOnboarding(queryClient);
+  // The movie screens: the Watchlist, the Calendar, a film's page and diary.
+  // A diary row, a planned day or a watchlist write moves a film between all
+  // four, and they are cheap reads.
+  void queryClient.invalidateQueries({ queryKey: ['movies'], ...REFETCH_EVERYTHING });
 }
 
 /**
@@ -97,6 +101,7 @@ export function invalidateAllEntries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: ['profile'], ...REFETCH_EVERYTHING });
   void queryClient.invalidateQueries({ queryKey: ['tracked'], ...REFETCH_EVERYTHING });
   invalidateOnboarding(queryClient);
+  void queryClient.invalidateQueries({ queryKey: ['movies'], ...REFETCH_EVERYTHING });
 }
 
 /**
@@ -125,7 +130,8 @@ export function invalidateSteam(queryClient: QueryClient, { entriesChanged = fal
  */
 export function invalidateRanking(queryClient: QueryClient, id: string): void {
   invalidateEntry(queryClient, id);
-  void queryClient.invalidateQueries({ queryKey: queryKeys.ranking(), ...REFETCH_EVERYTHING });
+  // Prefix match: every medium's `['ranking', medium]`.
+  void queryClient.invalidateQueries({ queryKey: ['ranking'], ...REFETCH_EVERYTHING });
   // Prefix match: every `['tier', tier]`.
   void queryClient.invalidateQueries({ queryKey: ['tier'], ...REFETCH_EVERYTHING });
 }

@@ -15,10 +15,11 @@
  * the stop line stay put. Reduce Motion: no fade.
  */
 
-import { comparisonPrompt, genreCue, type BatchQuestion, type ComparisonOutcome } from '@verso/core';
+import { comparisonPrompt, genreCue, type BatchQuestion, type ComparisonOutcome, type Medium } from '@verso/core';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 
+import { filmComparisonWords } from '@/lib/film';
 import { Button, Text, TierChip, useTheme } from '@/ui';
 
 import { CompareCard } from '../../log/compare-card';
@@ -27,6 +28,8 @@ import type { SessionGame } from './games';
 import { TextAction } from './text-action';
 
 export interface CompareStageProps {
+  /** Films read TMDB's genres and say "just watched"; games are the default. */
+  medium?: Medium;
   question: BatchQuestion;
   /** How many questions have been answered: the key of the one on screen. */
   answered: number;
@@ -39,6 +42,7 @@ export interface CompareStageProps {
 }
 
 export function CompareStage({
+  medium = 'game',
   question,
   answered,
   game,
@@ -49,8 +53,9 @@ export function CompareStage({
 }: CompareStageProps) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
-  const prompt = comparisonPrompt(question.insertion);
-  const cue = genreCue(question.insertion);
+  const filmWords = medium === 'movie' ? filmComparisonWords(question.insertion) : null;
+  const prompt = filmWords ? filmWords.prompt : comparisonPrompt(question.insertion);
+  const cue = filmWords ? filmWords.cue : genreCue(question.insertion);
 
   return (
     <ScrollView
@@ -69,7 +74,7 @@ export function CompareStage({
           {prompt}
         </Text>
         <View style={[styles.pair, { gap: theme.space[3] }]}>
-          <CompareCard game={game} subtitle={NEW_GAME_SUBTITLE} cue={cue} onPress={() => onAnswer('a')} />
+          <CompareCard game={game} subtitle={medium === 'movie' ? 'just watched' : NEW_GAME_SUBTITLE} cue={cue} onPress={() => onAnswer('a')} />
           <CompareCard game={pivot} subtitle={pivotSubtitle} cue={cue} onPress={() => onAnswer('b')} />
         </View>
       </Animated.View>

@@ -14,6 +14,7 @@
 
 import { profileStats } from '@verso/api';
 import type { QueryClient } from '@tanstack/react-query';
+import type { Medium } from '@verso/core';
 
 import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
@@ -21,10 +22,18 @@ import { supabase } from '@/lib/supabase';
 
 import { crossesTenRanked } from './gate';
 
-export function logTenRankedIfReached(queryClient: QueryClient, added: number): void {
+/**
+ * `medium` is the ranked list the write went into: ten films count as ten in
+ * the movie list, so a film never re-reads the games count (or the reverse).
+ * The games read keeps the Profile tab's key; another medium's has its own
+ * under the same `['profile']` prefix, so the Profile's games stats are never
+ * overwritten with a film count.
+ */
+export function logTenRankedIfReached(queryClient: QueryClient, added: number, medium: Medium = 'game'): void {
   if (added <= 0) return;
+  const queryKey = medium === 'game' ? queryKeys.profileStats() : [...queryKeys.profileStats(), medium];
   void queryClient
-    .fetchQuery({ queryKey: queryKeys.profileStats(), queryFn: () => profileStats(supabase), staleTime: 0 })
+    .fetchQuery({ queryKey, queryFn: () => profileStats(supabase, { medium }), staleTime: 0 })
     .then((stats) => {
       if (crossesTenRanked(stats.ranked - added, stats.ranked)) return logAppEvent('ten_ranked');
       return undefined;

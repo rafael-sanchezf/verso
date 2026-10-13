@@ -21,7 +21,7 @@ import type { ReleaseState } from '@verso/api';
 import { releaseDate } from '../../lib/format';
 
 /** Which row was tapped. */
-export type Choice = 'backlog' | 'playing' | 'finished';
+export type Choice = 'backlog' | 'playing' | 'finished' | 'watched';
 
 export interface AddOption {
   choice: Choice;
@@ -76,3 +76,17 @@ function unreleasedDescription(date: string | null, now: Date): string {
   const out = releaseDate(date, now);
   return out === null ? 'Release date to be announced' : `Out ${out} · shows in Coming up`;
 }
+
+/**
+ * The sheet's rows for a film (movies-brief.md, "Search": "Want to watch"
+ * and "I watched this"; nothing about services). "Want to watch" writes what
+ * Backlog writes, and the film lands on the Watchlist or the Calendar by its
+ * release state (rule 37), so an unreleased film needs no row of its own.
+ * "I watched this" opens the log sheet: logging is not ranking (rule 35).
+ */
+export const FILM_ROWS: AddSheetRows = {
+  options: [
+    { choice: 'backlog', title: 'Want to watch', description: 'On your watchlist or calendar', filled: false },
+    { choice: 'watched', title: 'I watched this', description: 'Log it, then rank it if you like', filled: true },
+  ],
+};

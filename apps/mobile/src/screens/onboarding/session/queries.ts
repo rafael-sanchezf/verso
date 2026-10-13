@@ -23,7 +23,7 @@ import {
   type BatchPrediction,
   type PlayedNotRankedRow,
 } from '@verso/api';
-import { TIERS } from '@verso/core';
+import { TIERS, type Medium } from '@verso/core';
 
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -50,19 +50,23 @@ export interface SessionReads {
   retry: () => void;
 }
 
-export function useSessionReads(ids: readonly string[], withPredictions: boolean): SessionReads {
+export function useSessionReads(
+  ids: readonly string[],
+  withPredictions: boolean,
+  medium: Medium = 'game',
+): SessionReads {
   const tierResults = useQueries({
     queries: TIERS.map((tier) => ({
-      queryKey: queryKeys.tier(tier),
-      queryFn: () => tierList(supabase, 'game', tier),
+      queryKey: queryKeys.tier(tier, medium),
+      queryFn: () => tierList(supabase, medium, tier),
       refetchOnMount: 'always' as const,
     })),
   });
 
   const guessIds = ids.slice(0, MAX_PREDICTION_IDS);
   const guesses = useQuery({
-    queryKey: queryKeys.batchPredictions('game', guessIds),
-    queryFn: () => batchPredictions(supabase, 'game', guessIds),
+    queryKey: queryKeys.batchPredictions(medium, guessIds),
+    queryFn: () => batchPredictions(supabase, medium, guessIds),
     enabled: withPredictions && guessIds.length > 0,
     refetchOnMount: 'always',
   });
@@ -93,10 +97,10 @@ export function useSessionReads(ids: readonly string[], withPredictions: boolean
   };
 }
 
-/** Ranking's banner: the played games with no ranking yet, newest first. */
-export function usePlayedNotRanked() {
+/** Ranking's banner: the played games (or watched films) with no ranking yet, newest first. */
+export function usePlayedNotRanked(medium: Medium = 'game') {
   return useQuery<PlayedNotRankedRow[]>({
-    queryKey: queryKeys.playedNotRanked('game'),
-    queryFn: () => playedNotRanked(supabase, 'game'),
+    queryKey: queryKeys.playedNotRanked(medium),
+    queryFn: () => playedNotRanked(supabase, medium),
   });
 }

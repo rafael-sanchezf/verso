@@ -29,10 +29,11 @@ import { useTheme } from './theme';
 
 export type { DateFieldProps } from './date-field-value';
 
-export function DateField({ label, value, onChange, max, clearable = false }: DateFieldProps) {
+export function DateField({ label, value, onChange, max, min, clearable = false }: DateFieldProps) {
   const theme = useTheme();
   const date = localDateOf(value);
   const maximumDate = localDateOf(max) ?? undefined;
+  const minimumDate = localDateOf(min) ?? undefined;
 
   const pick = (_event: DateTimePickerEvent, picked?: Date) => {
     if (picked) onChange(dateOnly(picked));
@@ -52,6 +53,7 @@ export function DateField({ label, value, onChange, max, clearable = false }: Da
               mode="date"
               display="compact"
               maximumDate={maximumDate}
+              minimumDate={minimumDate}
               accessibilityLabel={label}
               onChange={pick}
             />
@@ -64,6 +66,7 @@ export function DateField({ label, value, onChange, max, clearable = false }: Da
                   value: date,
                   mode: 'date',
                   maximumDate,
+                  minimumDate,
                   // `dismissed` arrives with the old date; only `set` is a pick.
                   onChange: (event, picked) => {
                     if (event.type === 'set') pick(event, picked);

@@ -38,7 +38,7 @@ import { supabase } from '@/lib/supabase';
 import { Cover, ErrorLine, Icon, Text } from '@/ui';
 import { useTheme, type ColorToken } from '@/ui/theme';
 
-import { addSheetRows, type Choice } from './add-options';
+import { addSheetRows, FILM_ROWS, type Choice } from './add-options';
 import { GameRowSkeleton } from './placeholders';
 
 export function AddSheet({ id }: { id: string }) {
@@ -54,6 +54,8 @@ export function AddSheet({ id }: { id: string }) {
 
   const choose = useMutation({
     mutationFn: async (choice: Choice) => {
+      // "I watched this" writes nothing here: the log sheet does, with its date.
+      if (choice === 'watched') return null;
       if (choice === 'backlog') return moveToBacklog(supabase, id);
       if (choice === 'playing') return setStatus(supabase, id, 'playing');
       return markFinished(supabase, id);
@@ -61,6 +63,11 @@ export function AddSheet({ id }: { id: string }) {
     onSuccess: (_result, choice) => {
       invalidateEntry(queryClient, id);
       router.back();
+      // A film's "I watched this" is its log sheet (movies-build.md, PR 2, item 5).
+      if (choice === 'watched') {
+        router.push({ pathname: '/log/[id]', params: { id } });
+        return;
+      }
       // "I finished this" is the start of the ranking flow, not the end of the
       // sheet: the game page opens with `log=1` and pushes the tier sheet as
       // soon as it has loaded (specs/game-page.md). `from` is the back title.
@@ -141,12 +148,19 @@ function Loaded({
   const theme = useTheme();
   // A tracked game gets the same rows as an untracked one, as it always has;
   // an unreleased one, tracked or not, gets the single row.
-  const rows = addSheetRows(releaseState(page.releaseDate));
+  const film = page.medium === 'movie';
+  const rows = film ? FILM_ROWS : addSheetRows(releaseState(page.releaseDate));
 
   return (
     <>
       <View style={[styles.game, { paddingBottom: 6, gap: theme.space[3] }]}>
-        <Cover width={40} radius={6} candidates={coverCandidates(page)} accessibilityLabel={page.title} />
+        <Cover
+          width={40}
+          radius={6}
+          aspect={film ? 'poster' : 'cover'}
+          candidates={coverCandidates(page)}
+          accessibilityLabel={page.title}
+        />
         <View style={styles.fill}>
           <Text size={17} weight={600} numberOfLines={2}>
             {page.title}

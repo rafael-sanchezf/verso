@@ -19,14 +19,18 @@
 
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { genreLabel, platformShortName } from '@/lib/format';
+import type { Medium } from '@verso/core';
+
+import { platformShortName } from '@/lib/format';
 import { Chip, GenreIcon, Icon, MenuChip, PlatformIcon, useTheme } from '@/ui';
 
-import { isFiltered, type RankingFilters } from './model';
+import { genreChipLabel, isFiltered, type RankingFilters } from './model';
 
 export type RankingView = 'list' | 'grid';
 
 export interface ToolsRowProps {
+  /** Films name their genres by TMDB's labels and have no Platform filter. */
+  medium?: Medium;
   filters: RankingFilters;
   onFiltersChange: (filters: RankingFilters) => void;
   /** Every genre in the whole ranking, as IGDB names (`genreOptions`); not just the filtered subset. */
@@ -41,6 +45,7 @@ export interface ToolsRowProps {
 }
 
 export function ToolsRow({
+  medium = 'game',
   filters,
   onFiltersChange,
   genres,
@@ -71,8 +76,9 @@ export function ToolsRow({
             options={genres}
             // The chip and the sheet read "RPG"; the value that comes back is
             // IGDB's `Role-playing (RPG)`, which the icon is looked up by.
-            formatOption={(genre) => genreLabel(genre) ?? genre}
-            renderIcon={(genre, color) => <GenreIcon genre={genre} color={color} />}
+            formatOption={(genre) => genreChipLabel(medium)(genre) ?? genre}
+            // TMDB's genres have no icon set of their own yet; IGDB's would mislabel them.
+            renderIcon={(genre, color) => (medium === 'movie' ? null : <GenreIcon genre={genre} color={color} />)}
             onChange={(genre) => onFiltersChange({ ...filters, genre })}
           />
         ) : null}

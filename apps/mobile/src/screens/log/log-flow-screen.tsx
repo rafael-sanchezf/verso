@@ -15,7 +15,7 @@
  * half-written: the game page then offers "Rank it".
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { finishInsertion } from '@verso/api';
 import {
   insertionToFinishArgs,
@@ -30,7 +30,9 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { invalidateRanking } from '@/lib/invalidate';
+import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
+import { movieFacts } from '@/screens/movie/fallback';
 import { logTenRankedIfReached } from '@/screens/onboarding/ten-ranked';
 import { ErrorLine } from '@/ui';
 import { useTheme } from '@/ui/theme';
@@ -39,6 +41,7 @@ import { CompareStep } from './compare-step';
 import { ConfirmStep } from './confirm-step';
 import { gameFromPage, gameFromTierRow, rankable, scoreText, TIER_IN_SENTENCE } from './game';
 import { chooseTier, nudge, respond, TIER_STEP, type LogState } from './machine';
+import { MovieLogStep } from './movie-log-step';
 import { gamesAbove, globalRank } from './placement';
 import { useGame, useTiers } from './queries';
 import { TierStep } from './tier-step';
@@ -52,7 +55,12 @@ import { TierStep } from './tier-step';
  */
 const FULL_HEIGHT_SHEET = { sheetAllowedDetents: [1] };
 
-export function LogFlowScreen({ id }: { id: string }) {
+/**
+ * `rank` skips a film's log sheet and opens at the tier step: the movie
+ * page's "Rank it ›" for a film already in the diary. A game always opens at
+ * the tier step, since its page marked it finished before pushing here.
+ */
+export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -62,9 +70,24 @@ export function LogFlowScreen({ id }: { id: string }) {
   const [log, setLog] = useState<LogState>(TIER_STEP);
 
   const game = useGame(id);
-  const tiers = useTiers(chosen);
+  // The medium comes from the item (movies-build.md, PR 2, item 5): a film
+  // opens on its log sheet, a game on the tier sheet.
+  const medium = game.data?.medium ?? 'game';
+  const isFilm = medium === 'movie';
+  const film = useQuery({
+    queryKey: queryKeys.movieFacts(id),
+    queryFn: () => movieFacts(supabase, id),
+    enabled: isFilm,
+  });
+  const [logged, setLogged] = useState(rank);
+  const tiers = useTiers(chosen, medium);
 
-  const newGame = useMemo(() => (game.data ? gameFromPage(game.data) : null), [game.data]);
+  // A film's genres are TMDB's, on `movie_details`; `gamePage` has none for it.
+  const newGame = useMemo(() => {
+    if (!game.data) return null;
+    const base = gameFromPage(game.data);
+    return isFilm ? { ...base, genres: film.data?.genres ?? [] } : base;
+  }, [game.data, isFilm, film.data]);
   const gamesById = useMemo(() => {
     const map = new Map<string, ReturnType<typeof gameFromTierRow>>();
     for (const row of tiers.rows ?? []) map.set(row.media_item_id, gameFromTierRow(row));
@@ -81,16 +104,15 @@ export function LogFlowScreen({ id }: { id: string }) {
    */
   useEffect(() => {
     if (chosen === null || log.step !== 'tier') return;
-    const page = game.data;
     const rows = tiers.rows;
-    if (!page || !rows) return;
+    if (!newGame || !rows) return;
 
     const list = rows
       .filter((row) => row.media_item_id !== id)
       .map((row) => ({ id: row.media_item_id, genres: row.genres }));
 
-    setLog(chooseTier(chosen, rankable(gameFromPage(page)), list));
-  }, [chosen, log.step, game.data, tiers.rows, id]);
+    setLog(chooseTier(chosen, rankable(newGame), list));
+  }, [chosen, log.step, newGame, tiers.rows, id]);
 
   /**
    * Dismiss the sheet. Home is the fallback for the case where this route is
@@ -108,7 +130,7 @@ export function LogFlowScreen({ id }: { id: string }) {
       invalidateRanking(queryClient, id);
       // The funnel's `ten_ranked` (onboarding.md, "Events"): a first ranking
       // adds one to the count; a re-rank adds none.
-      logTenRankedIfReached(queryClient, game.data?.ranking ? 0 : 1);
+      logTenRankedIfReached(queryClient, game.data?.ranking ? 0 : 1, medium);
       close();
     },
   });
@@ -124,9 +146,9 @@ export function LogFlowScreen({ id }: { id: string }) {
   const onDone = useCallback(() => {
     if (log.step !== 'confirm') return;
     save.mutate(
-      insertionToFinishArgs({ ...log.insertion, insertAt: log.insertAt }, { medium: 'game' }),
+      insertionToFinishArgs({ ...log.insertion, insertAt: log.insertAt }, { medium }),
     );
-  }, [log, save]);
+  }, [log, save, medium]);
 
   const above = chosen === null ? null : gamesAbove(chosen, tiers.sizes);
   const expanded = log.step !== 'tier';
@@ -143,7 +165,19 @@ export function LogFlowScreen({ id }: { id: string }) {
       */}
       {expanded ? <Stack.Screen options={FULL_HEIGHT_SHEET} /> : null}
 
-      {log.step === 'tier' ? (
+      {game.isPending ? null : isFilm && !logged ? (
+        film.data ? (
+          <MovieLogStep
+            film={film.data}
+            onSaved={(rankNext) => {
+              if (rankNext) setLogged(true);
+              else close();
+            }}
+          />
+        ) : film.isError ? (
+          <ErrorLine message="Couldn't load this film." onRetry={() => void film.refetch()} />
+        ) : null
+      ) : log.step === 'tier' ? (
         <View
           style={{
             paddingTop: theme.space[3],
@@ -193,6 +227,7 @@ export function LogFlowScreen({ id }: { id: string }) {
 
             return (
               <CompareStep
+                medium={medium}
                 insertion={insertion}
                 newGame={newGame}
                 pivot={pivot}

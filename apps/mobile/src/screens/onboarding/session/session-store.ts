@@ -27,7 +27,7 @@
  */
 
 import type { OnboardingGameRow } from '@verso/api';
-import type { Tier } from '@verso/core';
+import type { Medium, Tier } from '@verso/core';
 import { useSyncExternalStore } from 'react';
 
 import { createHolder } from './holder';
@@ -42,6 +42,12 @@ export interface SessionItem {
 
 export interface SessionRequest {
   source: SessionSource;
+  /**
+   * Which medium's ranked list the games join. Games when absent, which is
+   * every caller from before the movies build; Ranking's films banner sends
+   * `movie` (movies-build.md, PR 2, item 7).
+   */
+  medium?: Medium;
   items: SessionItem[];
   onDone: 'steam-or-tabs' | 'back' | 'deck';
 }

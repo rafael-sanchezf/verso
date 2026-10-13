@@ -93,7 +93,7 @@ function Review({ run }: { run: FinishedRun }) {
 
   /** Write what is not written yet; true once every game has landed. */
   const write = async (): Promise<boolean> => {
-    const args = batchFinishArgs(reviewResult(review, base), { medium: 'game' });
+    const args = batchFinishArgs(reviewResult(review, base), { medium: run.request.medium ?? 'game' });
     const counts = reviewCounts(review);
     const ok = await writes.save(args, { tenRanked: crossesTen(review.rankedBefore, counts.rankedAfter) });
     if (ok) {

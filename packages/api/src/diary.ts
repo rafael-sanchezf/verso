@@ -19,7 +19,7 @@
 
 import type { Client } from './client';
 import type { Database, Json } from './database.types';
-import { getEntry, todayLocal, type Entry } from './entries';
+import { getEntry, removeEntry, todayLocal, type Entry } from './entries';
 
 type WatchLogRow = Database['public']['Tables']['watch_log']['Row'];
 
@@ -174,6 +174,22 @@ export async function editWatch(client: Client, watchId: string, patch: WatchPat
 export async function removeWatch(client: Client, watchId: string): Promise<void> {
   const { error } = await client.from('watch_log').delete().eq('id', watchId);
   if (error) throw error;
+}
+
+/**
+ * Stop tracking a film, diary and all: the movie page's "Remove from library".
+ *
+ * `removeEntry` alone leaves the `watch_log` rows, and a film with a diary
+ * row still reads "Watched Sep 2" on its page, so the rows go first (owner
+ * only, under the table's delete policy), then the entry. Two statements, not
+ * a transaction: if the second fails the film is untracked of its diary but
+ * still listed, and a retry finishes the job, since both deletes are
+ * idempotent. The ranking, if there is one, survives, as with `removeEntry`.
+ */
+export async function removeMovieEntry(client: Client, mediaItemId: string): Promise<void> {
+  const { error } = await client.from('watch_log').delete().eq('media_item_id', mediaItemId);
+  if (error) throw error;
+  await removeEntry(client, mediaItemId);
 }
 
 /**

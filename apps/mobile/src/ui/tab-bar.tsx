@@ -22,6 +22,8 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { MEDIUM_WORDS, useActiveMedium } from '@/state/medium';
+
 import { Icon, type IconName } from './icon';
 import { focusRing, isFocusVisible, isHovered, HOVER_OPACITY, type InteractionState } from './interaction';
 import { Text } from './text';
@@ -31,7 +33,10 @@ import { useTheme } from './theme';
  * The five tabs, in order, with the icon each one gets.
  *
  * Labels are exactly the tab names (rule 8): a tab and its page share a word,
- * so "Next" here is "Up next" as a header and nothing else anywhere.
+ * so "Next" here is "Up next" as a header and nothing else anywhere. The
+ * fourth tab is the medium's own list (rule 18; movies-brief.md, "Tabs for
+ * movies"): "Next" for games and "Watchlist" for films, one route that draws
+ * either (`app/(tabs)/next.tsx`), the label from the active medium.
  */
 export const TABS: readonly { name: string; label: string; icon: IconName }[] = [
   { name: 'index', label: 'Home', icon: 'house' },
@@ -44,6 +49,7 @@ export const TABS: readonly { name: string; label: string; icon: IconName }[] = 
 export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
   const theme = useTheme();
   const safeArea = useSafeAreaInsets();
+  const { medium } = useActiveMedium();
 
   // The navigator passes its own insets; fall back to the hook's when it does
   // not (the preview route renders this bar outside a navigator).
@@ -62,8 +68,9 @@ export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarP
         },
       ]}>
       {state.routes.map((route, index) => {
-        const tab = TABS.find((candidate) => candidate.name === route.name);
-        if (!tab) return null;
+        const found = TABS.find((candidate) => candidate.name === route.name);
+        if (!found) return null;
+        const tab = found.name === 'next' ? { ...found, label: MEDIUM_WORDS[medium].listTab } : found;
 
         const focused = state.index === index;
         const { options } = descriptors[route.key] ?? {};

@@ -50,6 +50,8 @@ export interface GameRowProps {
   added?: boolean;
   onPress: () => void;
   onControl: () => void;
+  /** A film's row: the 2:3 poster and the site's Semi Bold title (frames 263:79, 264:79). */
+  film?: boolean;
 }
 
 export function GameRow({
@@ -63,11 +65,14 @@ export function GameRow({
   added = false,
   onPress,
   onControl,
+  film = false,
 }: GameRowProps) {
   return (
     <ListRow
       coverWidth={44}
       coverRadius={6}
+      coverAspect={film ? 'poster' : 'cover'}
+      titleWeight={film ? 600 : 500}
       candidates={candidates}
       title={title}
       subtitle={subtitle}

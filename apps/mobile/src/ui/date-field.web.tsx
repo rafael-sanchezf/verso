@@ -28,7 +28,7 @@ import { fontFamilyFor, useTheme } from './theme';
 
 export type { DateFieldProps } from './date-field-value';
 
-export function DateField({ label, value, onChange, max, clearable = false }: DateFieldProps) {
+export function DateField({ label, value, onChange, max, min, clearable = false }: DateFieldProps) {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const current = dateOnlyOf(value) ?? '';
@@ -45,6 +45,7 @@ export function DateField({ label, value, onChange, max, clearable = false }: Da
           aria-label={label}
           value={current}
           max={max}
+          min={min}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onChange={(event) => {

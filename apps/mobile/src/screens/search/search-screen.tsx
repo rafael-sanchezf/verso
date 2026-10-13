@@ -69,11 +69,12 @@ import { isSelectedTab, parseSearchIntent, playingIntentControl, type SearchInte
 import { GameRowSkeletons } from './placeholders';
 import { RECENT_SHOWN } from './recent';
 import { SearchField } from './search-field';
-import { popularSubtitle, searchSubtitle } from './subtitle';
+import { filmPopularSubtitle, filmResultSubtitle, popularSubtitle, searchSubtitle } from './subtitle';
 import { useRecentSearches } from './use-recent-searches';
 import { useStartPlaying } from './use-start-playing';
 import { useReleaseDates } from './use-release-dates';
 import { useTrackedIds } from './use-tracked';
+import { useActiveMedium } from '@/state/medium';
 
 /** How many hits the field asks for. The database clamps it to 100. */
 const RESULT_LIMIT = 20;
@@ -92,6 +93,12 @@ export function SearchScreen() {
   const searching = trimmed !== '';
 
   const { queries: recent, remember } = useRecentSearches();
+
+  // The active medium (state/medium.ts; movies-build.md, PR 2, item 6): films
+  // search the movie catalog, read "year · genre" and open the movie page.
+  // The two intents are games' (Home's Playing card, Ranking's add-many).
+  const { medium } = useActiveMedium();
+  const film = medium === 'movie';
 
   const params = useLocalSearchParams<{ intent?: string }>();
   const navigation = useNavigation();
@@ -134,8 +141,8 @@ export function SearchScreen() {
   const startPlaying = useStartPlaying();
 
   const results = useQuery({
-    queryKey: queryKeys.search(debounced),
-    queryFn: () => searchGames(supabase, debounced, { limit: RESULT_LIMIT }),
+    queryKey: queryKeys.search(debounced, medium),
+    queryFn: () => searchGames(supabase, debounced, { limit: RESULT_LIMIT, medium }),
     enabled: debounced !== '',
   });
 
@@ -154,8 +161,8 @@ export function SearchScreen() {
    * which is what the spec asks for in that case anyway.
    */
   const popular = useQuery({
-    queryKey: queryKeys.popular(POPULAR_COUNT),
-    queryFn: () => popularGames(supabase, POPULAR_COUNT),
+    queryKey: queryKeys.popular(POPULAR_COUNT, medium),
+    queryFn: () => popularGames(supabase, POPULAR_COUNT, medium),
     staleTime: Infinity,
     gcTime: Infinity,
     retry: 2,
@@ -169,9 +176,10 @@ export function SearchScreen() {
   const openGame = useCallback(
     (id: string) => {
       remember(trimmed);
-      router.push({ pathname: '/game/[id]', params: { id, from: 'Search' } });
+      if (film) router.push({ pathname: '/movie/[id]', params: { id, from: 'Search' } });
+      else router.push({ pathname: '/game/[id]', params: { id, from: 'Search' } });
     },
-    [remember, router, trimmed],
+    [film, remember, router, trimmed],
   );
 
   const openAdd = useCallback(
@@ -280,10 +288,15 @@ export function SearchScreen() {
         <IntentHint text={alreadyRankedLine(addMany.alreadyRanked)} />
       ) : null}
 
-      <SearchField value={query} onChangeValue={setQuery} inputRef={input} />
+      <SearchField
+        value={query}
+        onChangeValue={setQuery}
+        inputRef={input}
+        placeholder={film ? 'Search films' : 'Search games'}
+      />
 
       {searching && !loading && !results.isError && hits.length === 0 ? (
-        <NoResults query={trimmed} />
+        <NoResults query={trimmed} film={film} />
       ) : (
         <ScrollView
           style={styles.fill}
@@ -297,6 +310,7 @@ export function SearchScreen() {
           keyboardDismissMode="on-drag">
           {searching ? (
             <Results
+              film={film}
               loading={loading}
               error={results.isError}
               hits={hits}
@@ -322,6 +336,7 @@ export function SearchScreen() {
 
               <Section title="Popular">
                 <Popular
+                  film={film}
                   rows={popular.data}
                   tracked={tracked}
                   control={control}
@@ -505,7 +520,12 @@ function rowControl(
  * skeleton and never an error. A section nobody asked for is not worth a
  * failure message on the screen someone came here to search with.
  */
-function Popular({ rows, onOpen, ...controls }: RowControls & { rows: PopularGameRow[] | undefined }) {
+function Popular({
+  rows,
+  film,
+  onOpen,
+  ...controls
+}: RowControls & { rows: PopularGameRow[] | undefined; film: boolean }) {
   if (!rows) return <GameRowSkeletons count={POPULAR_COUNT} />;
 
   return (
@@ -514,8 +534,9 @@ function Popular({ rows, onOpen, ...controls }: RowControls & { rows: PopularGam
         <GameRow
           key={row.id}
           title={row.title}
-          subtitle={popularSubtitle(row)}
+          subtitle={film ? filmPopularSubtitle(row) : popularSubtitle(row)}
           candidates={coverCandidates(row)}
+          film={film}
           {...rowControl(controls, fromPopularRow(row))}
           onPress={() => onOpen(row.id)}
         />
@@ -525,6 +546,7 @@ function Popular({ rows, onOpen, ...controls }: RowControls & { rows: PopularGam
 }
 
 function Results({
+  film,
   loading,
   error,
   hits,
@@ -532,6 +554,7 @@ function Results({
   onOpen,
   ...controls
 }: RowControls & {
+  film: boolean;
   loading: boolean;
   error: boolean;
   hits: SearchGameRow[];
@@ -546,8 +569,9 @@ function Results({
         <GameRow
           key={row.media_item_id}
           title={row.title}
-          subtitle={searchSubtitle(row)}
+          subtitle={film ? filmResultSubtitle(row) : searchSubtitle(row)}
           candidates={coverCandidates(row)}
+          film={film}
           {...rowControl(controls, fromSearchRow(row))}
           onPress={() => onOpen(row.media_item_id)}
         />
@@ -581,12 +605,12 @@ function IntentHint({ text }: { text: string }) {
  * block. No action: the only useful next move is in the field the user is
  * already looking at.
  */
-function NoResults({ query }: { query: string }) {
+function NoResults({ query, film }: { query: string; film: boolean }) {
   return (
     <View style={[styles.fill, styles.centre, { paddingBottom: 120 }]}>
       <EmptyState
         icon="search"
-        title={`No games match “${query}”`}
+        title={`No ${film ? 'films' : 'games'} match “${query}”`}
         body="Check the spelling or try a shorter title."
       />
     </View>

@@ -155,6 +155,11 @@ export default function RootLayout() {
                 name="game/[id]/index"
                 options={{ headerShown: true, headerTransparent: false, title: '' }}
               />
+              {/* The movie page, pushed over the tabs like the game page (movies-build.md, PR 2). */}
+              <Stack.Screen
+                name="movie/[id]/index"
+                options={{ headerShown: true, headerTransparent: false, title: '' }}
+              />
               <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
               {/* Pushed from Settings → Data. Its own screen, not a sheet: the review list is long and dragged. */}
               <Stack.Screen name="import/letterboxd" options={{ headerShown: true, title: 'Letterboxd' }} />

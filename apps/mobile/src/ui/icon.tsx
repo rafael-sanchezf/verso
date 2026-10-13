@@ -74,6 +74,9 @@ import ThumbsUp from 'lucide-react-native/icons/thumbs-up';
 import ArrowUp from 'lucide-react-native/icons/arrow-up';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 
+// The movie screens (movies-build.md, PR 2): the Watchlist's Filters chip.
+import SlidersHorizontal from 'lucide-react-native/icons/sliders-horizontal';
+
 import { useTheme, type ColorToken } from './theme';
 
 /** The set the frames use, in the order shell.md lists them. */
@@ -140,6 +143,9 @@ const ICONS = {
   // The ask: Home's button (Lucide's sparkles, never the mark; decision 31) and the send.
   sparkles: Sparkles,
   'arrow-up': ArrowUp,
+
+  // The movie screens: the Watchlist's Filters chip.
+  'sliders-horizontal': SlidersHorizontal,
 } as const;
 
 export type IconName = keyof typeof ICONS;

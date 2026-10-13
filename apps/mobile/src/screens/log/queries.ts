@@ -21,7 +21,7 @@
 
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { gamePage, tierList, type GamePage, type TierListRow } from '@verso/api';
-import { TIERS, type Tier } from '@verso/core';
+import { TIERS, type Medium, type Tier } from '@verso/core';
 
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -53,14 +53,14 @@ export interface TierReads {
  * leaves that tier's size `null`, and `gamesAbove` answers null, which the
  * screen draws as the score without a rank (specs/log-flow.md, step 2).
  */
-export function useTiers(chosen: Tier | null): TierReads {
+export function useTiers(chosen: Tier | null, medium: Medium = 'game'): TierReads {
   const needed = (tier: Tier) =>
     chosen !== null && TIERS.indexOf(tier) <= TIERS.indexOf(chosen);
 
   const results = useQueries({
     queries: TIERS.map((tier) => ({
-      queryKey: queryKeys.tier(tier),
-      queryFn: () => tierList(supabase, 'game', tier),
+      queryKey: queryKeys.tier(tier, medium),
+      queryFn: () => tierList(supabase, medium, tier),
       enabled: needed(tier),
     })),
   });

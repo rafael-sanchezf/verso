@@ -59,6 +59,26 @@ export function coverHeight(width: number): number {
   return Math.round((width * COVER_ASPECT.height) / COVER_ASPECT.width);
 }
 
+/**
+ * A film poster's proportions: TMDB serves posters at 2:3 (`w342` is 342 ×
+ * 513), so a film's box is 2:3 and the art fills it whole (rule 29). Games
+ * keep the IGDB box above; a screen says which it is drawing with `aspect`.
+ */
+export const POSTER_ASPECT = { width: 2, height: 3 } as const;
+
+/** How tall a poster of this width is, in whole points. */
+export function posterHeight(width: number): number {
+  return Math.round((width * POSTER_ASPECT.height) / POSTER_ASPECT.width);
+}
+
+/** Which box a cover is drawn in: a game's IGDB cover, or a film's 2:3 poster. */
+export type CoverAspect = 'cover' | 'poster';
+
+/** The height for either box. */
+export function artHeight(width: number, aspect: CoverAspect = 'cover'): number {
+  return aspect === 'poster' ? posterHeight(width) : coverHeight(width);
+}
+
 export interface CoverProps {
   /** Points. The height comes from `coverHeight(width)`. */
   width: number;
@@ -68,6 +88,8 @@ export interface CoverProps {
   candidates: readonly string[];
   /** For the screen reader; a cover with no label is noise. */
   accessibilityLabel?: string;
+  /** `poster` for a film (2:3); the IGDB box otherwise. */
+  aspect?: CoverAspect;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -103,7 +125,7 @@ function shadowFor(scheme: ColorScheme): ViewStyle {
   });
 }
 
-export function Cover({ width, radius, candidates, accessibilityLabel, style }: CoverProps) {
+export function Cover({ width, radius, candidates, accessibilityLabel, aspect = 'cover', style }: CoverProps) {
   const theme = useTheme();
   const [index, setIndex] = useState(0);
 
@@ -113,7 +135,7 @@ export function Cover({ width, radius, candidates, accessibilityLabel, style }: 
   const key = candidates.join('|');
   useEffect(() => setIndex(0), [key]);
 
-  const height = coverHeight(width);
+  const height = artHeight(width, aspect);
   const borderRadius = radius ?? theme.radius.sm;
   const uri = candidates[index];
 

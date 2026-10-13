@@ -25,7 +25,7 @@
  */
 
 import { coverCandidates } from '@verso/api';
-import type { Tier } from '@verso/core';
+import type { Medium, Tier } from '@verso/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type Animated from 'react-native-reanimated';
@@ -45,6 +45,8 @@ import {
 import { coverSourceOf, rowSubtitle, type RankingItem, type RankingListItem } from './model';
 
 export interface RankingListProps {
+  /** Films draw 2:3 posters at 44 and "year · Sci-fi" (the site's Ranking phone). */
+  medium?: Medium;
   list: RankingListItem[];
   /** Off while a filter is active: the visible order is not the whole list. */
   sortEnabled: boolean;
@@ -75,6 +77,7 @@ const FOCUS_ATTEMPTS = 4;
 const FOCUS_RETRY_MS = 120;
 
 export function RankingList({
+  medium = 'game',
   list,
   sortEnabled,
   scrollableRef,
@@ -176,7 +179,7 @@ export function RankingList({
                   accessibilityRole="button"
                   accessibilityLabel={`${entry.item.rank}. ${entry.item.title}`}
                   onTap={() => onOpen(entry.item.mediaItemId)}>
-                  <RankingRow item={entry.item} tinted={tinted === entry.key} />
+                  <RankingRow item={entry.item} tinted={tinted === entry.key} medium={medium} />
                 </Sortable.Touchable>
               </Sortable.Handle>
             </View>
@@ -219,7 +222,16 @@ export function TierDivider({ tier }: { tier: Tier }) {
   );
 }
 
-export function RankingRow({ item, tinted = false }: { item: RankingItem; tinted?: boolean }) {
+export function RankingRow({
+  item,
+  tinted = false,
+  medium = 'game',
+}: {
+  item: RankingItem;
+  tinted?: boolean;
+  medium?: Medium;
+}) {
+  const film = medium === 'movie';
   const theme = useTheme();
 
   return (
@@ -235,12 +247,23 @@ export function RankingRow({ item, tinted = false }: { item: RankingItem; tinted
           {item.rank}
         </Text>
       }
-      coverWidth={40}
+      coverWidth={film ? 44 : 40}
       coverRadius={6}
+      coverAspect={film ? 'poster' : 'cover'}
+      titleWeight={film ? 600 : 500}
       candidates={coverCandidates(coverSourceOf(item.row))}
       title={item.title}
-      subtitle={rowSubtitle(item)}
-      trailing={<ScoreBadge score={item.score} />}
+      subtitle={rowSubtitle(item, medium)}
+      trailing={
+        film ? (
+          // Centred on the 2:3 poster's taller row, as the site's Ranking phone draws it.
+          <View style={styles.centred}>
+            <ScoreBadge score={item.score} />
+          </View>
+        ) : (
+          <ScoreBadge score={item.score} />
+        )
+      }
       style={[
         styles.row,
         tinted ? { backgroundColor: theme.colors['bg/surface'], ...styles.tinted } : null,
@@ -257,6 +280,7 @@ const styles = StyleSheet.create({
   tinted: { borderRadius: 10, marginHorizontal: -8, paddingHorizontal: 8 },
   // Right-aligned so the gap to the cover is the same at rank 9 and rank 10.
   rank: { width: 22 },
+  centred: { alignSelf: 'center' },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',

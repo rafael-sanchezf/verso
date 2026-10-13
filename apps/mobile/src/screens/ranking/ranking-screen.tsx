@@ -24,9 +24,11 @@ import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RankingBanner } from '@/screens/onboarding/session/ranking-banner';
+import { useActiveMedium } from '@/state/medium';
 import { EmptyState, MediumChip, ScreenHeader, useTheme } from '@/ui';
 
 import { RankingDoors } from './doors';
+import { FilmsBanner, FilmsEmpty } from './films-banner';
 import {
   assembleRanking,
   dropTarget,
@@ -62,16 +64,23 @@ export function RankingScreen() {
   // The sortable scrolls this while a row is held near an edge.
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
-  const ranking = useRanking();
-  const move = useMoveRankingEntry();
+  // The active medium (state/medium.ts): films read the movie ranking, with
+  // the site's rows and the films banner (movies-build.md, PR 2, item 7).
+  const { medium } = useActiveMedium();
+  const film = medium === 'movie';
+  const ranking = useRanking(medium);
+  const move = useMoveRankingEntry(medium);
+
+  // A filter chosen in one medium means nothing in the other.
+  useEffect(() => setFilters(NO_FILTERS), [medium]);
 
   const items = useMemo(() => assembleRanking(ranking.data ?? EMPTY_TIERS), [ranking.data]);
-  const visible = useMemo(() => filterItems(items, filters), [items, filters]);
+  const visible = useMemo(() => filterItems(items, filters, medium), [items, filters, medium]);
   const list = useMemo(() => toListItems(visible), [visible]);
 
   // The sheets list what the whole ranking contains, not what the current filter
   // has left, or choosing one filter would empty the other's sheet.
-  const genres = useMemo(() => genreOptions(items), [items]);
+  const genres = useMemo(() => genreOptions(items, medium), [items, medium]);
   const platforms = useMemo(() => platformOptions(items), [items]);
 
   const filtered = isFiltered(filters);
@@ -104,7 +113,8 @@ export function RankingScreen() {
   const onFocused = useCallback(() => setFocusId(null), []);
 
   const openGame = (mediaItemId: string) => {
-    router.push({ pathname: '/game/[id]', params: { id: mediaItemId, from: 'Ranking' } });
+    if (film) router.push({ pathname: '/movie/[id]', params: { id: mediaItemId, from: 'Ranking' } });
+    else router.push({ pathname: '/game/[id]', params: { id: mediaItemId, from: 'Ranking' } });
   };
 
   const onDrop = (dropped: RankingListItem[], key: string) => {
@@ -129,8 +139,12 @@ export function RankingScreen() {
         paddingBottom={view === 'list' ? 10 : theme.space[3]}
       />
 
+      {/* Films: "{n} watched films to rank ›" above the tools row, as the frame draws it. */}
+      {film && hasItems ? <FilmsBanner /> : null}
+
       {hasItems ? (
         <ToolsRow
+          medium={medium}
           filters={filters}
           onFiltersChange={setFilters}
           genres={genres}
@@ -141,7 +155,7 @@ export function RankingScreen() {
       ) : null}
 
       {/* "{n} played games to rank": the drain, owned by the session (onboarding.md, "The doors"). */}
-      <RankingBanner />
+      {film ? null : <RankingBanner />}
 
       {ranking.isPending ? (
         <View style={{ paddingHorizontal: theme.space[4] }}>
@@ -150,9 +164,9 @@ export function RankingScreen() {
       ) : ranking.isError ? (
         <RankingError onRetry={() => void ranking.refetch()} />
       ) : !hasItems ? (
-        <RankingDoors />
+        film ? <FilmsEmpty /> : <RankingDoors />
       ) : visible.length === 0 ? (
-        <NothingMatches onClear={() => setFilters(NO_FILTERS)} />
+        <NothingMatches film={film} onClear={() => setFilters(NO_FILTERS)} />
       ) : (
         <Animated.ScrollView
           ref={scrollRef}
@@ -162,6 +176,7 @@ export function RankingScreen() {
           }}>
           {view === 'list' ? (
             <RankingList
+              medium={medium}
               list={list}
               sortEnabled={!filtered}
               scrollableRef={scrollRef}
@@ -171,7 +186,7 @@ export function RankingScreen() {
               onFocused={onFocused}
             />
           ) : (
-            <RankingGrid items={visible} onOpen={openGame} />
+            <RankingGrid medium={medium} items={visible} onOpen={openGame} />
           )}
         </Animated.ScrollView>
       )}
@@ -183,12 +198,12 @@ export function RankingScreen() {
  * A filter that matches nothing. Not drawn: coded from the same block as the
  * empty ranking, with the way out as its action (rule 7).
  */
-function NothingMatches({ onClear }: { onClear: () => void }) {
+function NothingMatches({ film, onClear }: { film: boolean; onClear: () => void }) {
   return (
     <View style={styles.emptyArea}>
       <EmptyState
         icon="search"
-        title="No games match"
+        title={film ? 'No films match' : 'No games match'}
         body="Nothing you have ranked fits that filter."
         action={{ label: 'Clear filters', onPress: onClear }}
       />

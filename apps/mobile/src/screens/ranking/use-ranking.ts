@@ -11,7 +11,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { moveRankingEntry, tierList, type TierListRow } from '@verso/api';
-import { TIERS, type Tier } from '@verso/core';
+import { TIERS, type Medium, type Tier } from '@verso/core';
 
 import { alert } from '@/lib/dialog';
 import { invalidateRanking } from '@/lib/invalidate';
@@ -26,11 +26,11 @@ import type { DropTarget, TierRows } from './model';
  * The four calls go out together: they are independent reads and doing them in
  * series would make the tab four round trips slow for no reason.
  */
-export function useRanking() {
+export function useRanking(medium: Medium = 'game') {
   return useQuery<TierRows>({
-    queryKey: queryKeys.ranking(),
+    queryKey: queryKeys.ranking(medium),
     queryFn: async () => {
-      const lists = await Promise.all(TIERS.map((tier) => tierList(supabase, 'game', tier)));
+      const lists = await Promise.all(TIERS.map((tier) => tierList(supabase, medium, tier)));
 
       const tiers: Record<Tier, TierListRow[]> = { loved: [], liked: [], fine: [], disliked: [] };
       TIERS.forEach((tier, index) => {
@@ -60,7 +60,7 @@ export interface MoveVariables {
  * revert looks like the drag simply did not take and invites the user to do it
  * again against the same broken connection.
  */
-export function useMoveRankingEntry() {
+export function useMoveRankingEntry(medium: Medium = 'game') {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -73,14 +73,14 @@ export function useMoveRankingEntry() {
 
     onMutate: async ({ optimistic }: MoveVariables) => {
       // An in-flight refetch would otherwise land after this write and undo it.
-      await queryClient.cancelQueries({ queryKey: queryKeys.ranking() });
-      const previous = queryClient.getQueryData<TierRows>(queryKeys.ranking());
-      queryClient.setQueryData(queryKeys.ranking(), optimistic);
+      await queryClient.cancelQueries({ queryKey: queryKeys.ranking(medium) });
+      const previous = queryClient.getQueryData<TierRows>(queryKeys.ranking(medium));
+      queryClient.setQueryData(queryKeys.ranking(medium), optimistic);
       return { previous };
     },
 
     onError: (_error, _variables, context) => {
-      if (context?.previous) queryClient.setQueryData(queryKeys.ranking(), context.previous);
+      if (context?.previous) queryClient.setQueryData(queryKeys.ranking(medium), context.previous);
       alert('That move did not save', 'Check your connection and try again.');
     },
 

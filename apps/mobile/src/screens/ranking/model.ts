@@ -12,10 +12,25 @@
  * Nothing here imports `react-native`, on purpose: the unit suite runs in node.
  */
 
-import { TIERS, genreDisplayName, scoreForPosition, type Tier } from '@verso/core';
+import { TIERS, genreDisplayName, scoreForPosition, type Medium, type Tier } from '@verso/core';
 import type { CoverSourceRow, TierListRow } from '@verso/api';
 
+import { filmGenreLabel } from '../../lib/film';
 import { genreLabel, platformShortName } from '../../lib/format';
+
+/**
+ * How a medium names a genre in a row: IGDB's short forms for games
+ * (`platformer`), TMDB's labels for films (`Sci-fi`, the site's Ranking
+ * phone). Null is a genre the app does not name (Indie, TV Movie).
+ */
+export function genreNamer(medium: Medium = 'game'): (genre: string) => string | null {
+  return medium === 'movie' ? filmGenreLabel : genreDisplayName;
+}
+
+/** The same, where the word starts a line or sits on a chip: `Platformer`, `Sci-fi`. */
+export function genreChipLabel(medium: Medium = 'game'): (genre: string) => string | null {
+  return medium === 'movie' ? filmGenreLabel : genreLabel;
+}
 
 /** The four lists as `tierList` returns them, best tier first when iterated with `TIERS`. */
 export type TierRows = Readonly<Record<Tier, readonly TierListRow[]>>;
@@ -137,18 +152,19 @@ export function coverSourceOf(row: TierListRow): CoverSourceRow {
 }
 
 /** The genres of one game in the short forms the app says out loud, unknown ones dropped. */
-export function displayGenres(genres: readonly string[]): string[] {
+export function displayGenres(genres: readonly string[], medium: Medium = 'game'): string[] {
+  const name = genreNamer(medium);
   const names: string[] = [];
   for (const genre of genres) {
-    const display = genreDisplayName(genre);
+    const display = name(genre);
     if (display !== null && !names.includes(display)) names.push(display);
   }
   return names;
 }
 
 /** `2025 · platformer`, the year alone when the genre is unknown, the genre alone when the year is. */
-export function rowSubtitle(item: RankingItem): string | null {
-  const parts = [item.year === null ? null : String(item.year), displayGenres(item.genres)[0] ?? null];
+export function rowSubtitle(item: RankingItem, medium: Medium = 'game'): string | null {
+  const parts = [item.year === null ? null : String(item.year), displayGenres(item.genres, medium)[0] ?? null];
   const present = parts.filter((part): part is string => part !== null && part !== '');
   return present.length === 0 ? null : present.join(' · ');
 }
@@ -164,15 +180,17 @@ export function rowSubtitle(item: RankingItem): string | null {
  * under R, not at IGDB's `Music`, and "Trivia game" under T, not at
  * `Quiz/Trivia`.
  */
-export function genreOptions(items: readonly RankingItem[]): string[] {
+export function genreOptions(items: readonly RankingItem[], medium: Medium = 'game'): string[] {
+  const name = genreNamer(medium);
+  const label = genreChipLabel(medium);
   const byDisplayName = new Map<string, string>();
   for (const item of items) {
     for (const genre of item.genres) {
-      const display = genreDisplayName(genre);
+      const display = name(genre);
       if (display !== null && !byDisplayName.has(display)) byDisplayName.set(display, genre.trim());
     }
   }
-  return byLabel([...byDisplayName.values()], (genre) => genreLabel(genre) ?? genre);
+  return byLabel([...byDisplayName.values()], (genre) => label(genre) ?? genre);
 }
 
 /**
@@ -217,9 +235,10 @@ function byLabel(values: readonly string[], labelOf: (value: string) => string):
 }
 
 /** Whether a game carries a genre, by display name, so spelling and case do not matter. */
-function hasGenre(item: RankingItem, genre: string): boolean {
-  const wanted = genreDisplayName(genre);
-  return wanted !== null && item.genres.some((own) => genreDisplayName(own) === wanted);
+function hasGenre(item: RankingItem, genre: string, medium: Medium): boolean {
+  const name = genreNamer(medium);
+  const wanted = name(genre);
+  return wanted !== null && item.genres.some((own) => name(own) === wanted);
 }
 
 export function isFiltered(filters: RankingFilters): boolean {
@@ -236,9 +255,10 @@ export function isFiltered(filters: RankingFilters): boolean {
 export function filterItems(
   items: readonly RankingItem[],
   filters: RankingFilters,
+  medium: Medium = 'game',
 ): RankingItem[] {
   return items.filter((item) => {
-    if (filters.genre !== null && !hasGenre(item, filters.genre)) return false;
+    if (filters.genre !== null && !hasGenre(item, filters.genre, medium)) return false;
     if (filters.platform !== null && !platformsOf(item).includes(filters.platform)) return false;
     return true;
   });

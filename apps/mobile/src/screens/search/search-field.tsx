@@ -30,9 +30,11 @@ export interface SearchFieldProps {
    * with the keyboard up, because typing the title is the only next step.
    */
   inputRef?: RefObject<TextInput | null>;
+  /** "Search games" by default; "Search films" in the movie medium. */
+  placeholder?: string;
 }
 
-export function SearchField({ value, onChangeValue, inputRef }: SearchFieldProps) {
+export function SearchField({ value, onChangeValue, inputRef, placeholder = 'Search games' }: SearchFieldProps) {
   const theme = useTheme();
   const ownRef = useRef<TextInput>(null);
   const input = inputRef ?? ownRef;
@@ -64,7 +66,7 @@ export function SearchField({ value, onChangeValue, inputRef }: SearchFieldProps
           onChangeText={onChangeValue}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="Search games"
+          placeholder={placeholder}
           placeholderTextColor={theme.colors['text/secondary']}
           // A game title is not a word: autocorrect turns "Silksong" into
           // "Silkson" and the capitaliser fights every lowercase title.
@@ -75,7 +77,7 @@ export function SearchField({ value, onChangeValue, inputRef }: SearchFieldProps
           returnKeyType="search"
           // Ours instead, below: the frame's is a plain x and outlives the focus.
           clearButtonMode="never"
-          accessibilityLabel="Search games"
+          accessibilityLabel={placeholder}
           style={[
             styles.input,
             { color: theme.colors['text/primary'], fontFamily: fontFamilyFor(400) },

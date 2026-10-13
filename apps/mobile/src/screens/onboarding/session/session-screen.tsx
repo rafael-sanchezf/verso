@@ -35,7 +35,7 @@ import {
   type ComparisonOutcome,
   type Tier,
 } from '@verso/core';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -70,6 +70,10 @@ export function SessionScreen() {
   const theme = useTheme();
   const router = useRouter();
   const live = useSessionRequest();
+  // `?medium=movie` from Ranking's films banner (movies-build.md, PR 2, item 7);
+  // the request's own medium wins, and games is the default.
+  const params = useLocalSearchParams<{ medium?: string }>();
+  const paramMedium = params.medium === 'movie' ? 'movie' : undefined;
 
   // Held from the first request this screen saw, so clearing the store after
   // the seeds' writes cannot blank the screen while it navigates away.
@@ -88,7 +92,7 @@ export function SessionScreen() {
     );
   }
 
-  return <Session request={request} />;
+  return <Session request={request.medium || !paramMedium ? request : { ...request, medium: paramMedium }} />;
 }
 
 /** A session that has started: what `beginBatch` returned, and every game it may draw. */
@@ -111,7 +115,8 @@ function Session({ request }: { request: SessionRequest }) {
   );
 
   // The seeds start with no predictions (onboarding.md, "Three games you love").
-  const reads = useSessionReads(ids, request.source !== 'seeds');
+  const medium = request.medium ?? 'game';
+  const reads = useSessionReads(ids, request.source !== 'seeds', medium);
 
   const [pass, setPass] = useState(() => startTierPass(items));
   const [running, setRunning] = useState<Running | null>(null);
@@ -132,7 +137,7 @@ function Session({ request }: { request: SessionRequest }) {
     const result = applyBatch(state);
     const before = run.started.existing;
     const rankedBefore = before.loved.length + before.liked.length + before.fine.length + before.disliked.length;
-    const ok = await writes.save(batchFinishArgs(result, { medium: 'game' }), {
+    const ok = await writes.save(batchFinishArgs(result, { medium }), {
       tenRanked: crossesTen(rankedBefore, rankedBefore + result.placements.length),
     });
     if (!ok) return;
@@ -274,6 +279,7 @@ function Session({ request }: { request: SessionRequest }) {
         />
         {game && pivot ? (
           <CompareStage
+            medium={medium}
             question={question}
             answered={batch.log.length}
             game={game}

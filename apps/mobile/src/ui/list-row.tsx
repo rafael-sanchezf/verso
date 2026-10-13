@@ -15,7 +15,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Pressed } from './button';
-import { Cover } from './cover';
+import { Cover, type CoverAspect } from './cover';
 import { Text } from './text';
 import { useTheme } from './theme';
 
@@ -23,6 +23,10 @@ export interface ListRowProps {
   /** Cover width in points; the height follows. Omit for a row with no art. */
   coverWidth?: number;
   coverRadius?: number;
+  /** `poster` for a film's 2:3 poster; a game's IGDB box by default. */
+  coverAspect?: CoverAspect;
+  /** The title's weight: 500 by default, 600 where the site's rows set it (films). */
+  titleWeight?: 500 | 600;
   /** From `coverCandidates(row)`. */
   candidates?: readonly string[];
   title: string;
@@ -43,6 +47,8 @@ export interface ListRowProps {
 export function ListRow({
   coverWidth,
   coverRadius = 6,
+  coverAspect,
+  titleWeight = 500,
   candidates = [],
   title,
   subtitle,
@@ -66,13 +72,14 @@ export function ListRow({
         <Cover
           width={coverWidth}
           radius={coverRadius}
+          aspect={coverAspect}
           candidates={candidates}
           accessibilityLabel={title}
         />
       ) : null}
 
       <View style={[styles.text, { gap: 2 }]}>
-        <Text size={16} weight={500} numberOfLines={titleLines}>
+        <Text size={16} weight={titleWeight} numberOfLines={titleLines}>
           {title}
         </Text>
         {subtitle ? (
