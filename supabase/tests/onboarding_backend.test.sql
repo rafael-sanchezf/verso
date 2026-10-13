@@ -232,7 +232,7 @@ select ok(
 
 -- 30
 select is(
-  (select p.prosecdef from pg_proc p where p.oid = 'public.deck_candidates(text[],integer,integer)'::regprocedure),
+  (select p.prosecdef from pg_proc p where p.oid = 'public.deck_candidates(text[],integer,integer,public.medium)'::regprocedure),
   true,
   'deck_candidates is security definer: the content profile is service role only'
 );
@@ -256,7 +256,7 @@ select ok(
   (select bool_and(p.proconfig @> array['search_path=public, extensions'])
      from pg_proc p
     where p.oid in (
-      'public.deck_candidates(text[],integer,integer)'::regprocedure,
+      'public.deck_candidates(text[],integer,integer,public.medium)'::regprocedure,
       'public.batch_predictions(public.medium,uuid[])'::regprocedure,
       'public.played_not_ranked(public.medium)'::regprocedure
     )),
@@ -265,9 +265,9 @@ select ok(
 
 -- 34
 select ok(
-  not has_function_privilege('anon', 'public.deck_candidates(text[],integer,integer)', 'execute')
-  and has_function_privilege('authenticated', 'public.deck_candidates(text[],integer,integer)', 'execute')
-  and has_function_privilege('service_role', 'public.deck_candidates(text[],integer,integer)', 'execute'),
+  not has_function_privilege('anon', 'public.deck_candidates(text[],integer,integer,public.medium)', 'execute')
+  and has_function_privilege('authenticated', 'public.deck_candidates(text[],integer,integer,public.medium)', 'execute')
+  and has_function_privilege('service_role', 'public.deck_candidates(text[],integer,integer,public.medium)', 'execute'),
   'deck_candidates: authenticated and service_role, never anon'
 );
 

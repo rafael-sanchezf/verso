@@ -543,6 +543,7 @@ export type Database = {
           genres: string[]
           media_item_id: string
           overview: string | null
+          people_text: string | null
           runtime_minutes: number | null
           studio: string | null
           tagline: string | null
@@ -558,6 +559,7 @@ export type Database = {
           genres?: string[]
           media_item_id: string
           overview?: string | null
+          people_text?: string | null
           runtime_minutes?: number | null
           studio?: string | null
           tagline?: string | null
@@ -573,6 +575,7 @@ export type Database = {
           genres?: string[]
           media_item_id?: string
           overview?: string | null
+          people_text?: string | null
           runtime_minutes?: number | null
           studio?: string | null
           tagline?: string | null
@@ -1131,8 +1134,9 @@ export type Database = {
           media_item_id: string
           note: string | null
           place: string | null
+          source: string
           user_id: string
-          watched_on: string
+          watched_on: string | null
         }
         Insert: {
           created_at?: string
@@ -1140,8 +1144,9 @@ export type Database = {
           media_item_id: string
           note?: string | null
           place?: string | null
+          source?: string
           user_id?: string
-          watched_on: string
+          watched_on?: string | null
         }
         Update: {
           created_at?: string
@@ -1149,8 +1154,9 @@ export type Database = {
           media_item_id?: string
           note?: string | null
           place?: string | null
+          source?: string
           user_id?: string
-          watched_on?: string
+          watched_on?: string | null
         }
         Relationships: [
           {
@@ -1311,7 +1317,12 @@ export type Database = {
       }
       count_suggestion_requests: { Args: { p_since?: string }; Returns: number }
       deck_candidates: {
-        Args: { p_limit?: number; p_offset?: number; p_platforms?: string[] }
+        Args: {
+          p_limit?: number
+          p_medium?: Database["public"]["Enums"]["medium"]
+          p_offset?: number
+          p_platforms?: string[]
+        }
         Returns: {
           boost: number
           cover_image_id: string
@@ -1418,6 +1429,53 @@ export type Database = {
           title: string
           year: number
         }[]
+      }
+      movie_home_rows: {
+        Args: { p_region?: string; p_today?: string }
+        Returns: {
+          about_media_item_id: string
+          candidates: Json
+          kind: string
+          row_index: number
+          title: string
+          variable_part: string
+        }[]
+      }
+      movie_page: {
+        Args: { p_media_item_id: string; p_region?: string; p_today?: string }
+        Returns: {
+          availability: Json
+          awards: string
+          backdrop_image_id: string
+          certification: string
+          collection_name: string
+          collection_tmdb_id: number
+          cover_image_id: string
+          digital_on: string
+          directors: string[]
+          external_ids: Json
+          genres: string[]
+          media_item_id: string
+          overview: string
+          placement: string
+          placement_on: string
+          release_date: string
+          runtime_minutes: number
+          scores: Json
+          streams_now: boolean
+          studio: string
+          tagline: string
+          theatrical_on: string
+          title: string
+          tmdb_id: number
+          top_cast: Json
+          writers: string[]
+          year: number
+        }[]
+      }
+      movie_people_text: {
+        Args: { p_directors: string[]; p_top_cast: Json; p_writers: string[] }
+        Returns: string
       }
       movie_release_state: {
         Args: { p_media_item_id: string; p_region?: string; p_today?: string }
@@ -1620,6 +1678,7 @@ export type Database = {
           genres: string[]
           igdb_id: number
           media_item_id: string
+          person_match: string
           platforms: string[]
           score: number
           title: string

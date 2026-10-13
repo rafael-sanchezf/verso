@@ -83,12 +83,18 @@ export interface PlayedNotRankedRow extends OnboardingGameRow {
  *
  * Popularity is IGDB's rating count today, the signal `popularGames` reads;
  * publishers' sales figures replace it later (decision 20).
+ *
+ * `medium` is `'game'` by default. With `'movie'` it is the film deck of the
+ * movies onboarding (20261013100000_movie_screens.sql): released films with a
+ * poster, by TMDB's vote count, `boost` from the caller's film profile;
+ * `platforms` is ignored and each row's `platforms` is empty.
  */
 export async function deckCandidates(
   client: Client,
   platforms: readonly string[] | null,
   limit = 10,
   offset = 0,
+  medium: Medium = 'game',
 ): Promise<DeckCandidateRow[]> {
   const { data, error } = await client.rpc('deck_candidates', {
     // An empty list is sent as one: the database reads it as no filter, the
@@ -96,6 +102,7 @@ export async function deckCandidates(
     p_platforms: platforms === null ? [] : [...platforms],
     p_limit: limit,
     p_offset: offset,
+    p_medium: medium,
   });
   if (error) throw error;
   return (data ?? []).map((row) => ({

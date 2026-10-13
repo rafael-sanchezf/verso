@@ -23,6 +23,15 @@ import { getEntry, removeEntry, todayLocal, type Entry } from './entries';
 
 type WatchLogRow = Database['public']['Tables']['watch_log']['Row'];
 
+/**
+ * How a diary row was written (20261013100000_movie_screens.sql): `log` from
+ * the log sheet, always dated; `bulk` from the bulk deck's seen check ("Seen
+ * before Verso"), with no day; `import` from a Letterboxd export, dated when
+ * the export has one. Profile reads "Watched X" for a dated `log` row and
+ * "Ranked X" for the rest (profile-brief, round two).
+ */
+export type WatchSource = 'log' | 'bulk' | 'import';
+
 /** The two places that are not a streaming service. Anything else is the service's name as the sheet showed it. */
 export const WATCH_PLACE_THEATER = 'theater';
 export const WATCH_PLACE_OTHER = 'other';
@@ -31,8 +40,10 @@ export const WATCH_PLACE_OTHER = 'other';
 export interface DiaryRow {
   id: string;
   mediaItemId: string;
-  /** `YYYY-MM-DD`, the day where the user was. */
-  watchedOn: string;
+  /** `YYYY-MM-DD`, the day where the user was; null only on a `bulk` or `import` row with no day. */
+  watchedOn: string | null;
+  /** How the row was written; see `WatchSource`. */
+  source: WatchSource;
   /**
    * A streaming service's name as the log sheet's chip showed it ("Netflix"),
    * `'theater'`, `'other'`, or null when the user did not say.
@@ -94,6 +105,7 @@ function toDiaryRow(row: WatchLogRow): DiaryRow {
     id: row.id,
     mediaItemId: row.media_item_id,
     watchedOn: row.watched_on,
+    source: row.source as WatchSource,
     place: row.place,
     note: row.note,
     createdAt: row.created_at,
@@ -121,6 +133,7 @@ export async function logWatch(
     .insert({
       media_item_id: mediaItemId,
       watched_on: watchedOn,
+      source: 'log',
       place: options.place ?? null,
       note: options.note ?? null,
     })
@@ -138,6 +151,52 @@ export async function logWatch(
   if (!entry) throw new Error(`no entry for ${mediaItemId} after logging a watch`);
 
   return { watch: toDiaryRow(written.data), entry, alreadyRanked: rankedResult.data !== null };
+}
+
+/**
+ * "Seen before Verso": the bulk deck's seen check. Writes a `bulk` diary row
+ * with no day, which makes the film played (creating the entry if the caller
+ * did not track it) and leaves `finishedAt` as it was, because nothing says
+ * when it was watched. Nothing is ranked (rule 35); the deck's session ranks
+ * it. Returns the same shape as `logWatch`.
+ *
+ * Idempotent: a film has at most one bulk row (`watch_log_one_bulk_row`), so
+ * a second tick, a retry or a double tap returns the row already there and
+ * writes nothing.
+ */
+export async function logSeen(client: Client, mediaItemId: string): Promise<LogWatchResult> {
+  const ranked = client.from('ranking_entries').select('media_item_id').eq('media_item_id', mediaItemId).maybeSingle();
+
+  let watch: WatchLogRow;
+  const written = await client
+    .from('watch_log')
+    .insert({ media_item_id: mediaItemId, watched_on: null, source: 'bulk' })
+    .select('*')
+    .single();
+  if (written.error) {
+    // 23505 is the partial unique index: already seen. Read the row back
+    // rather than upserting, because PostgREST's on_conflict cannot name a
+    // partial index's predicate.
+    if (written.error.code !== '23505') throw written.error;
+    const existing = await client
+      .from('watch_log')
+      .select('*')
+      .eq('media_item_id', mediaItemId)
+      .eq('source', 'bulk')
+      .single();
+    if (existing.error) throw existing.error;
+    watch = existing.data;
+  } else {
+    watch = written.data;
+  }
+
+  const rankedResult = await ranked;
+  if (rankedResult.error) throw rankedResult.error;
+
+  const entry = await getEntry(client, mediaItemId);
+  if (!entry) throw new Error(`no entry for ${mediaItemId} after marking it seen`);
+
+  return { watch: toDiaryRow(watch), entry, alreadyRanked: rankedResult.data !== null };
 }
 
 /**
@@ -193,16 +252,16 @@ export async function removeMovieEntry(client: Client, mediaItemId: string): Pro
 }
 
 /**
- * One film's diary, newest first: the movie page's "Watched 2× · last Sep 2 ›"
- * and the rows behind it, and the log sheet's "2nd watch" line (the length of
- * this plus one).
+ * One film's diary, newest first, undated rows last: the movie page's
+ * "Watched 2× · last Sep 2 ›" and the rows behind it, and the log sheet's
+ * "2nd watch" line (the length of this plus one).
  */
 export async function diaryFor(client: Client, mediaItemId: string): Promise<DiaryRow[]> {
   const { data, error } = await client
     .from('watch_log')
     .select('*')
     .eq('media_item_id', mediaItemId)
-    .order('watched_on', { ascending: false })
+    .order('watched_on', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data.map(toDiaryRow);
@@ -214,14 +273,15 @@ export interface DiaryOptions {
 }
 
 /**
- * The caller's diary, newest first, each row with its film: Profile's recent
- * rows ("Dune · Sep 2 · Netflix") and the full diary grouped by month.
+ * The caller's diary, newest first and undated rows last, each row with its
+ * film: Profile's recent rows ("Dune · Sep 2 · Netflix") and the full diary
+ * grouped by month.
  */
 export async function diary(client: Client, options: DiaryOptions = {}): Promise<DiaryListRow[]> {
   let query = client
     .from('watch_log')
     .select('*, media_items!inner ( title, year, cover_image_id, external_ids )')
-    .order('watched_on', { ascending: false })
+    .order('watched_on', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
   if (options.limit !== undefined) query = query.limit(options.limit);
 

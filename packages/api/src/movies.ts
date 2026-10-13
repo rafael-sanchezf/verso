@@ -1,8 +1,8 @@
 /**
  * The movies side's reads: the streaming-service directory the services
  * picker draws, the Watchlist (and the finder's pool, which is the same read
- * with the filters on), the Calendar, where one film sits, and the count of
- * watched films not ranked yet.
+ * with the filters on), the Calendar, where one film sits, the count of
+ * watched films not ranked yet, the movie page, and Home's rows by reason.
  *
  * The catalog facts come from the TMDB mirror (`packages/catalog`'s
  * `tmdb-sync`); the app never calls TMDB. Every availability surface credits
@@ -26,6 +26,7 @@ import type { Client } from './client';
 import type { Json } from './database.types';
 import { todayLocal } from './entries';
 import { regionCode } from './profiles';
+import type { ScoresBySource } from './views';
 
 /** One streaming service as the directory lists it for a region. */
 export interface WatchProvider {
@@ -279,4 +280,266 @@ export async function unrankedCount(client: Client, medium: Medium): Promise<num
   );
   if (error) throw error;
   return count ?? 0;
+}
+
+/** One current offer on the movie page's "Where to watch". */
+export interface MovieOffer {
+  /** `watch_providers.provider_id`. */
+  providerId: number;
+  name: string;
+  /** TMDB's `logo_path`, leading slash included; null when TMDB has none. */
+  logoImageId: string | null;
+  offerType: 'flatrate' | 'free' | 'ads' | 'rent' | 'buy';
+  /**
+   * A subscription, free or ads offer on one of the caller's services: the
+   * outlined chip with the check. Renting from a service you subscribe to is
+   * not "on your services", the rule `onMyServices` follows on the Watchlist.
+   */
+  mine: boolean;
+}
+
+/** One cast member, as `movie_details.top_cast` stores them, in billing order. */
+export interface MovieCastMember {
+  tmdbPersonId: number | null;
+  name: string;
+  character: string | null;
+  /** TMDB's `profile_path`, leading slash included, or null; the URL is built at render time. */
+  profilePath: string | null;
+}
+
+/** The movie page's catalog half: the film, its facts, its scores, where it sits, where to watch it. */
+export interface MoviePage {
+  mediaItemId: string;
+  title: string;
+  year: number | null;
+  releaseDate: string | null;
+  coverImageId: string | null;
+  /** `media_items.external_ids`. Pass the page to `coverCandidates`; see covers.ts. */
+  externalIds: Json;
+  tmdbId: number | null;
+  runtimeMinutes: number | null;
+  genres: string[];
+  directors: string[];
+  writers: string[];
+  topCast: MovieCastMember[];
+  studio: string | null;
+  /** "Part of": the collection's TMDB id and name, or null. */
+  collectionTmdbId: number | null;
+  collectionName: string | null;
+  tagline: string | null;
+  overview: string | null;
+  backdropImageId: string | null;
+  /** The region's certification ("PG-13"), or null when the region has none: the header line omits it. */
+  certification: string | null;
+  /**
+   * Every external score the film has, by source, as the game page has them:
+   * `tmdb` (TMDB's average times ten, `scoreCount` the votes) today, and
+   * `rotten_tomatoes` when the Wikidata pass writes it. Label the source; never
+   * average two (rule 21).
+   */
+  scores: ScoresBySource;
+  /** The awards line. Null until the catalog has a source; the page hides the line. */
+  awards: string | null;
+  /** Where it sits by the one rule the Watchlist and the Calendar share; see `movieReleaseState`. */
+  releaseState: MovieReleaseState;
+  /** The region's current offers, in JustWatch's display order, then subscription, free, ads, rent, buy. */
+  availability: MovieOffer[];
+}
+
+export interface MoviePageOptions extends MovieListOptions {
+  /** The region to read the certification, the dates and the offers in. Omitted, the database uses the caller's `watchRegion` (US when unset). */
+  region?: string;
+}
+
+interface RawScore {
+  score: number | string | null;
+  score_count: number | null;
+  fetched_at: string;
+}
+
+interface RawCastMember {
+  tmdb_person_id?: number | null;
+  name: string;
+  character?: string | null;
+  profile_path?: string | null;
+}
+
+interface RawOffer {
+  provider_id: number;
+  name: string;
+  logo_image_id: string | null;
+  offer_type: MovieOffer['offerType'];
+  mine: boolean;
+}
+
+/**
+ * The movie page's catalog half in one round trip
+ * (supabase/migrations/20261013100000_movie_screens.sql, `movie_page`). The
+ * diary line and the actions read the caller's own rows through `diaryFor`
+ * and `getEntry`; this is everything else. Null for an id that is not a film.
+ * `gamePage` is the games twin and is unchanged.
+ */
+export async function moviePage(
+  client: Client,
+  mediaItemId: string,
+  options: MoviePageOptions = {},
+): Promise<MoviePage | null> {
+  const { data, error } = await client
+    .rpc('movie_page', {
+      p_media_item_id: mediaItemId,
+      p_today: options.today ?? todayLocal(),
+      ...(options.region === undefined ? {} : { p_region: regionCode(options.region) }),
+    })
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  const scores: ScoresBySource = {};
+  for (const [source, raw] of Object.entries((data.scores ?? {}) as unknown as Record<string, RawScore>)) {
+    scores[source] = {
+      source,
+      score: raw.score === null ? null : Number(raw.score),
+      scoreCount: raw.score_count,
+      fetchedAt: raw.fetched_at,
+    };
+  }
+
+  return {
+    mediaItemId: data.media_item_id,
+    title: data.title,
+    year: data.year ?? null,
+    releaseDate: data.release_date ?? null,
+    coverImageId: data.cover_image_id ?? null,
+    externalIds: data.external_ids,
+    tmdbId: data.tmdb_id ?? null,
+    runtimeMinutes: data.runtime_minutes ?? null,
+    genres: data.genres ?? [],
+    directors: data.directors ?? [],
+    writers: data.writers ?? [],
+    topCast: ((data.top_cast ?? []) as unknown as RawCastMember[]).map((member) => ({
+      tmdbPersonId: member.tmdb_person_id ?? null,
+      name: member.name,
+      character: member.character ?? null,
+      profilePath: member.profile_path ?? null,
+    })),
+    studio: data.studio ?? null,
+    collectionTmdbId: data.collection_tmdb_id ?? null,
+    collectionName: data.collection_name ?? null,
+    tagline: data.tagline ?? null,
+    overview: data.overview ?? null,
+    backdropImageId: data.backdrop_image_id ?? null,
+    certification: data.certification ?? null,
+    scores,
+    awards: data.awards ?? null,
+    releaseState: {
+      placement: toPlacement(data.placement),
+      placementOn: data.placement_on ?? null,
+      theatricalOn: data.theatrical_on ?? null,
+      digitalOn: data.digital_on ?? null,
+      streamsNow: data.streams_now,
+    },
+    availability: ((data.availability ?? []) as unknown as RawOffer[]).map((offer) => ({
+      providerId: offer.provider_id,
+      name: offer.name,
+      logoImageId: offer.logo_image_id,
+      offerType: offer.offer_type,
+      mine: offer.mine,
+    })),
+  };
+}
+
+/**
+ * Why a Home row is there (decision 28): the watchlist, a genre the caller
+ * ranks high, a Loved film, or, only when none of those has anything to say,
+ * what is popular.
+ */
+export type HomeRowKind = 'watchlist' | 'genre' | 'because' | 'popular';
+
+/** One poster in a Home row. */
+export interface HomeRowCandidate {
+  mediaItemId: string;
+  title: string;
+  year: number | null;
+  coverImageId: string | null;
+  /** `media_items.external_ids`. Pass the candidate to `coverCandidates`; see covers.ts. */
+  externalIds: Json;
+  runtimeMinutes: number | null;
+  genres: string[];
+  /** Every service with a subscription, free or ads offer in the region now, in display order. */
+  streamsOn: number[];
+  /** Those of `streamsOn` the caller has: the poster's service pill. */
+  onMyServices: number[];
+}
+
+/** One row of movies Home. */
+export interface HomeRow {
+  kind: HomeRowKind;
+  /**
+   * The whole title in plain words: "You wanted to watch these", "Horror",
+   * "Because you loved Past Lives", "Popular". The genre is the catalog's
+   * word for it, as TMDB spells it.
+   */
+  title: string;
+  /**
+   * The part of `title` the screen sets in italics (the genre, the film), or
+   * null when nothing in the title varies. Always a substring of `title`.
+   */
+  variablePart: string | null;
+  /** The Loved film a `because` row is about; null for the other kinds. */
+  aboutMediaItemId: string | null;
+  /** One to twelve, best first (the watchlist keeps its newest-first order). */
+  candidates: HomeRowCandidate[];
+}
+
+export interface MovieHomeRowsOptions extends MovieListOptions {
+  /**
+   * The region the candidates' services are read in. Omitted, the database
+   * uses the caller's `watchRegion` (US when unset), the region the watchlist
+   * row's membership is read in, so omit it unless the screen means another.
+   */
+  region?: string;
+}
+
+interface RawCandidate {
+  media_item_id: string;
+  title: string;
+  year: number | null;
+  cover_image_id: string | null;
+  external_ids: Json;
+  runtime_minutes: number | null;
+  genres: string[];
+  streams_on: number[];
+  on_my_services: number[];
+}
+
+/**
+ * Movies Home's rows by reason, in order
+ * (supabase/migrations/20261013100000_movie_screens.sql, `movie_home_rows`):
+ * "You wanted to watch these", up to three genres, up to three "Because you
+ * loved", seven at most; one "Popular" row when none of them has anything to
+ * say, so Home is never empty while the catalog is not.
+ */
+export async function movieHomeRows(client: Client, options: MovieHomeRowsOptions = {}): Promise<HomeRow[]> {
+  const { data, error } = await client.rpc('movie_home_rows', {
+    p_today: options.today ?? todayLocal(),
+    ...(options.region === undefined ? {} : { p_region: regionCode(options.region) }),
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    kind: row.kind as HomeRowKind,
+    title: row.title,
+    variablePart: row.variable_part ?? null,
+    aboutMediaItemId: row.about_media_item_id ?? null,
+    candidates: ((row.candidates ?? []) as unknown as RawCandidate[]).map((candidate) => ({
+      mediaItemId: candidate.media_item_id,
+      title: candidate.title,
+      year: candidate.year,
+      coverImageId: candidate.cover_image_id,
+      externalIds: candidate.external_ids,
+      runtimeMinutes: candidate.runtime_minutes,
+      genres: candidate.genres,
+      streamsOn: candidate.streams_on,
+      onMyServices: candidate.on_my_services,
+    })),
+  }));
 }

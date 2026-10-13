@@ -187,6 +187,10 @@ jobs:
   db:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # The movie_home_rows timing ceiling for this runner; see the step that
+      # sets it on the database below.
+      VERSO_PERF_CEILING_MS: 1000
     steps:
       - uses: actions/checkout@v4
 
@@ -216,6 +220,16 @@ jobs:
         run: >-
           supabase start
           -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
+
+      - name: Set the performance ceiling for this runner
+        # supabase/tests/movie_screens.test.sql times movie_home_rows on 25,000
+        # films against verso.perf_ceiling_ms, 300 when unset (a developer's
+        # machine). A shared runner is slower, so the ceiling here is looser;
+        # the measured number is printed as a diag either way. Set on the
+        # database, so every pgTAP connection after this step reads it.
+        run: >-
+          docker exec supabase_db_verso psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1
+          -c "alter database postgres set verso.perf_ceiling_ms = '${VERSO_PERF_CEILING_MS}'"
 
       - name: Run pgTAP tests
         run: supabase test db --local

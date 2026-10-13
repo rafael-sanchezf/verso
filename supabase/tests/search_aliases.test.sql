@@ -258,8 +258,8 @@ select is(
 -- 34
 select is(
   pg_get_function_result('public.search_games(text,integer,public.medium)'::regprocedure),
-  'TABLE(media_item_id uuid, title text, year smallint, cover_image_id text, external_ids jsonb, igdb_id integer, developer text, genres text[], platforms text[], score real)',
-  'it returns the row it did before plus external_ids, the Steam cover fallback''s input'
+  'TABLE(media_item_id uuid, title text, year smallint, cover_image_id text, external_ids jsonb, igdb_id integer, developer text, genres text[], platforms text[], score real, person_match text)',
+  'it returns the row it did before plus external_ids, the Steam cover fallback''s input (and person_match since 20261013100000_movie_screens.sql)'
 );
 
 -- 35

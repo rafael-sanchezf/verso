@@ -44,7 +44,7 @@ select policies_are(
 );
 
 -- 4
-select col_not_null('public', 'watch_log', 'watched_on', 'watched_on is not null');
+select col_is_null('public', 'watch_log', 'watched_on', 'watched_on is nullable since 20261013100000_movie_screens.sql: a bulk or import row may have no day (the check that keeps a log row dated is in movie_screens.test.sql)');
 
 -- 5
 select col_hasnt_default('public', 'watch_log', 'watched_on', 'watched_on has no default: the app sends the day where the user is');
@@ -265,9 +265,9 @@ select throws_ok(
 -- 29
 select throws_ok(
   $$ insert into public.watch_log (media_item_id, watched_on) values ('00000000-0000-0000-0000-0000000b1f01', null) $$,
-  '23502',
+  '23514',
   null,
-  'a row needs a day'
+  'a log row needs a day (watch_log_dated_log_check, 20261013100000_movie_screens.sql)'
 );
 
 -- ==============================================================================

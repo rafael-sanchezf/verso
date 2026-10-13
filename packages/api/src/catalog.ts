@@ -31,10 +31,17 @@ type Nullable<T, K extends keyof T> = Omit<T, K> & { [P in K]: T[P] | null };
  * so a hit goes to `coverCandidates` as it is and a game IGDB has no cover for
  * falls back to its Steam art. `external_ids` is `Json`, which already admits
  * null, so it needs no entry in the `Nullable` list below.
+ *
+ * `person_match` is the person a film was found by (the brief's "year ·
+ * Denis Villeneuve"): the first director, then cast member in billing order,
+ * then writer whose name matched, when the person and not the title is why
+ * the film is in the results; null for a film found by its title, and always
+ * null for a game. The row's second line is "year · genre" when it is null.
+ * The rows keep the RPC's own names, as every caller already reads them.
  */
 export type SearchGameRow = Nullable<
   Functions['search_games']['Returns'][number],
-  'year' | 'cover_image_id' | 'developer' | 'igdb_id'
+  'year' | 'cover_image_id' | 'developer' | 'igdb_id' | 'person_match'
 >;
 
 export interface SearchGamesOptions {
@@ -55,6 +62,11 @@ export interface SearchGamesOptions {
  * it ("gta", "botw"), then by similarity; within each, the closer match and
  * then the more popular title first. A blank query returns nothing. See
  * supabase/migrations/20260923110000_search_aliases.sql.
+ *
+ * For films a person matches too: a director's, an actor's or a writer's name
+ * (or a word in it) starting with the term ranks with the title prefixes, a
+ * title before a person at equal closeness, and the row says who in
+ * `person_match` (20261013100000_movie_screens.sql).
  *
  * `genres` comes from whichever extension table holds the row, so a film's
  * genres are TMDB's and a game's are IGDB's. `igdbId`, `developer` and

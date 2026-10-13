@@ -14,7 +14,7 @@
 -- row whose placed_at must *not* move is backdated to 2020 first.
 
 begin;
-select plan(53);
+select plan(54);
 
 -- Fixtures --------------------------------------------------------------------
 
@@ -245,6 +245,13 @@ select results_eq(
             ('00000000-0000-0000-0000-0000000000a1'::uuid, '2024-08-09'::date, null::text, null::text),
             ('00000000-0000-0000-0000-0000000000a4'::uuid, '2023-11-19'::date, null::text, null::text) $$,
   'every watched date is one diary row, with no place and no note'
+);
+
+-- 22b
+select is(
+  (select array_agg(distinct source) from public.watch_log where user_id = '00000000-0000-0000-0000-00000000000a'),
+  array['import'],
+  'and every one is an import row, not a log row (source, 20261013100000_movie_screens.sql)'
 );
 
 -- 23

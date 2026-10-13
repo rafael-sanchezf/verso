@@ -44,8 +44,8 @@ select columns_are(
   'public', 'movie_details',
   array['media_item_id', 'tmdb_id', 'runtime_minutes', 'genres', 'directors',
         'writers', 'top_cast', 'studio', 'collection_tmdb_id', 'collection_name',
-        'tagline', 'overview', 'backdrop_image_id'],
-  'movie_details has exactly the columns the design doc lists'
+        'tagline', 'overview', 'backdrop_image_id', 'people_text'],
+  'movie_details has exactly the columns the design doc lists, plus people_text (20261013100000_movie_screens.sql)'
 );
 
 select columns_are(
