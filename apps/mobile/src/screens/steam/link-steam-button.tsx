@@ -23,6 +23,7 @@
 import type { SteamLink } from '@verso/api';
 import { ActivityIndicator, Platform, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Button, ErrorLine, Text, useTheme } from '@/ui';
 
 import { linkButtonLabel } from './link-flow';
@@ -39,13 +40,14 @@ export interface LinkSteamButtonProps {
 }
 
 export function LinkSteamButton({ onLinked, initialReturn, label }: LinkSteamButtonProps) {
+  const t = useT();
   const theme = useTheme();
   const flow = useSteamLink({ onLinked, initialReturn });
 
   if (Platform.OS === 'web') {
     return (
       <Text size={15} color="text/secondary">
-        Linking Steam works in the phone app for now.
+        {t('profile.steam.link.webOnly')}
       </Text>
     );
   }
@@ -53,7 +55,7 @@ export function LinkSteamButton({ onLinked, initialReturn, label }: LinkSteamBut
   return (
     <View style={{ gap: theme.space[3] }}>
       <Button
-        label={linkButtonLabel(flow.phase, label)}
+        label={linkButtonLabel(flow.phase, t, label)}
         disabled={flow.busy}
         onPress={flow.start}
         leading={flow.busy ? <ActivityIndicator color={theme.colors['bg/canvas']} /> : undefined}

@@ -7,10 +7,12 @@
  * map says it is.
  */
 
+import { useT } from '@/lib/i18n';
 import { useDocumentTitle } from '@/lib/use-document-title';
 import { SteamScreen } from '@/screens/steam/steam-screen';
 
 export default function SteamSettingsRoute() {
-  useDocumentTitle('Steam');
+  const t = useT();
+  useDocumentTitle(t('profile.steam.title'));
   return <SteamScreen />;
 }

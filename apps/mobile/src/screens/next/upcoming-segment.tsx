@@ -5,15 +5,17 @@
 
 import { View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
 import { ListEmptyState, ListErrorState, ListSkeleton } from './list-status';
 import { useUpcomingQuery } from './queries';
-import { gameCount } from './row-text';
+import { gameCountKey } from './row-text';
 import { UpcomingRow } from './upcoming-row';
 
 export function UpcomingSegment() {
+  const t = useT();
   const theme = useTheme();
   const { data, isPending, isError, refetch } = useUpcomingQuery();
 
@@ -24,8 +26,8 @@ export function UpcomingSegment() {
     return (
       <ListEmptyState
         icon="calendar"
-        title="Nothing upcoming"
-        body="Unreleased games you add land here."
+        title={t('lists.next.upcomingEmptyTitle')}
+        body={t('lists.next.upcomingEmptyBody')}
       />
     );
   }
@@ -34,7 +36,7 @@ export function UpcomingSegment() {
     <View>
       <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[2] }}>
         <Text size={13} weight={500} color="text/secondary">
-          {gameCount(data.length)} · by release date
+          {t(gameCountKey(data.length), { count: data.length })} · {t('lists.next.byReleaseDate')}
         </Text>
       </View>
       {/* The rows' 16pt gutter; `ListRow` has none of its own. */}

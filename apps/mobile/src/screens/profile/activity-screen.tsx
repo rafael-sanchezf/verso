@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { isLiveMedium, trackedMedia } from '@/state/medium';
 import { Cover, EmptyState, EmptyStateCard, ErrorLine, Icon, Skeleton, Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
@@ -41,6 +42,7 @@ const CELL_HEIGHT = 60;
 const POSTER_WIDTH = 28;
 
 export function ActivityScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ medium?: string }>();
@@ -64,9 +66,9 @@ export function ActivityScreen() {
 
   const openItem = (event: ActivityMonthEvent) => {
     if (event.medium === 'movie') {
-      router.push({ pathname: '/movie/[id]', params: { id: event.mediaItemId, from: 'Activity' } });
+      router.push({ pathname: '/movie/[id]', params: { id: event.mediaItemId, from: t('profile.activity.title') } });
     } else {
-      router.push({ pathname: '/game/[id]', params: { id: event.mediaItemId, from: 'Activity' } });
+      router.push({ pathname: '/game/[id]', params: { id: event.mediaItemId, from: t('profile.activity.title') } });
     }
   };
 
@@ -75,19 +77,19 @@ export function ActivityScreen() {
   const header = (
     <Stack.Screen
       options={{
-        title: monthTitle(shown.year, shown.month),
-        headerBackTitle: 'Profile',
+        title: monthTitle(shown.year, shown.month, t),
+        headerBackTitle: t('profile.activity.back'),
         headerTitle: () => (
           <View style={[styles.row, { gap: 14 }]}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Previous month" hitSlop={12} onPress={() => move(-1)}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('profile.activity.previousMonth')} hitSlop={12} onPress={() => move(-1)}>
               <Icon name="chevron-left" size={20} color="text/secondary" />
             </Pressable>
             <Text size={17} weight={600}>
-              {monthTitle(shown.year, shown.month)}
+              {monthTitle(shown.year, shown.month, t)}
             </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Next month"
+              accessibilityLabel={t('profile.activity.nextMonth')}
               accessibilityState={{ disabled: atThisMonth }}
               disabled={atThisMonth}
               hitSlop={12}
@@ -115,7 +117,7 @@ export function ActivityScreen() {
           <View style={styles.row}>
             {WEEKDAY_LETTERS.map((letter, index) => (
               <Text key={index} size={12} color="text/secondary" align="center" layout={styles.column}>
-                {letter}
+                {t(letter)}
               </Text>
             ))}
           </View>
@@ -135,10 +137,10 @@ export function ActivityScreen() {
 
         <View style={{ paddingHorizontal: theme.space[4], paddingTop: 24, gap: 4 }}>
           <Text size={20} weight={600}>
-            {monthName(shown.month)}
+            {monthName(shown.month, t)}
           </Text>
           {month.isError ? (
-            <ErrorLine message="Something went wrong." onRetry={() => void month.refetch()} />
+            <ErrorLine message={t('profile.activity.somethingWentWrong')} onRetry={() => void month.refetch()} />
           ) : !month.data ? (
             <View style={{ gap: 12, paddingTop: 8 }}>
               <Skeleton width="100%" height={48} radius={8} />
@@ -156,7 +158,11 @@ export function ActivityScreen() {
           ) : (
             <View style={{ paddingTop: 8 }}>
               <EmptyStateCard>
-                <EmptyState icon="calendar" title="Nothing this month" body="What you rank, watch and finish lands on its day." />
+                <EmptyState
+                  icon="calendar"
+                  title={t('profile.activity.nothingThisMonth')}
+                  body={t('profile.activity.nothingThisMonthBody')}
+                />
               </EmptyStateCard>
             </View>
           )}
@@ -175,11 +181,14 @@ function DayCell({
   today: boolean;
   onPress?: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   if (!cell) return <View style={[styles.column, { height: CELL_HEIGHT }]} />;
 
   const label = cell.first
-    ? `${monthDayWord(cell.day)}: ${cell.first.title}${cell.more > 0 ? ` and ${cell.more} more` : ''}`
+    ? cell.more > 0
+      ? t('profile.activity.dayAndMore', { day: cell.day, title: cell.first.title, count: cell.more })
+      : t('profile.activity.day', { day: cell.day, title: cell.first.title })
     : undefined;
 
   return (
@@ -210,10 +219,6 @@ function DayCell({
       ) : null}
     </Pressable>
   );
-}
-
-function monthDayWord(day: number): string {
-  return `Day ${day}`;
 }
 
 const styles = StyleSheet.create({

@@ -2,6 +2,7 @@ import type { LetterboxdMatchRow, TierListRow } from '@verso/api';
 import type { LetterboxdFilm } from '@verso/core';
 import { describe, expect, it } from 'vitest';
 
+import { translate, type TranslationKey, type TranslationVars } from '../src/lib/i18n/dictionary';
 import {
   applyArgs,
   buildReview,
@@ -14,6 +15,9 @@ import {
   rowFacts,
   type ReviewListItem,
 } from '../src/screens/letterboxd/model';
+
+/** The screens' `t`, in English: the sentences these tests read are the English dictionary's. */
+const say = (key: TranslationKey, vars?: TranslationVars) => translate('en', key, vars);
 
 function film(key: string, title: string, rating: number | null, extra: Partial<LetterboxdFilm> = {}): LetterboxdFilm {
   return { key, uri: `https://boxd.it/${key}`, title, year: 2020, rating, watchedDates: [], rewatches: 0, tmdbId: null, ...extra };
@@ -206,11 +210,14 @@ describe('reviewHeadline and diaryDates', () => {
   );
 
   it('counts what will happen for the choice, leaving out empty buckets', () => {
-    expect(reviewHeadline(review)).toBe('2 films to mark watched · 1 not found');
-    expect(reviewHeadline(review, true)).toBe('1 film to rank · 1 watched, unrated · 1 not found');
+    expect(reviewHeadline(review, say)).toBe('2 films to mark watched · 1 not found');
+    expect(reviewHeadline(review, say, true)).toBe('1 film to rank · 1 watched, unrated · 1 not found');
+    expect(reviewHeadline(review, (key, vars) => translate('es', key, vars), true)).toBe(
+      '1 película por clasificar · 1 vista, sin calificación · 1 no encontrada',
+    );
 
     const only = buildReview([film('a', 'Alpha', 5), film('b', 'Beta', 4)], [match('a', 'A'), match('b', 'B')], EMPTY_MOVIE_TIERS);
-    expect(reviewHeadline(only, true)).toBe('2 films to rank');
+    expect(reviewHeadline(only, say, true)).toBe('2 films to rank');
   });
 
   it('counts the diary dates of the films that will be written, not of the unmatched', () => {

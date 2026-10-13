@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import Sortable from 'react-native-sortables';
 
+import { useT } from '@/lib/i18n';
 import { Icon, ListRow } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -23,8 +24,10 @@ export interface BacklogRowProps {
 }
 
 export function BacklogRow({ entry, draggable, onStart }: BacklogRowProps) {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
+  const detail = backlogDetail(entry);
 
   const handle = draggable ? (
     <Sortable.Handle>
@@ -39,7 +42,7 @@ export function BacklogRow({ entry, draggable, onStart }: BacklogRowProps) {
       candidates={coverCandidates(entry)}
       title={entry.title}
       subtitle={backlogSubtitle(entry)}
-      detail={backlogDetail(entry)}
+      detail={detail === null ? null : 'text' in detail ? detail.text : t(detail.key, { date: detail.date })}
       onPress={() =>
         router.push({ pathname: '/game/[id]', params: { id: entry.mediaItemId, from: 'Next' } })
       }

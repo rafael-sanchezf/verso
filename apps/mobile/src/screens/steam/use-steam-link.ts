@@ -23,6 +23,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useReducer, useRef } from 'react';
 
+import { useT } from '@/lib/i18n';
 import { invalidateSteam } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -54,13 +55,14 @@ export interface SteamLinkFlow {
   phase: LinkPhase;
   /** Between the tap and the answer. The button waits; a second tap does nothing. */
   busy: boolean;
-  /** One line for the last attempt's failure, or null. */
+  /** One line for the last attempt's failure, in the app's language, or null. */
   failure: string | null;
   /** Start a round trip. A no-op while one is under way. */
   start: () => void;
 }
 
 export function useSteamLink({ onLinked, initialReturn = null }: UseSteamLinkOptions = {}): SteamLinkFlow {
+  const t = useT();
   const queryClient = useQueryClient();
   const [phase, dispatch] = useReducer(linkReducer, IDLE);
 
@@ -102,7 +104,7 @@ export function useSteamLink({ onLinked, initialReturn = null }: UseSteamLinkOpt
       } catch {
         dispatch({
           type: 'start-failed',
-          message: "Couldn't open Steam's sign-in page. Please try again.",
+          message: 'profile.steam.link.couldNotOpenSignIn',
         });
       }
     } finally {
@@ -147,10 +149,12 @@ export function useSteamLink({ onLinked, initialReturn = null }: UseSteamLinkOpt
       .catch(() => dispatch({ type: 'confirm-failed' }));
   }, [phase.kind, queryClient]);
 
+  const failure = failureOf(phase);
+
   return {
     phase,
     busy: isBusy(phase),
-    failure: failureOf(phase),
+    failure: failure === null ? null : t(failure),
     start: () => void start(),
   };
 }

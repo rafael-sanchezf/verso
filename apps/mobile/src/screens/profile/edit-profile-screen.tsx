@@ -22,13 +22,13 @@ import { alert } from '@/lib/dialog';
 import { useT } from '@/lib/i18n';
 import { invalidateProfile } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
-import { MEDIUM_WORDS, LIVE_MEDIA } from '@/state/medium';
+import { LIVE_MEDIA } from '@/state/medium';
 import { ErrorLine, Icon, Skeleton, Text, textStyles } from '@/ui';
 import { fontFamilyFor, useTheme } from '@/ui/theme';
 
 import { ProfileAvatar } from './avatar';
 import { useProfileIdentity } from './data';
-import { editFormFrom, editPatch, initialsFor, toggleMedium, type EditForm } from './model';
+import { editFormFrom, editPatch, initialsFor, MEDIUM_KEYS, toggleMedium, type EditForm } from './model';
 import { pickAndUploadAvatar } from './photo';
 import { Separator } from './settings-row';
 
@@ -70,8 +70,12 @@ export function EditProfileScreen() {
       invalidateProfile(queryClient);
       router.back();
     } catch (cause) {
-      if (cause instanceof UsernameError) setUsernameError(cause.message);
-      else alert("Couldn't save", 'Check your connection and try again.');
+      // The kind, not the message: @verso/api words its refusal in English.
+      if (cause instanceof UsernameError) {
+        setUsernameError(t(cause.kind === 'username-taken' ? 'profile.edit.usernameTaken' : 'profile.edit.usernameInvalid'));
+      } else {
+        alert(t('profile.edit.couldNotSave'), t('profile.edit.checkConnection'));
+      }
     } finally {
       setSaving(false);
     }
@@ -85,7 +89,7 @@ export function EditProfileScreen() {
       if (updated) invalidateProfile(queryClient);
     } catch (cause) {
       if (__DEV__) console.warn('Change photo failed', cause);
-      alert("Couldn't change your photo", 'Try a different photo, or check your connection.');
+      alert(t('profile.edit.couldNotChangePhoto'), t('profile.edit.couldNotChangePhotoBody'));
     } finally {
       setUploading(false);
     }
@@ -95,11 +99,11 @@ export function EditProfileScreen() {
     <Stack.Screen
       options={{
         title: '',
-        headerBackTitle: 'Profile',
+        headerBackTitle: t('profile.edit.back'),
         headerRight: () => (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Save"
+            accessibilityLabel={t('common.save')}
             accessibilityState={{ disabled: !form || saving }}
             disabled={!form || saving}
             hitSlop={10}
@@ -109,7 +113,7 @@ export function EditProfileScreen() {
               <ActivityIndicator />
             ) : (
               <Text size={17} weight={600} color="brand/text">
-                Save
+                {t('common.save')}
               </Text>
             )}
           </Pressable>
@@ -124,7 +128,7 @@ export function EditProfileScreen() {
         {header}
         <View style={{ padding: theme.space[4], gap: 16, alignItems: 'center' }}>
           {identity.isError ? (
-            <ErrorLine message="Something went wrong." onRetry={() => void identity.refetch()} />
+            <ErrorLine message={t('profile.edit.somethingWentWrong')} onRetry={() => void identity.refetch()} />
           ) : (
             <>
               <Skeleton width={96} height={96} radius={48} />
@@ -157,30 +161,30 @@ export function EditProfileScreen() {
             style={({ pressed }) => [styles.row, { gap: 8 }, pressed ? styles.pressed : undefined]}>
             {uploading ? <ActivityIndicator /> : null}
             <Text size={15} color="brand/text">
-              {uploading ? 'Uploading…' : 'Change photo'}
+              {uploading ? t('profile.edit.uploading') : t('profile.edit.changePhoto')}
             </Text>
           </Pressable>
         </View>
 
         <View style={{ gap: 8 }}>
           <Group>
-            <Row label="Name">
+            <Row label={t('profile.edit.name')}>
               <TextInput
                 value={form.name}
                 onChangeText={(name) => update({ name })}
-                placeholder="Your name"
+                placeholder={t('profile.edit.namePlaceholder')}
                 placeholderTextColor={theme.colors['text/secondary']}
                 autoCapitalize="words"
                 autoCorrect={false}
                 maxLength={40}
                 textAlign="right"
-                accessibilityLabel="Name"
+                accessibilityLabel={t('profile.edit.name')}
                 editable={!saving}
                 style={inputStyle}
               />
             </Row>
             <Separator />
-            <Row label="Username">
+            <Row label={t('profile.edit.username')}>
               <TextInput
                 // Drawn with its "@" as the frame does; the "@" is never part of the value.
                 value={form.username ? `@${form.username}` : ''}
@@ -188,14 +192,14 @@ export function EditProfileScreen() {
                   update({ username: text.replace(/^@+/, '') });
                   setUsernameError(null);
                 }}
-                placeholder="@handle"
+                placeholder={t('profile.edit.usernamePlaceholder')}
                 placeholderTextColor={theme.colors['text/secondary']}
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="username"
                 maxLength={25}
                 textAlign="right"
-                accessibilityLabel="Username"
+                accessibilityLabel={t('profile.edit.username')}
                 editable={!saving}
                 style={inputStyle}
               />
@@ -207,13 +211,13 @@ export function EditProfileScreen() {
             </Text>
           ) : null}
           <Text size={13} color="text/secondary" layout={styles.hint}>
-            Letters, numbers and underscores, 3 to 24. Friends find you by it.
+            {t('profile.edit.usernameHint')}
           </Text>
         </View>
 
         <View style={{ gap: 8 }}>
           <Text size={13} weight={600} color="text/secondary" layout={styles.hint}>
-            MEDIA YOU TRACK
+            {t('profile.edit.mediaYouTrack')}
           </Text>
           <Group>
             {LIVE_MEDIA.map((medium) => {
@@ -224,10 +228,10 @@ export function EditProfileScreen() {
                   <Pressable
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked, disabled: onlyOne }}
-                    accessibilityHint={onlyOne ? 'You track at least one' : undefined}
+                    accessibilityHint={onlyOne ? t('profile.edit.atLeastOne') : undefined}
                     onPress={() => update({ media: toggleMedium(form.media, medium) })}
                     style={({ pressed }) => (pressed && !onlyOne ? styles.pressed : undefined)}>
-                    <Row label={t(MEDIUM_WORDS[medium].plural)}>
+                    <Row label={t(MEDIUM_KEYS[medium])}>
                       {checked ? <Icon name="check" size={18} color="brand/text" /> : null}
                     </Row>
                   </Pressable>
@@ -235,15 +239,15 @@ export function EditProfileScreen() {
                 </View>
               );
             })}
-            <Row label="TV">
+            <Row label={t('profile.edit.tv')}>
               <Text size={15} color="text/secondary">
-                Coming
+                {t('profile.edit.coming')}
               </Text>
             </Row>
             <Separator />
-            <Row label="Books">
+            <Row label={t('profile.edit.books')}>
               <Text size={15} color="text/secondary">
-                Coming
+                {t('profile.edit.coming')}
               </Text>
             </Row>
           </Group>
@@ -251,18 +255,18 @@ export function EditProfileScreen() {
 
         <View style={{ gap: 8 }}>
           <Group>
-            <Row label="Public profile">
+            <Row label={t('profile.edit.publicProfile')}>
               <Switch
                 value={form.isPublic}
                 onValueChange={(isPublic) => update({ isPublic })}
                 trackColor={{ true: theme.colors['brand/primary'] }}
-                accessibilityLabel="Public profile"
+                accessibilityLabel={t('profile.edit.publicProfile')}
                 disabled={saving}
               />
             </Row>
           </Group>
           <Text size={13} color="text/secondary" layout={styles.hint}>
-            Off: only you see this page. On: anyone with your link sees your rankings, never your notes or your diary.
+            {t('profile.edit.publicHint')}
           </Text>
         </View>
       </ScrollView>

@@ -36,6 +36,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { SettingsSection } from '@/screens/profile/settings-section';
 import { ErrorLine, Skeleton, Text, useTheme } from '@/ui';
 
@@ -47,6 +48,7 @@ import { useSteamImport, type ImportMove } from './use-steam-import';
 import { useSteamAccount, useUnlinkSteam } from './use-steam-link';
 
 export function SteamScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ status?: string; reason?: string }>();
@@ -56,7 +58,7 @@ export function SteamScreen() {
     if (account.isPending) return <Loading />;
     if (account.isError) {
       return (
-        <ErrorLine message="Couldn't load your Steam link." onRetry={() => void account.refetch()} />
+        <ErrorLine message={t('profile.steam.couldNotLoadLink')} onRetry={() => void account.refetch()} />
       );
     }
     if (account.data === null) {
@@ -87,10 +89,11 @@ function openMove(router: ReturnType<typeof useRouter>, move: ImportMove) {
 }
 
 function Loading() {
+  const t = useT();
   const theme = useTheme();
 
   return (
-    <View accessibilityLabel="Loading" style={{ gap: theme.space[6] }}>
+    <View accessibilityLabel={t('profile.steam.loading')} style={{ gap: theme.space[6] }}>
       <Skeleton height={132} radius={theme.radius.md} />
       <Skeleton height={132} radius={theme.radius.md} />
     </View>
@@ -98,16 +101,15 @@ function Loading() {
 }
 
 function NotLinked({ initialReturn }: { initialReturn: ReturnType<typeof linkReturnFromParams> }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <View style={{ gap: theme.space[6] }}>
       <View style={{ gap: theme.space[3] }}>
-        <Text size={17}>
-          We read your games and hours played. Steam needs Game details set to Public; we show you how.
-        </Text>
+        <Text size={17}>{t('profile.steam.notLinkedLead')}</Text>
         <Text size={15} color="text/secondary">
-          We never read friends, messages or purchases. Unlink any time here.
+          {t('profile.steam.notLinkedNever')}
         </Text>
       </View>
 
@@ -117,6 +119,7 @@ function NotLinked({ initialReturn }: { initialReturn: ReturnType<typeof linkRet
 }
 
 function Linked({ link, onMove }: { link: SteamLink; onMove: (move: ImportMove) => void }) {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const unlink = useUnlinkSteam();
@@ -124,38 +127,34 @@ function Linked({ link, onMove }: { link: SteamLink; onMove: (move: ImportMove) 
   const busy = unlink.isPending || importer.pending;
 
   function confirmUnlink() {
-    alert(
-      'Unlink Steam?',
-      'Verso stops reading your Steam account and deletes the copy of your library it stored. Hours already imported stay on your games.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Unlink',
-          style: 'destructive',
-          onPress: () =>
-            unlink.mutate(undefined, {
-              onError: () => alert("Couldn't unlink Steam", 'Check your connection and try again.'),
-            }),
-        },
-      ],
-    );
+    alert(t('profile.steam.unlinkTitle'), t('profile.steam.unlinkMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('profile.steam.unlink'),
+        style: 'destructive',
+        onPress: () =>
+          unlink.mutate(undefined, {
+            onError: () => alert(t('profile.steam.couldNotUnlink'), t('profile.steam.checkConnection')),
+          }),
+      },
+    ]);
   }
 
   return (
     <>
       <SettingsSection
-        title="Steam account"
+        title={t('profile.steam.account')}
         rows={[
-          { key: 'id', label: 'Steam ID', value: link.steamId },
+          { key: 'id', label: t('profile.steam.steamId'), value: link.steamId },
           {
             key: 'profile',
-            label: 'Open profile on Steam',
+            label: t('profile.steam.openProfile'),
             navigates: true,
             onPress: () => void Linking.openURL(steamProfileUrl(link.steamId)),
           },
           {
             key: 'unlink',
-            label: 'Unlink',
+            label: t('profile.steam.unlink'),
             destructive: true,
             busy: unlink.isPending,
             onPress: busy ? undefined : confirmUnlink,
@@ -165,12 +164,12 @@ function Linked({ link, onMove }: { link: SteamLink; onMove: (move: ImportMove) 
 
       <View style={{ gap: theme.space[2] }}>
         <SettingsSection
-          title="Library"
+          title={t('profile.steam.library')}
           rows={[
-            { key: 'last', label: 'Last import', value: lastImportText(link) },
+            { key: 'last', label: t('profile.steam.lastImport'), value: lastImportText(link, t) },
             {
               key: 'import',
-              label: 'Import library',
+              label: t('profile.steam.importLibrary'),
               navigates: true,
               busy: importer.pending,
               onPress: busy ? undefined : importer.run,
@@ -179,7 +178,7 @@ function Linked({ link, onMove }: { link: SteamLink; onMove: (move: ImportMove) 
               ? [
                   {
                     key: 'games',
-                    label: 'Games to add from Steam',
+                    label: t('profile.steam.gamesToAdd'),
                     navigates: true,
                     onPress: () => router.push('/settings/steam/candidates'),
                   },
@@ -189,7 +188,7 @@ function Linked({ link, onMove }: { link: SteamLink; onMove: (move: ImportMove) 
         />
         {/* What the import reads and what it does not do, under the button that runs it. */}
         <Text size={13} color="text/secondary">
-          Reads your Steam games and hours played. Nothing is added to your lists until you add it.
+          {t('profile.steam.importNote')}
         </Text>
       </View>
 

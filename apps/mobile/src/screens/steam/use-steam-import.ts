@@ -18,6 +18,7 @@ import { importSteamLibrary } from '@verso/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { useT } from '@/lib/i18n';
 import { invalidateSteam } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 
@@ -30,11 +31,12 @@ export type ImportMove = Exclude<ImportStep, { kind: 'line' }>;
 export interface SteamImport {
   run: () => void;
   pending: boolean;
-  /** The line for a rate limit, a lost link, or a failure; null otherwise. */
+  /** The line for a rate limit, a lost link, or a failure, in the app's language; null otherwise. */
   line: string | null;
 }
 
 export function useSteamImport(asker: ImportAsker, onMove: (move: ImportMove) => void): SteamImport {
+  const t = useT();
   const queryClient = useQueryClient();
 
   const onMoveRef = useRef(onMove);
@@ -48,7 +50,7 @@ export function useSteamImport(asker: ImportAsker, onMove: (move: ImportMove) =>
       invalidateSteam(queryClient, {
         entriesChanged: result.status === 'imported' && result.entriesUpdated > 0,
       });
-      const step = importStep(result, asker);
+      const step = importStep(result, asker, t);
       if (step.kind !== 'line') onMoveRef.current(step);
     },
     // The function marks the link 'error' on its way out; refetch so the
@@ -57,9 +59,9 @@ export function useSteamImport(asker: ImportAsker, onMove: (move: ImportMove) =>
   });
 
   const line = (() => {
-    if (mutation.isError) return importFailureMessage(mutation.error);
+    if (mutation.isError) return t(importFailureMessage(mutation.error));
     if (!mutation.data) return null;
-    const step = importStep(mutation.data, asker);
+    const step = importStep(mutation.data, asker, t);
     return step.kind === 'line' ? step.message : null;
   })();
 

@@ -33,6 +33,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { GameRow } from '@/screens/search/game-row';
@@ -56,6 +57,7 @@ export interface SteamCandidatesScreenProps {
 }
 
 export function SteamCandidatesScreen({ onDone }: SteamCandidatesScreenProps = {}) {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -77,7 +79,7 @@ export function SteamCandidatesScreen({ onDone }: SteamCandidatesScreenProps = {
 
   if (query.isPending) {
     return (
-      <View accessibilityLabel="Loading" style={[padding, { paddingTop: theme.space[3] }]}>
+      <View accessibilityLabel={t('profile.steam.candidates.loading')} style={[padding, { paddingTop: theme.space[3] }]}>
         <GameRowSkeletons count={8} />
       </View>
     );
@@ -86,7 +88,7 @@ export function SteamCandidatesScreen({ onDone }: SteamCandidatesScreenProps = {
   if (query.isError) {
     return (
       <View style={[padding, { paddingTop: theme.space[4] }]}>
-        <ErrorLine message="Couldn't load your Steam games." onRetry={() => void query.refetch()} />
+        <ErrorLine message={t('profile.steam.candidates.couldNotLoad')} onRetry={() => void query.refetch()} />
       </View>
     );
   }
@@ -96,9 +98,9 @@ export function SteamCandidatesScreen({ onDone }: SteamCandidatesScreenProps = {
       <View style={[padding, { flex: 1, justifyContent: 'center', paddingBottom: 120 }]}>
         <EmptyState
           icon="check"
-          title="Nothing to add"
-          body="Every game from your Steam library that we could match is already in your lists."
-          action={{ label: 'Done', onPress: done }}
+          title={t('profile.steam.candidates.nothingToAdd')}
+          body={t('profile.steam.candidates.nothingToAddBody')}
+          action={{ label: t('profile.steam.candidates.done'), onPress: done }}
         />
       </View>
     );
@@ -122,7 +124,7 @@ export function SteamCandidatesScreen({ onDone }: SteamCandidatesScreenProps = {
       )}
       ListFooterComponent={
         <View style={{ paddingTop: theme.space[5], gap: theme.space[6] }}>
-          <Button label="Done" variant="contrast" onPress={done} />
+          <Button label={t('profile.steam.candidates.done')} variant="contrast" onPress={done} />
           <SteamAttribution />
         </View>
       }
@@ -131,25 +133,28 @@ export function SteamCandidatesScreen({ onDone }: SteamCandidatesScreenProps = {
 }
 
 function Header({ count, capped, playtimeHidden }: { count: number; capped: boolean; playtimeHidden: boolean }) {
+  const t = useT();
   const theme = useTheme();
-  const games = count === 1 ? '1 game' : `${count} games`;
+  const header = capped
+    ? t('profile.steam.candidates.headerCapped', { count })
+    : count === 1
+      ? t('profile.steam.candidates.headerOne')
+      : t('profile.steam.candidates.headerMany', { count });
 
   return (
     <View style={{ gap: theme.space[3], paddingBottom: theme.space[2] }}>
       <Text size={15} color="text/secondary">
-        {capped ? `The first ${games}` : games} in your Steam library that aren't in your lists yet,
-        least played first. Tap + to add one.
+        {header}
       </Text>
       {playtimeHidden ? (
         <View style={{ gap: theme.space[1] }}>
           <Text size={15} color="text/secondary">
-            Steam reported no hours for any game. If “Always keep my total playtime private” is ticked
-            on Steam, untick it and import again.
+            {t('profile.steam.candidates.playtimeHidden')}
           </Text>
           <LinkText
-            label="Open Privacy Settings on Steam"
+            label={t('profile.steam.candidates.openPrivacy')}
             url={STEAM_PRIVACY_SETTINGS_URL}
-            accessibilityLabel="Open Privacy Settings on Steam. Opens Steam."
+            accessibilityLabel={t('profile.steam.candidates.openPrivacyLabel')}
             weight={600}
           />
         </View>
@@ -169,10 +174,11 @@ function CandidateRow({
   onOpen: () => void;
   onAdd: () => void;
 }) {
+  const t = useT();
   return (
     <GameRow
       title={candidate.title}
-      subtitle={candidateSubtitle(candidate)}
+      subtitle={candidateSubtitle(candidate, t)}
       candidates={coverCandidates(candidateCover(candidate))}
       tracked={tracked}
       onPress={onOpen}

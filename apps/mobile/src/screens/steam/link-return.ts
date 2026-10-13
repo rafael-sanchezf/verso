@@ -18,8 +18,11 @@
  *    flow is waiting for it (see `+native-intent.tsx`).
  *
  * Pure, and relative imports only, so `test/steam-link-return.test.ts` runs it
- * without React Native.
+ * without React Native. A failure's words are a dictionary key
+ * (`profile.steam.link`), translated by the screen that shows them.
  */
+
+import type { TranslationKey } from '../../lib/i18n/dictionary';
 
 /** The path the router sees, and the route file that answers it. */
 export const STEAM_LINK_RETURN_PATH = 'steam/linked';
@@ -153,18 +156,18 @@ function linkReturnFrom(status: string | null | undefined, reason: string | null
  * assertion, a failed write, our server -- is ours to apologise for, in one
  * line that does not pretend to know more.
  */
-export function linkFailureMessage(reason: string): string | null {
+export function linkFailureMessage(reason: string): TranslationKey | null {
   switch (reason) {
     case 'cancelled':
       return null;
     case 'already_linked_elsewhere':
-      return 'That Steam account is linked to another Verso account. Unlink it there first, then try again.';
+      return 'profile.steam.link.linkedElsewhere';
     case 'state_not_valid':
     case 'missing_state':
-      return 'That link attempt expired. Tap Link Steam to start a new one.';
+      return 'profile.steam.link.expired';
     case 'not_configured':
-      return "Linking Steam isn't set up on our server yet.";
+      return 'profile.steam.link.notSetUp';
     default:
-      return "Steam didn't confirm the link. Please try again.";
+      return 'profile.steam.link.notConfirmed';
   }
 }

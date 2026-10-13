@@ -14,6 +14,7 @@ import { moveRankingEntry, tierList, type TierListRow } from '@verso/api';
 import { TIERS, type Medium, type Tier } from '@verso/core';
 
 import { alert } from '@/lib/dialog';
+import { t } from '@/lib/i18n';
 import { invalidateRanking } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -81,7 +82,7 @@ export function useMoveRankingEntry(medium: Medium = 'game') {
 
     onError: (_error, _variables, context) => {
       if (context?.previous) queryClient.setQueryData(queryKeys.ranking(medium), context.previous);
-      alert('That move did not save', 'Check your connection and try again.');
+      alert(t('lists.ranking.moveDidNotSave'), t('lists.checkConnection'));
     },
 
     // Success or failure, the database is the truth: refetch rather than trust

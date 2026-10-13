@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { MediumChip, ScreenHeader, SegmentedControl, useTheme } from '@/ui';
 
 import { isSelectedTab } from '@/screens/search/intent';
@@ -34,13 +35,13 @@ import { WatchlistSegment, type WatchlistVisit } from './watchlist-segment';
 
 type Segment = 'watchlist' | 'calendar';
 
-const SEGMENTS = [
-  { value: 'watchlist', label: 'Watchlist' },
-  { value: 'calendar', label: 'Calendar' },
-] as const;
-
 export function WatchlistScreen() {
+  const t = useT();
   const theme = useTheme();
+  const segments = [
+    { value: 'watchlist' as const, label: t('lists.watchlist.watchlist') },
+    { value: 'calendar' as const, label: t('lists.watchlist.calendar') },
+  ];
   const router = useRouter();
   const [segment, setSegment] = useState<Segment>('watchlist');
 
@@ -71,9 +72,9 @@ export function WatchlistScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
-      <ScreenHeader title="Watchlist" right={<MediumChip />} />
+      <ScreenHeader title={t('lists.watchlist.title')} right={<MediumChip />} />
       <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[3] }}>
-        <SegmentedControl<Segment> segments={SEGMENTS} value={segment} onChange={setSegment} />
+        <SegmentedControl<Segment> segments={segments} value={segment} onChange={setSegment} />
       </View>
       {segment === 'watchlist' ? (
         <WatchlistSegment visit={visit} onVisitApplied={() => setVisit(null)} />

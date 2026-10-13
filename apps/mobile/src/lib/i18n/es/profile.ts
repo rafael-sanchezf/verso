@@ -1,4 +1,384 @@
 import type { Dictionary } from '../dictionary';
 
-/** Empty until its wave; see `en/profile.ts`. */
-export const profile: Dictionary['profile'] = {};
+/**
+ * Wave 6 in Spanish; see `en/profile.ts` for the shape.
+ *
+ * Steam's own setting names are Steam's Latin American Spanish ("Detalles de
+ * juegos", "Mantener siempre privado mi tiempo total de juego"), since that is
+ * what a Spanish-speaking player's Steam shows. Letterboxd has no Spanish
+ * interface, so its menu names stay as the site writes them.
+ */
+export const profile: Dictionary['profile'] = {
+  page: {
+    title: 'Perfil',
+    settings: 'Configuración',
+    setYourName: 'Agrega tu nombre',
+    somethingWentWrong: 'Algo salió mal.',
+    joined: 'se unió en {date}',
+    editProfile: 'Editar perfil',
+    edit: 'Editar',
+    all: 'Todo',
+    couldNotLoadNumbers: 'No se pudieron cargar tus números.',
+    tiles: {
+      watched: 'Vistas',
+      played: 'Jugados',
+      ranked: 'En ranking',
+      topPercent: 'Top {percent}%',
+      ofRankers: 'de usuarios',
+      hours: 'Horas',
+    },
+    friends: {
+      title: 'Amigos',
+      noneYet: 'Amigos, ninguno todavía',
+      find: 'Buscar amigos',
+      comingTitle: 'Los amigos llegan pronto',
+      comingBody: 'Seguir a tus amigos y ver lo que clasifican llega con la próxima versión.',
+    },
+    sectionCounts: {
+      game: '{ranked} en ranking · {list} en Pendientes',
+      movie: '{ranked} en ranking · {list} en Por ver',
+    },
+    topTitle: {
+      game: 'Tus mejores juegos',
+      movie: 'Tus mejores películas',
+    },
+    seeAll: 'Ver todo',
+    seeAllRanked: {
+      game: 'Ver todos los juegos clasificados',
+      movie: 'Ver todas las películas clasificadas',
+    },
+    noneRanked: {
+      game: 'Todavía no hay juegos clasificados.',
+      movie: 'Todavía no hay películas clasificadas.',
+    },
+    shareProfile: 'Compartir mi perfil',
+    shareTop: 'Compartir mi top 10',
+    copied: 'Copiado',
+    copiedBody: 'Pégalo donde quieras compartirlo.',
+    couldNotCopy: 'No se pudo copiar',
+    couldNotCopyBody: 'Tu navegador no lo permitió.',
+    recent: 'Reciente',
+    seeAllLink: 'Ver todo ›',
+    seeAllActivity: 'Ver toda la actividad',
+    nothingYet: 'Nada todavía',
+    nothingYetBody: {
+      movie: 'Registra o clasifica una película y aparecerá aquí.',
+      game: 'Clasifica un juego desde su página y aparecerá aquí.',
+      all: 'Lo que clasificas, ves y terminas aparece aquí.',
+    },
+    ago: {
+      today: 'Hoy',
+      days: '{count} d',
+      weeks: '{count} sem',
+    },
+    share: {
+      heading: {
+        game: 'Mis mejores juegos',
+        movie: 'Mis mejores películas',
+      },
+      signature: 'Ranking hecho con Verso',
+      signatureWithHandle: 'Ranking hecho con Verso · @{handle}',
+    },
+    photo: 'Tu foto de perfil',
+  },
+
+  media: {
+    game: 'Juegos',
+    movie: 'Películas',
+  },
+
+  activityLine: {
+    ranked: 'Clasificaste {title}',
+    watched: 'Viste {title}',
+    finished: 'Terminaste {title}',
+    rankedScored: 'Clasificaste {title} · {score}',
+    watchedScored: 'Viste {title} · {score}',
+    finishedScored: 'Terminaste {title} · {score}',
+  },
+
+  activity: {
+    title: 'Actividad',
+    back: 'Perfil',
+    monthTitle: '{month} de {year}',
+    previousMonth: 'Mes anterior',
+    nextMonth: 'Mes siguiente',
+    somethingWentWrong: 'Algo salió mal.',
+    nothingThisMonth: 'Nada este mes',
+    nothingThisMonthBody: 'Lo que clasificas, ves y terminas aparece en su día.',
+    day: 'Día {day}: {title}',
+    dayAndMore: 'Día {day}: {title} y {count} más',
+  },
+
+  calendar: {
+    // Capitalized: each stands alone at the start of a header, as `Hoy` does.
+    months: {
+      january: 'Enero',
+      february: 'Febrero',
+      march: 'Marzo',
+      april: 'Abril',
+      may: 'Mayo',
+      june: 'Junio',
+      july: 'Julio',
+      august: 'Agosto',
+      september: 'Septiembre',
+      october: 'Octubre',
+      november: 'Noviembre',
+      december: 'Diciembre',
+    },
+    // The RAE's abbreviations, lowercase inside a line, as `lib/format.ts` writes them.
+    monthsShort: {
+      jan: 'ene',
+      feb: 'feb',
+      mar: 'mar',
+      apr: 'abr',
+      may: 'may',
+      jun: 'jun',
+      jul: 'jul',
+      aug: 'ago',
+      sep: 'sept',
+      oct: 'oct',
+      nov: 'nov',
+      dec: 'dic',
+    },
+    monthYear: '{month} {year}',
+    weekdayLetters: {
+      sunday: 'D',
+      monday: 'L',
+      tuesday: 'M',
+      wednesday: 'M',
+      thursday: 'J',
+      friday: 'V',
+      saturday: 'S',
+    },
+  },
+
+  edit: {
+    title: 'Editar perfil',
+    back: 'Perfil',
+    couldNotSave: 'No se pudo guardar',
+    checkConnection: 'Revisa tu conexión e inténtalo de nuevo.',
+    couldNotChangePhoto: 'No se pudo cambiar tu foto',
+    couldNotChangePhotoBody: 'Prueba con otra foto o revisa tu conexión.',
+    somethingWentWrong: 'Algo salió mal.',
+    uploading: 'Subiendo…',
+    changePhoto: 'Cambiar foto',
+    name: 'Nombre',
+    namePlaceholder: 'Tu nombre',
+    username: 'Usuario',
+    usernamePlaceholder: '@usuario',
+    usernameTaken: 'Ese nombre de usuario ya está en uso',
+    usernameInvalid: 'Un nombre de usuario tiene de 3 a 24 caracteres: letras minúsculas, números y guiones bajos',
+    usernameHint: 'Letras, números y guiones bajos, de 3 a 24. Tus amigos te encuentran con él.',
+    mediaYouTrack: 'LO QUE SIGUES',
+    atLeastOne: 'Sigues al menos uno',
+    tv: 'TV',
+    books: 'Libros',
+    coming: 'Próximamente',
+    publicProfile: 'Perfil público',
+    publicHint:
+      'Desactivado: solo tú ves esta página. Activado: cualquiera con tu enlace ve tus rankings, nunca tus notas ni tu diario.',
+  },
+
+  data: {
+    notValidJson: 'el archivo no es un JSON válido',
+    somethingWentWrong: 'Algo salió mal. Inténtalo de nuevo.',
+  },
+
+  steam: {
+    title: 'Steam',
+    couldNotLoadLink: 'No se pudo cargar tu vínculo con Steam.',
+    loading: 'Cargando',
+    notLinkedLead:
+      'Leemos tus juegos y tus horas jugadas. Steam necesita que Detalles de juegos sea Público; te mostramos cómo.',
+    notLinkedNever: 'Nunca leemos tus amigos, mensajes ni compras. Desvincula cuando quieras desde aquí.',
+    unlinkTitle: '¿Desvincular Steam?',
+    unlinkMessage:
+      'Verso deja de leer tu cuenta de Steam y elimina la copia de tu biblioteca que guardó. Las horas ya importadas se quedan en tus juegos.',
+    unlink: 'Desvincular',
+    couldNotUnlink: 'No se pudo desvincular Steam',
+    checkConnection: 'Revisa tu conexión e inténtalo de nuevo.',
+    account: 'Cuenta de Steam',
+    steamId: 'ID de Steam',
+    openProfile: 'Abrir perfil en Steam',
+    library: 'Biblioteca',
+    lastImport: 'Última importación',
+    importLibrary: 'Importar biblioteca',
+    gamesToAdd: 'Juegos para agregar desde Steam',
+    importNote: 'Lee tus juegos de Steam y tus horas jugadas. No se agrega nada a tus listas hasta que tú lo agregues.',
+    lastImportValue: {
+      inProgress: 'En curso',
+      never: 'Nunca',
+      private: '{when} · Perfil privado',
+      failed: '{when} · Falló',
+    },
+    lines: {
+      stillPrivate: 'Steam todavía no comparte tus juegos. Revisa las tres opciones de arriba e inténtalo de nuevo.',
+      rateLimited: 'Entre importaciones pasan diez minutos. Inténtalo de nuevo {when}.',
+      notLinked: 'Steam ya no está vinculado a esta cuenta.',
+    },
+    retryAfter: {
+      now: 'ahora',
+      aboutAMinute: 'en un minuto, más o menos',
+      aboutMinutes: 'en unos {minutes} minutos',
+    },
+    errors: {
+      linkNotSetUp: 'Vincular Steam todavía no está configurado en nuestro servidor.',
+      couldNotOpenSignIn:
+        'No se pudo abrir la página de inicio de sesión de Steam. Revisa tu conexión e inténtalo de nuevo.',
+      importNotSetUp: 'Importar desde Steam todavía no está configurado en nuestro servidor.',
+      notAnswering: 'Steam no responde. Inténtalo de nuevo en unos minutos.',
+      couldNotImport: 'No se pudo importar desde Steam. Revisa tu conexión e inténtalo de nuevo.',
+    },
+    link: {
+      button: 'Vincular Steam',
+      opening: 'Abriendo Steam…',
+      waiting: 'Esperando a Steam…',
+      checking: 'Revisando el vínculo…',
+      webOnly: 'Por ahora, Steam se vincula desde la app del celular.',
+      couldNotCheck: 'No se pudo comprobar si el vínculo funcionó. Revisa tu conexión e inténtalo de nuevo.',
+      didNotSave: 'Steam inició tu sesión, pero el vínculo no se guardó. Inténtalo de nuevo.',
+      couldNotOpenSignIn: 'No se pudo abrir la página de inicio de sesión de Steam. Inténtalo de nuevo.',
+      linkedElsewhere:
+        'Esa cuenta de Steam está vinculada a otra cuenta de Verso. Desvincúlala allí primero e inténtalo de nuevo.',
+      expired: 'Ese intento de vínculo caducó. Toca Vincular Steam para empezar uno nuevo.',
+      notSetUp: 'Vincular Steam todavía no está configurado en nuestro servidor.',
+      notConfirmed: 'Steam no confirmó el vínculo. Inténtalo de nuevo.',
+    },
+    attribution: {
+      poweredBy: 'Con la tecnología de Steam',
+      poweredByLabel: 'Con la tecnología de Steam. Abre la tienda de Steam.',
+      trademark: 'Steam y el logotipo de Steam son marcas comerciales de Valve Corporation.',
+    },
+    candidates: {
+      title: 'De Steam',
+      loading: 'Cargando',
+      couldNotLoad: 'No se pudieron cargar tus juegos de Steam.',
+      nothingToAdd: 'Nada que agregar',
+      nothingToAddBody: 'Todos los juegos de tu biblioteca de Steam que pudimos identificar ya están en tus listas.',
+      done: 'Listo',
+      headerOne:
+        '1 juego de tu biblioteca de Steam que todavía no está en tus listas, del menos jugado al más jugado. Toca + para agregarlo.',
+      headerMany:
+        '{count} juegos de tu biblioteca de Steam que todavía no están en tus listas, del menos jugado al más jugado. Toca + para agregar uno.',
+      headerCapped:
+        'Los primeros {count} juegos de tu biblioteca de Steam que todavía no están en tus listas, del menos jugado al más jugado. Toca + para agregar uno.',
+      playtimeHidden:
+        'Steam no informó horas para ningún juego. Si “Mantener siempre privado mi tiempo total de juego” está marcado en Steam, desmárcalo e importa de nuevo.',
+      openPrivacy: 'Abrir Configuración de privacidad en Steam',
+      openPrivacyLabel: 'Abrir Configuración de privacidad en Steam. Abre Steam.',
+      noHours: 'Sin horas en Steam',
+      hours: '{hours} en Steam',
+    },
+    privacy: {
+      title: 'Privacidad de Steam',
+      heading: 'Steam no compartió tus juegos',
+      lead: 'Steam solo comparte una biblioteca cuyos Detalles de juegos son Públicos. Cambia tres opciones en Steam e inténtalo de nuevo.',
+      step1: 'En Steam, abre tu Perfil, luego Editar perfil y luego Configuración de privacidad.',
+      step2: 'Pon Detalles de juegos en Público. Mi perfil también tiene que ser Público, o Steam no lo permite.',
+      step3: 'Desmarca “Mantener siempre privado mi tiempo total de juego”, para que tus horas lleguen con tus juegos.',
+      stepLabel: 'Paso {number}. {text}',
+      tryingAgain: 'Reintentando…',
+      tryAgain: 'Reintentar',
+      notNow: 'Ahora no',
+    },
+  },
+
+  letterboxd: {
+    pick: {
+      title: 'Trae tus películas',
+      lead: 'Cada película que registraste en Letterboxd se marca como vista, con cada fecha en tu diario. Ver no es clasificar: las clasificas cuando quieras. Si quieres, tus estrellas pueden ubicarlas en un primer borrador que revisas antes de que se guarde nada.',
+      step1: 'En Letterboxd, abre Settings, luego Import & Export y luego Export your data.',
+      step2: 'Letterboxd te envía un zip por correo. Ábrelo en Archivos; se descomprime con un toque.',
+      step3: 'Elige ratings.csv y diary.csv de su interior. Lo mejor es los dos a la vez.',
+      reading: 'Leyendo tus archivos',
+      matching: 'Buscando tus películas en el catálogo…',
+      chooseFiles: 'Elegir archivos',
+      nothingSaved: 'No se guarda nada hasta que confirmes en la siguiente pantalla.',
+    },
+    films: {
+      one: '1 película',
+      other: '{count} películas',
+    },
+    done: {
+      rankedOne: '1 película clasificada',
+      rankedMany: '{count} películas clasificadas',
+      markedWatchedOne: '1 película marcada como vista',
+      markedWatchedMany: '{count} películas marcadas como vistas',
+      button: 'Listo',
+      watchedWaitingOne: '1 película marcada como vista, esperando a que la clasifiques.',
+      watchedWaitingMany: '{count} películas marcadas como vistas, esperando a que las clasifiques.',
+      watchedNotRanked: 'Vistas, sin clasificar: esperan a que las clasifiques cuando quieras.',
+      diaryOne: 'Se agregó 1 visionado a tu diario.',
+      diaryMany: 'Se agregaron {count} visionados a tu diario.',
+      notFoundOne: '1 película no se encontró en el catálogo.',
+      notFoundMany: '{count} películas no se encontraron en el catálogo.',
+    },
+    review: {
+      discardTitle: '¿Descartar esta importación?',
+      discardMessage: 'No se guardó nada, y las películas que moviste vuelven a donde las pusieron las estrellas.',
+      keepReviewing: 'Seguir revisando',
+      discard: 'Descartar',
+      title: '¿Se ve bien?',
+      diaryOne: '1 visionado va a tu diario con el día en que lo registraste.',
+      diaryMany: '{count} visionados van a tu diario con el día en que los registraste.',
+      modeWatched: 'Marcar como vistas',
+      modeRank: 'Clasificar con mis estrellas',
+      rankHint:
+        'Una calificación con estrellas no es una comparación, así que esto es un borrador: lo arman las calificaciones, y los empates van en el orden en que las viste. Mantén presionado ≡ y arrastra para mover una película; crúzala sobre una línea de nivel para cambiarle el nivel.',
+      fuzzyOne: '1 película se identificó por un título parecido y muestra debajo el nombre de tu archivo.',
+      fuzzyMany: '{count} películas se identificaron por un título parecido y muestran debajo el nombre de tu archivo.',
+      watchedHintOne:
+        '1 película tiene calificación con estrellas. Se marca como vista y espera a que la clasifiques; activa Clasificar con mis estrellas para ubicarla según la calificación.',
+      watchedHintMany:
+        '{count} películas tienen calificación con estrellas. Se marcan como vistas y esperan a que las clasifiques; activa Clasificar con mis estrellas para ubicarlas según las calificaciones.',
+      watchedNotRanked: 'Vistas, sin clasificar ({count})',
+      watchedNotRankedHint: 'Sin calificación en Letterboxd. Se marcan como vistas y esperan a que las clasifiques.',
+      markedWatched: 'Marcadas como vistas ({count})',
+      markedWatchedHint: 'Ver no es clasificar: estas esperan a que las clasifiques, cuando quieras.',
+      notInCatalog: 'No están en el catálogo ({count})',
+      notInCatalogHint:
+        'No se guardará nada de estas. El catálogo crece; inténtalo más tarde o agrégalas desde la búsqueda.',
+      alreadyRanked: 'Ya están en tu ranking ({count})',
+      alreadyRankedHint: 'Tu propia ubicación se mantiene; se ignora la calificación del archivo.',
+      andMore: 'y {count} más',
+      importing: 'Importando…',
+      confirmRank: 'Confirmar ranking e importar {films}',
+      confirmWatchedOne: 'Marcar 1 película como vista',
+      confirmWatchedMany: 'Marcar {count} películas como vistas',
+      cancel: 'Cancelar',
+    },
+    headline: {
+      toRank: '{films} por clasificar',
+      watchedUnratedOne: '1 vista, sin calificación',
+      watchedUnratedMany: '{count} vistas, sin calificación',
+      toMarkWatchedOne: '1 película por marcar como vista',
+      toMarkWatchedMany: '{count} películas por marcar como vistas',
+      notFoundOne: '1 no encontrada',
+      notFoundMany: '{count} no encontradas',
+    },
+    row: {
+      alreadyRanked: 'ya clasificada',
+      fromLetterboxd: 'de Letterboxd',
+      placedFromStars: 'ubicada según tus estrellas, alrededor de {score}',
+      inYourFile: 'En tu archivo como “{title}”',
+      moveUp: 'Subir',
+      moveDown: 'Bajar',
+      drag: 'Arrastrar {title}',
+    },
+    files: {
+      rowsOne: '{name}: 1 fila',
+      rowsMany: '{name}: {count} filas',
+      rowsOneUnreadable: '{name}: 1 fila, {malformed} ilegibles',
+      rowsManyUnreadable: '{name}: {count} filas, {malformed} ilegibles',
+      watchlist: '{name}: omitido, una lista Por ver no son películas vistas',
+      ambiguous: '{name}: omitido, su nombre no dice si son películas vistas o una lista Por ver',
+      unknown: '{name}: no es un archivo de Letterboxd',
+    },
+    errors: {
+      notAnExport:
+        'Ninguno de esos archivos es una exportación de Letterboxd. Elige ratings.csv o diary.csv del zip que te envió Letterboxd.',
+      noFilms: 'No hay películas para importar.\n{notes}',
+      somethingWentWrong: 'Algo salió mal. Inténtalo de nuevo.',
+    },
+  },
+};

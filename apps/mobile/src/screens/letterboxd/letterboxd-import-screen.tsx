@@ -25,20 +25,17 @@ import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
+import { useT, type TranslationKey } from '@/lib/i18n';
 import { Button, EmptyState, EmptyStateCard, ErrorLine, SegmentedControl, Skeleton, Text, useTheme } from '@/ui';
 
-import { diaryDates, filmCount, reviewHeadline, rowFacts, type ReviewFilm } from './model';
+import { diaryDates, filmCount, reviewHeadline, rowFacts, type ReviewFilm, type Say } from './model';
 import { ReviewList } from './review-list';
 import { useLetterboxdImport } from './use-letterboxd-import';
 
 type Mode = 'watched' | 'rank';
 
-const MODES = [
-  { value: 'watched', label: 'Mark watched' },
-  { value: 'rank', label: 'Rank from my stars' },
-] as const;
-
 export function LetterboxdImportScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const flow = useLetterboxdImport();
@@ -47,17 +44,23 @@ export function LetterboxdImportScreen() {
   const step = flow.step;
   const list = step.kind === 'review' || step.kind === 'saving' ? step.list : null;
   const facts = useMemo(() => (list ? rowFacts(list) : new Map()), [list]);
+  const modes = useMemo(
+    () =>
+      [
+        { value: 'watched', label: t('profile.letterboxd.review.modeWatched') },
+        { value: 'rank', label: t('profile.letterboxd.review.modeRank') },
+      ] as const,
+    [t],
+  );
 
   if (step.kind === 'pick' || step.kind === 'reading') {
     return (
       <SafeAreaView style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]} edges={['bottom']}>
         <ScrollView contentContainerStyle={{ padding: theme.space[4], gap: theme.space[5] }}>
           <View style={{ gap: theme.space[2] }}>
-            <Text style="title-2">Bring your films over</Text>
+            <Text style="title-2">{t('profile.letterboxd.pick.title')}</Text>
             <Text size={15} color="text/secondary">
-              Every film you logged on Letterboxd is marked watched, with each date in your diary. Watched is not
-              ranked: you rank them when you like. If you want, your star ratings can place them as a first draft
-              you check before anything is saved.
+              {t('profile.letterboxd.pick.lead')}
             </Text>
           </View>
 
@@ -66,28 +69,28 @@ export function LetterboxdImportScreen() {
               styles.card,
               { backgroundColor: theme.colors['bg/surface'], padding: theme.space[4], gap: theme.space[3] },
             ]}>
-            <Step n={1} text="In Letterboxd, open Settings, then Import & Export, then Export your data." />
-            <Step n={2} text="Letterboxd emails you a zip. Open it in Files; it unzips with a tap." />
-            <Step n={3} text="Choose ratings.csv and diary.csv from inside it. Both at once is best." />
+            <Step n={1} text={t('profile.letterboxd.pick.step1')} />
+            <Step n={2} text={t('profile.letterboxd.pick.step2')} />
+            <Step n={3} text={t('profile.letterboxd.pick.step3')} />
           </View>
 
           {flow.error ? <ErrorLine message={flow.error} align="start" /> : null}
 
           {step.kind === 'reading' ? (
-            <View style={{ gap: theme.space[3] }} accessibilityLabel="Reading your files">
+            <View style={{ gap: theme.space[3] }} accessibilityLabel={t('profile.letterboxd.pick.reading')}>
               <Text size={15} color="text/secondary">
-                Matching your films to the catalog…
+                {t('profile.letterboxd.pick.matching')}
               </Text>
               <Skeleton width="100%" height={52} radius={8} />
               <Skeleton width="100%" height={52} radius={8} />
               <Skeleton width="100%" height={52} radius={8} />
             </View>
           ) : (
-            <Button label="Choose files" variant="primary" onPress={() => void flow.choose()} />
+            <Button label={t('profile.letterboxd.pick.chooseFiles')} variant="primary" onPress={() => void flow.choose()} />
           )}
 
           <Text size={13} color="text/secondary">
-            Nothing is saved until you confirm on the next screen.
+            {t('profile.letterboxd.pick.nothingSaved')}
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -102,9 +105,18 @@ export function LetterboxdImportScreen() {
           <EmptyStateCard>
             <EmptyState
               icon="film"
-              title={ranked ? `${filmCount(result.ranked)} ranked` : `${filmCount(result.watched)} marked watched`}
-              body={doneBody(result.watched, result.diary, result.unmatched, ranked)}
-              action={{ label: 'Done', onPress: () => router.back() }}
+              title={
+                ranked
+                  ? counted(result.ranked, 'profile.letterboxd.done.rankedOne', 'profile.letterboxd.done.rankedMany', t)
+                  : counted(
+                      result.watched,
+                      'profile.letterboxd.done.markedWatchedOne',
+                      'profile.letterboxd.done.markedWatchedMany',
+                      t,
+                    )
+              }
+              body={doneBody(result.watched, result.diary, result.unmatched, ranked, t)}
+              action={{ label: t('profile.letterboxd.done.button'), onPress: () => router.back() }}
             />
           </EmptyStateCard>
         </View>
@@ -125,9 +137,9 @@ export function LetterboxdImportScreen() {
       flow.reset();
       return;
     }
-    alert('Discard this import?', 'Nothing has been saved, and the films you moved go back to where the stars put them.', [
-      { text: 'Keep reviewing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: flow.reset },
+    alert(t('profile.letterboxd.review.discardTitle'), t('profile.letterboxd.review.discardMessage'), [
+      { text: t('profile.letterboxd.review.keepReviewing'), style: 'cancel' },
+      { text: t('profile.letterboxd.review.discard'), style: 'destructive', onPress: flow.reset },
     ]);
   };
 
@@ -138,13 +150,13 @@ export function LetterboxdImportScreen() {
         contentContainerStyle={{ padding: theme.space[4], gap: theme.space[5] }}
         showsVerticalScrollIndicator={false}>
         <View style={{ gap: theme.space[2] }}>
-          <Text style="title-2">Look right?</Text>
+          <Text style="title-2">{t('profile.letterboxd.review.title')}</Text>
           <Text size={15} color="text/secondary">
-            {reviewHeadline(review, rank)}
+            {reviewHeadline(review, t, rank)}
           </Text>
           {dates > 0 ? (
             <Text size={13} color="text/secondary">
-              {`${dates} ${dates === 1 ? 'watch goes' : 'watches go'} into your diary with the day you logged ${dates === 1 ? 'it' : 'them'}.`}
+              {counted(dates, 'profile.letterboxd.review.diaryOne', 'profile.letterboxd.review.diaryMany', t)}
             </Text>
           ) : null}
           {notes.map((note) => (
@@ -157,18 +169,24 @@ export function LetterboxdImportScreen() {
         {review.rated.length > 0 ? (
           <View style={{ gap: theme.space[2] }}>
             <SegmentedControl<Mode>
-              segments={MODES}
+              segments={modes}
               value={rank ? 'rank' : 'watched'}
               onChange={(mode) => flow.setRank(mode === 'rank')}
             />
             <Text size={13} color="text/secondary">
               {rank
-                ? `A star rating is not a comparison, so this is a draft: ratings set it, ties are in the order you watched them. Hold ≡ and drag to move a film, across a tier line to change its tier.${
-                    review.fuzzy > 0
-                      ? ` ${review.fuzzy} ${review.fuzzy === 1 ? 'film was' : 'films were'} matched by a close title and ${review.fuzzy === 1 ? 'shows' : 'show'} the name from your file underneath.`
-                      : ''
-                  }`
-                : `${filmCount(review.rated.length)} ${review.rated.length === 1 ? 'has' : 'have'} a star rating. They are marked watched and wait to be ranked; turn on Rank from my stars to place them from the ratings instead.`}
+                ? [
+                    t('profile.letterboxd.review.rankHint'),
+                    ...(review.fuzzy > 0
+                      ? [counted(review.fuzzy, 'profile.letterboxd.review.fuzzyOne', 'profile.letterboxd.review.fuzzyMany', t)]
+                      : []),
+                  ].join(' ')
+                : counted(
+                    review.rated.length,
+                    'profile.letterboxd.review.watchedHintOne',
+                    'profile.letterboxd.review.watchedHintMany',
+                    t,
+                  )}
             </Text>
           </View>
         ) : null}
@@ -185,22 +203,26 @@ export function LetterboxdImportScreen() {
         ) : null}
 
         <FilmSection
-          title={rank ? `Watched, not ranked (${review.watched.length})` : `Marked watched (${total})`}
+          title={
+            rank
+              ? t('profile.letterboxd.review.watchedNotRanked', { count: review.watched.length })
+              : t('profile.letterboxd.review.markedWatched', { count: total })
+          }
           hint={
             rank
-              ? 'No rating on Letterboxd. They are marked watched and wait to be ranked.'
-              : 'Watched is not ranked: these wait to be ranked, whenever you like.'
+              ? t('profile.letterboxd.review.watchedNotRankedHint')
+              : t('profile.letterboxd.review.markedWatchedHint')
           }
           films={rank ? review.watched : [...review.rated, ...review.watched]}
         />
         <FilmSection
-          title={`Not in the catalog (${review.unmatched.length})`}
-          hint="Nothing will be written for these. The catalog grows; try again later or add them by search."
+          title={t('profile.letterboxd.review.notInCatalog', { count: review.unmatched.length })}
+          hint={t('profile.letterboxd.review.notInCatalogHint')}
           films={review.unmatched}
         />
         <FilmSection
-          title={`Already in your ranking (${review.skipped.length})`}
-          hint="Your own placement stays; the file's rating is ignored."
+          title={t('profile.letterboxd.review.alreadyRanked', { count: review.skipped.length })}
+          hint={t('profile.letterboxd.review.alreadyRankedHint')}
           films={review.skipped}
         />
       </Animated.ScrollView>
@@ -208,12 +230,18 @@ export function LetterboxdImportScreen() {
       <View style={{ paddingHorizontal: theme.space[4], paddingTop: theme.space[3], gap: theme.space[3] }}>
         {flow.error ? <ErrorLine message={flow.error} align="start" /> : null}
         <Button
-          label={saving ? 'Importing…' : rank ? `Confirm ranking and import ${filmCount(total)}` : `Mark ${filmCount(total)} watched`}
+          label={
+            saving
+              ? t('profile.letterboxd.review.importing')
+              : rank
+                ? t('profile.letterboxd.review.confirmRank', { films: filmCount(total, t) })
+                : counted(total, 'profile.letterboxd.review.confirmWatchedOne', 'profile.letterboxd.review.confirmWatchedMany', t)
+          }
           variant="primary"
           disabled={saving || total === 0}
           onPress={() => void flow.confirm()}
         />
-        <Button label="Cancel" variant="secondary" disabled={saving} onPress={cancel} />
+        <Button label={t('profile.letterboxd.review.cancel')} variant="secondary" disabled={saving} onPress={cancel} />
       </View>
     </SafeAreaView>
   );
@@ -234,6 +262,7 @@ function Step({ n, text }: { n: number; text: string }) {
 }
 
 function FilmSection({ title, hint, films }: { title: string; hint: string; films: readonly ReviewFilm[] }) {
+  const t = useT();
   const theme = useTheme();
   if (films.length === 0) return null;
 
@@ -255,7 +284,7 @@ function FilmSection({ title, hint, films }: { title: string; hint: string; film
         ))}
         {more > 0 ? (
           <Text size={13} color="text/secondary">
-            and {more} more
+            {t('profile.letterboxd.review.andMore', { count: more })}
           </Text>
         ) : null}
       </View>
@@ -263,12 +292,21 @@ function FilmSection({ title, hint, films }: { title: string; hint: string; film
   );
 }
 
-function doneBody(watched: number, diary: number, unmatched: number, ranked: boolean): string {
+/** One sentence for one and another for several, each with `{count}`. */
+function counted(n: number, one: TranslationKey, many: TranslationKey, t: Say): string {
+  return n === 1 ? t(one) : t(many, { count: n });
+}
+
+function doneBody(watched: number, diary: number, unmatched: number, ranked: boolean, t: Say): string {
   const parts: string[] = [];
-  if (ranked && watched > 0) parts.push(`${filmCount(watched)} marked watched, waiting to be ranked.`);
-  if (!ranked && watched > 0) parts.push('Watched, not ranked: they wait to be ranked whenever you like.');
-  if (diary > 0) parts.push(`${diary} ${diary === 1 ? 'watch' : 'watches'} added to your diary.`);
-  if (unmatched > 0) parts.push(`${filmCount(unmatched)} not found in the catalog.`);
+  if (ranked && watched > 0) {
+    parts.push(counted(watched, 'profile.letterboxd.done.watchedWaitingOne', 'profile.letterboxd.done.watchedWaitingMany', t));
+  }
+  if (!ranked && watched > 0) parts.push(t('profile.letterboxd.done.watchedNotRanked'));
+  if (diary > 0) parts.push(counted(diary, 'profile.letterboxd.done.diaryOne', 'profile.letterboxd.done.diaryMany', t));
+  if (unmatched > 0) {
+    parts.push(counted(unmatched, 'profile.letterboxd.done.notFoundOne', 'profile.letterboxd.done.notFoundMany', t));
+  }
   return parts.join(' ');
 }
 

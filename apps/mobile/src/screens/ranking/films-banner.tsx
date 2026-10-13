@@ -16,14 +16,10 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { usePlayedNotRanked } from '@/screens/onboarding/session/queries';
 import { startSession } from '@/screens/onboarding/session/session-store';
 import { EmptyState, Pressed, Text, useTheme } from '@/ui';
-
-/** "14 watched films to rank", "1 watched film to rank". */
-export function filmsToRankLabel(count: number): string {
-  return count === 1 ? '1 watched film to rank' : `${count} watched films to rank`;
-}
 
 function useOpenFilmSession() {
   const router = useRouter();
@@ -42,6 +38,7 @@ function useOpenFilmSession() {
 }
 
 export function FilmsBanner() {
+  const t = useT();
   const theme = useTheme();
   const { count, open } = useOpenFilmSession();
   if (count === 0) return null;
@@ -62,10 +59,10 @@ export function FilmsBanner() {
         ]}>
         <View style={styles.text}>
           <Text size={15} weight={600}>
-            {filmsToRankLabel(count)}
+            {count === 1 ? t('lists.ranking.filmsToRank.one') : t('lists.ranking.filmsToRank.other', { count })}
           </Text>
           <Text size={13} color="text/secondary">
-            From your diary
+            {t('lists.ranking.fromYourDiary')}
           </Text>
         </View>
         <Text size={17} color="text/secondary">
@@ -77,6 +74,7 @@ export function FilmsBanner() {
 }
 
 export function FilmsEmpty() {
+  const t = useT();
   const router = useRouter();
   const { count, open } = useOpenFilmSession();
 
@@ -84,12 +82,15 @@ export function FilmsEmpty() {
     <View style={styles.area}>
       <EmptyState
         icon="trophy"
-        title="Nothing ranked yet"
-        body="Rank the films you've watched."
+        title={t('lists.ranking.nothingRankedYet')}
+        body={t('lists.ranking.rankYourFilms')}
         action={
           count > 0
-            ? { label: count === 1 ? 'Rank 1 film' : `Rank ${count} films`, onPress: open }
-            : { label: 'Add a film', onPress: () => router.navigate('/search') }
+            ? {
+                label: count === 1 ? t('lists.ranking.rankFilms.one') : t('lists.ranking.rankFilms.other', { count }),
+                onPress: open,
+              }
+            : { label: t('lists.ranking.addAFilm'), onPress: () => router.navigate('/search') }
         }
       />
     </View>

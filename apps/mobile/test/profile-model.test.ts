@@ -1,8 +1,9 @@
 import type { ProfileStats } from '@verso/api';
 import { describe, expect, it } from 'vitest';
 
+import { translate, type TranslationKey, type TranslationVars } from '../src/lib/i18n/dictionary';
 import {
-  ACTIVITY_VERBS,
+  ACTIVITY_LINES,
   activityLine,
   dayLabel,
   editFormFrom,
@@ -23,30 +24,38 @@ import {
   topPercentLabel,
 } from '../src/screens/profile/model';
 
+/** The screens' `t`, in English: the sentences these tests read are the English dictionary's. */
+const say = (key: TranslationKey, vars?: TranslationVars) => translate('en', key, vars);
+
 function stats(partial: Partial<ProfileStats>): ProfileStats {
   return { ranked: 0, backlog: 0, upcoming: 0, playing: 0, played: 0, dropped: 0, ...partial };
 }
 
 describe('the verb rule', () => {
   it('names a verb for every kind the read returns', () => {
-    expect(Object.keys(ACTIVITY_VERBS).sort()).toEqual(['finished', 'ranked', 'watched']);
-    expect(ACTIVITY_VERBS.ranked).toBe('Ranked');
+    expect(Object.keys(ACTIVITY_LINES).sort()).toEqual(['finished', 'ranked', 'watched']);
+    expect(say(ACTIVITY_LINES.ranked.plain, { title: 'Hades' })).toBe('Ranked Hades');
   });
 
   it('reads a placement as Ranked with the score and no rank number', () => {
-    expect(activityLine({ kind: 'ranked', title: 'Dune: Part Two', score: 9.6 })).toBe('Ranked Dune: Part Two · 9.6');
+    expect(activityLine({ kind: 'ranked', title: 'Dune: Part Two', score: 9.6 }, say)).toBe('Ranked Dune: Part Two · 9.6');
   });
 
   it('reads a logged film as Watched, with no score when it is not ranked', () => {
-    expect(activityLine({ kind: 'watched', title: 'Parasite', score: null })).toBe('Watched Parasite');
+    expect(activityLine({ kind: 'watched', title: 'Parasite', score: null }, say)).toBe('Watched Parasite');
   });
 
   it('reads a game the log flow finished as Finished, with the folded score', () => {
-    expect(activityLine({ kind: 'finished', title: 'Elden Ring', score: 9.4 })).toBe('Finished Elden Ring · 9.4');
+    expect(activityLine({ kind: 'finished', title: 'Elden Ring', score: 9.4 }, say)).toBe('Finished Elden Ring · 9.4');
   });
 
   it('keeps one decimal on a whole score', () => {
-    expect(activityLine({ kind: 'ranked', title: 'Hades', score: 10 })).toBe('Ranked Hades · 10.0');
+    expect(activityLine({ kind: 'ranked', title: 'Hades', score: 10 }, say)).toBe('Ranked Hades · 10.0');
+  });
+
+  it('puts the title where Spanish puts it', () => {
+    const es = (key: TranslationKey, vars?: TranslationVars) => translate('es', key, vars);
+    expect(activityLine({ kind: 'watched', title: 'Parasite', score: 8.2 }, es)).toBe('Viste Parasite · 8.2');
   });
 });
 
@@ -97,7 +106,7 @@ describe('the tiles', () => {
   const both = { game: stats({ ranked: 48, played: 60 }), movie: stats({ ranked: 31, played: 31 }) };
 
   it('shows Ranked across media, Top N% and Hours on All', () => {
-    const tiles = profileTiles('all', ['game', 'movie'], { stats: both, percentile: 92.3, hours: 127.6 });
+    const tiles = profileTiles('all', ['game', 'movie'], { stats: both, percentile: 92.3, hours: 127.6 }, say);
     expect(tiles.map((tile) => [tile.value, tile.label])).toEqual([
       ['79', 'Ranked'],
       ['Top 8%', 'of rankers'],
@@ -106,38 +115,43 @@ describe('the tiles', () => {
   });
 
   it("shows a film's four: Watched, Ranked, Top N%, Hours", () => {
-    const tiles = profileTiles('movie', ['game', 'movie'], { stats: both, percentile: 88, hours: 64 });
+    const tiles = profileTiles('movie', ['game', 'movie'], { stats: both, percentile: 88, hours: 64 }, say);
     expect(tiles.map((tile) => tile.label)).toEqual(['Watched', 'Ranked', 'of rankers', 'Hours']);
     expect(tiles.map((tile) => tile.value)).toEqual(['31', '31', 'Top 12%', '64']);
   });
 
   it("shows a game's four with Played first", () => {
-    const tiles = profileTiles('game', ['game'], { stats: both, percentile: 50, hours: 10 });
+    const tiles = profileTiles('game', ['game'], { stats: both, percentile: 50, hours: 10 }, say);
     expect(tiles.map((tile) => `${tile.value} ${tile.label}`)).toEqual(['60 Played', '48 Ranked', 'Top 50% of rankers', '10 Hours']);
   });
 
   it('hides the Top tile when there is no percentile (a cohort under ten)', () => {
-    const tiles = profileTiles('all', ['game', 'movie'], { stats: both, percentile: null, hours: 0 });
+    const tiles = profileTiles('all', ['game', 'movie'], { stats: both, percentile: null, hours: 0 }, say);
     expect(tiles.map((tile) => tile.key)).toEqual(['ranked', 'hours']);
   });
 
   it('holds every place with a dash while loading', () => {
-    const tiles = profileTiles('all', ['game', 'movie'], { stats: { game: both.game }, percentile: undefined, hours: undefined });
+    const tiles = profileTiles(
+      'all',
+      ['game', 'movie'],
+      { stats: { game: both.game }, percentile: undefined, hours: undefined },
+      say,
+    );
     expect(tiles.map((tile) => tile.value)).toEqual(['—', '—', '—']);
   });
 
   it('never says Top 0%, and hides rather than say Top 100%', () => {
-    expect(topPercentLabel(100)).toBe('Top 1%');
-    expect(topPercentLabel(1)).toBe('Top 99%');
-    expect(topPercentLabel(0)).toBeNull();
-    expect(topPercentLabel(0.4)).toBeNull();
-    expect(topPercentLabel(null)).toBeNull();
+    expect(topPercentLabel(100, say)).toBe('Top 1%');
+    expect(topPercentLabel(1, say)).toBe('Top 99%');
+    expect(topPercentLabel(0, say)).toBeNull();
+    expect(topPercentLabel(0.4, say)).toBeNull();
+    expect(topPercentLabel(null, say)).toBeNull();
   });
 
   it("counts each section in its medium's words", () => {
-    expect(sectionCounts('game', stats({ ranked: 48, backlog: 10, upcoming: 2 }))).toBe('48 ranked · 12 backlog');
-    expect(sectionCounts('movie', stats({ ranked: 31, backlog: 12 }))).toBe('31 ranked · 12 watchlist');
-    expect(sectionCounts('movie', undefined)).toBeNull();
+    expect(sectionCounts('game', stats({ ranked: 48, backlog: 10, upcoming: 2 }), say)).toBe('48 ranked · 12 backlog');
+    expect(sectionCounts('movie', stats({ ranked: 31, backlog: 12 }), say)).toBe('31 ranked · 12 watchlist');
+    expect(sectionCounts('movie', undefined, say)).toBeNull();
   });
 });
 
@@ -177,7 +191,8 @@ describe('the month grid', () => {
   });
 
   it('names and moves months across a year', () => {
-    expect(monthTitle(2026, 10)).toBe('October 2026');
+    expect(monthTitle(2026, 10, say)).toBe('October 2026');
+    expect(monthTitle(2026, 10, (key, vars) => translate('es', key, vars))).toBe('Octubre de 2026');
     expect(shiftMonth(2026, 1, -1)).toEqual({ year: 2025, month: 12 });
     expect(shiftMonth(2026, 12, 1)).toEqual({ year: 2027, month: 1 });
   });
@@ -187,16 +202,16 @@ describe('the times', () => {
   const now = new Date(2026, 9, 12, 21, 0);
 
   it('reads days and weeks as the frames write them', () => {
-    expect(shortAgo('2026-10-12', now)).toBe('Today');
-    expect(shortAgo('2026-10-08', now)).toBe('4d');
-    expect(shortAgo('2026-10-02', now)).toBe('1w');
-    expect(shortAgo('2026-08-01', now)).toBe('Aug 1');
+    expect(shortAgo('2026-10-12', say, now)).toBe('Today');
+    expect(shortAgo('2026-10-08', say, now)).toBe('4d');
+    expect(shortAgo('2026-10-02', say, now)).toBe('1w');
+    expect(shortAgo('2026-08-01', say, now)).toBe('Aug 1');
   });
 
   it('reads late last night as 1d once midnight has passed', () => {
     const justAfterMidnight = new Date(2026, 9, 13, 0, 30);
-    expect(shortAgo('2026-10-12', justAfterMidnight)).toBe('1d');
-    expect(shortAgo('2026-10-13', justAfterMidnight)).toBe('Today');
+    expect(shortAgo('2026-10-12', say, justAfterMidnight)).toBe('1d');
+    expect(shortAgo('2026-10-13', say, justAfterMidnight)).toBe('Today');
   });
 
   it('dates the Activity list, with the year only when it is not this one', () => {
@@ -222,7 +237,7 @@ describe('identity', () => {
 
 describe('share', () => {
   it('shares one top ten plainly on one medium', () => {
-    expect(profileShareText([{ medium: 'movie', items: [{ title: 'Heat', score: 9.8 }] }])).toBe(
+    expect(profileShareText([{ medium: 'movie', items: [{ title: 'Heat', score: 9.8 }] }], say)).toBe(
       '1. Heat — 9.8\n\nRanked with Verso',
     );
   });
@@ -233,10 +248,11 @@ describe('share', () => {
         { medium: 'game', items: [{ title: 'Hades', score: 9.8 }] },
         { medium: 'movie', items: [{ title: 'Heat', score: 9.1 }] },
       ],
+      say,
       'rafa',
     );
     expect(text).toBe('My top games\n1. Hades — 9.8\n\nMy top movies\n1. Heat — 9.1\n\nRanked with Verso · @rafa');
-    expect(profileShareText([{ medium: 'game', items: [] }])).toBeNull();
+    expect(profileShareText([{ medium: 'game', items: [] }], say)).toBeNull();
   });
 });
 

@@ -15,10 +15,12 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { searchHref } from '@/screens/search/intent';
 import { Button, EmptyState, useTheme } from '@/ui';
 
 export function RankingDoors() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
 
@@ -26,16 +28,20 @@ export function RankingDoors() {
     <View style={styles.area}>
       <EmptyState
         icon="trophy"
-        title="Nothing ranked yet"
-        body="Two ways to start."
+        title={t('lists.ranking.nothingRankedYet')}
+        body={t('lists.ranking.twoWaysToStart')}
         style={{ paddingBottom: theme.space[4] }}
       />
       <View style={[styles.buttons, { gap: 10 }]}>
         <Button
-          label="Rank popular games"
+          label={t('lists.ranking.rankPopularGames')}
           onPress={() => router.push({ pathname: '/onboarding/deck', params: { from: 'ranking' } })}
         />
-        <Button label="I know what I played" variant="secondary" onPress={() => router.navigate(searchHref('addmany'))} />
+        <Button
+          label={t('lists.ranking.iKnowWhatIPlayed')}
+          variant="secondary"
+          onPress={() => router.navigate(searchHref('addmany'))}
+        />
       </View>
     </View>
   );

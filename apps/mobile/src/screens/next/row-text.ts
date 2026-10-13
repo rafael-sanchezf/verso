@@ -14,6 +14,9 @@ import type { EntryRow } from '@verso/api';
 // not this screen's to edit) has no path-alias resolution, and this module is
 // imported directly by test/next-row-text.test.ts.
 import { personalDate, platforms as formatPlatforms, playtime, timeToBeat } from '../../lib/format';
+// A type only, erased at build: the sentences stay in the dictionary and the
+// row says them, so this module never loads `@/lib/i18n` (spanish-build.md).
+import type { TranslationKey } from '../../lib/i18n/dictionary';
 
 /**
  * A local copy of `@/ui/text`'s `joinParts`, rather than importing it: that
@@ -43,19 +46,26 @@ export function backlogSubtitle(entry: EntryRow): string | null {
 }
 
 /**
+ * Backlog line three, as the row says it: a sentence from the dictionary with
+ * its date (`Started {date}`, `Added {date}`), or words `format.ts` already
+ * wrote in the app's language (`14 h played`).
+ */
+export type BacklogDetail = { key: TranslationKey; date: string } | { text: string };
+
+/**
  * Backlog line three: the first of "Started {date}", "{hours} played",
  * "Added {date}" that has something to say. `added_at` is never null on a
  * real row, so this only returns null for a fixture built without one.
  */
-export function backlogDetail(entry: EntryRow, now: Date = new Date()): string | null {
+export function backlogDetail(entry: EntryRow, now: Date = new Date()): BacklogDetail | null {
   const started = personalDate(entry.entry.startedAt, now);
-  if (started) return `Started ${started}`;
+  if (started) return { key: 'lists.next.started', date: started };
 
   const played = playtime(entry.entry.playtimeMinutes);
-  if (played) return played;
+  if (played) return { text: played };
 
   const added = personalDate(entry.entry.addedAt, now);
-  if (added) return `Added ${added}`;
+  if (added) return { key: 'lists.next.added', date: added };
 
   return null;
 }
@@ -70,12 +80,13 @@ export function upcomingSubtitle(entry: EntryRow): string | null {
 }
 
 /**
- * The sub row's count: `3 games`, and `1 game` when there is one.
+ * The sub row's count, as the key the row says with `{ count }`: `3 games`,
+ * and `1 game` when there is one.
  *
  * next.md writes it as "{n} games", which is right for every number the frames
  * drew and wrong for the one they did not. Starting a game from a two-item
  * backlog leaves "1 games" on screen.
  */
-export function gameCount(count: number): string {
-  return count === 1 ? '1 game' : `${count} games`;
+export function gameCountKey(count: number): TranslationKey {
+  return count === 1 ? 'lists.next.games.one' : 'lists.next.games.other';
 }

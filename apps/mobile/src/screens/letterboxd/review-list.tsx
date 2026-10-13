@@ -117,11 +117,11 @@ function TierDivider({ tier }: { tier: Tier }) {
 }
 
 /** `2021 · ★★★★½` for an imported row, `2021 · already ranked` for one that was. */
-function subtitleOf(row: ReviewRow): string {
+function subtitleOf(row: ReviewRow, alreadyRanked: string): string {
   return (
     joinParts([
       row.year === null ? null : String(row.year),
-      row.kind === 'imported' && row.rating !== null ? starsText(row.rating) : 'already ranked',
+      row.kind === 'imported' && row.rating !== null ? starsText(row.rating) : alreadyRanked,
     ]) ?? ''
   );
 }
@@ -137,22 +137,27 @@ interface FilmRowProps {
 }
 
 function FilmRow({ row, facts, provisional, movable, canMoveUp, canMoveDown, onMove }: FilmRowProps) {
+  const t = useT();
   const theme = useTheme();
   const imported = row.kind === 'imported';
   const draggable = imported && movable;
 
   const scoreWords = facts
     ? provisional
-      ? `placed from your stars, about ${scoreText(facts.score)}`
+      ? t('profile.letterboxd.row.placedFromStars', { score: scoreText(facts.score) })
       : scoreText(facts.score)
     : '';
+  const alreadyRanked = t('profile.letterboxd.row.alreadyRanked');
   const label =
-    joinParts([`${facts?.rank ?? ''}. ${row.title}`, imported ? 'from Letterboxd' : 'already ranked', scoreWords], ', ') ?? row.title;
+    joinParts(
+      [`${facts?.rank ?? ''}. ${row.title}`, imported ? t('profile.letterboxd.row.fromLetterboxd') : alreadyRanked, scoreWords],
+      ', ',
+    ) ?? row.title;
 
   const actions = draggable
     ? [
-        ...(canMoveUp ? [{ name: 'moveUp', label: 'Move up' }] : []),
-        ...(canMoveDown ? [{ name: 'moveDown', label: 'Move down' }] : []),
+        ...(canMoveUp ? [{ name: 'moveUp', label: t('profile.letterboxd.row.moveUp') }] : []),
+        ...(canMoveDown ? [{ name: 'moveDown', label: t('profile.letterboxd.row.moveDown') }] : []),
       ]
     : [];
 
@@ -182,11 +187,11 @@ function FilmRow({ row, facts, provisional, movable, canMoveUp, canMoveDown, onM
           {row.title}
         </Text>
         <Text size={13} color="text/secondary" numberOfLines={1}>
-          {subtitleOf(row)}
+          {subtitleOf(row, alreadyRanked)}
         </Text>
         {row.fileTitle === null ? null : (
           <Text size={12} color="text/secondary" numberOfLines={1}>
-            {`In your file as “${row.fileTitle}”`}
+            {t('profile.letterboxd.row.inYourFile', { title: row.fileTitle })}
           </Text>
         )}
       </View>
@@ -203,7 +208,7 @@ function FilmRow({ row, facts, provisional, movable, canMoveUp, canMoveDown, onM
 
       {draggable ? (
         <Sortable.Handle>
-          <View accessibilityLabel={`Drag ${row.title}`} style={styles.handle}>
+          <View accessibilityLabel={t('profile.letterboxd.row.drag', { title: row.title })} style={styles.handle}>
             <Text size={16} color="text/secondary">
               ≡
             </Text>

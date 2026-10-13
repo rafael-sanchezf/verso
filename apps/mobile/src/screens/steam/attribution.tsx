@@ -16,23 +16,25 @@
 
 import { View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Text } from '@/ui';
 
 import { STEAM_STORE_URL } from './import-outcome';
 import { LinkText } from './link-text';
 
 export function SteamAttribution() {
+  const t = useT();
   return (
     <View style={{ gap: 4 }}>
       <LinkText
-        label="Powered by Steam"
+        label={t('profile.steam.attribution.poweredBy')}
         url={STEAM_STORE_URL}
-        accessibilityLabel="Powered by Steam. Opens the Steam store."
+        accessibilityLabel={t('profile.steam.attribution.poweredByLabel')}
         size={13}
         color="text/secondary"
       />
       <Text size={12} color="text/secondary">
-        Steam and the Steam logo are trademarks of Valve Corporation.
+        {t('profile.steam.attribution.trademark')}
       </Text>
     </View>
   );

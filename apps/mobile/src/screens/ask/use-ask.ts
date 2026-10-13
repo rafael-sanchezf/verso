@@ -27,7 +27,7 @@ import { useCallback, useRef, useState } from 'react';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 
-import { buildTrace, readNote, type AskMedium } from './trace';
+import { buildTrace, readNote, type AskMedium, type TraceLine } from './trace';
 
 export type Consent = 'unasked' | 'allowed' | 'declined';
 
@@ -45,7 +45,7 @@ export type AskPhase =
   | { kind: 'question' }
   /** The send is waiting on Allow or Not now. */
   | { kind: 'consent' }
-  | { kind: 'thinking'; trace: [string, string, string] }
+  | { kind: 'thinking'; trace: [TraceLine, TraceLine, TraceLine] }
   | ({
       kind: 'picks';
       picks: SuggestPick[];

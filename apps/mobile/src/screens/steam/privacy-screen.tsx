@@ -31,6 +31,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { Button, ErrorLine, Text, useTheme } from '@/ui';
 
 import { STEAM_PRIVACY_SETTINGS_URL } from './import-outcome';
@@ -49,6 +50,7 @@ export interface SteamPrivacyScreenProps {
 }
 
 export function SteamPrivacyScreen({ onImported, onNotNow }: SteamPrivacyScreenProps = {}) {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
 
@@ -72,11 +74,10 @@ export function SteamPrivacyScreen({ onImported, onNotNow }: SteamPrivacyScreenP
       <ScrollView contentContainerStyle={{ padding: theme.space[4], gap: theme.space[6] }}>
         <View style={{ gap: theme.space[2] }}>
           <Text size={22} weight={700} accessibilityRole="header">
-            Steam didn't share your games
+            {t('profile.steam.privacy.heading')}
           </Text>
           <Text size={15} color="text/secondary">
-            Steam only shares a library whose Game details are Public. Change three settings on
-            Steam, then try again.
+            {t('profile.steam.privacy.lead')}
           </Text>
         </View>
 
@@ -88,12 +89,12 @@ export function SteamPrivacyScreen({ onImported, onNotNow }: SteamPrivacyScreenP
           }}>
           <Step
             number={1}
-            text="On Steam, open your Profile, then Edit Profile, then Privacy Settings."
+            text={t('profile.steam.privacy.step1')}
             link={
               <LinkText
-                label="Open Privacy Settings on Steam"
+                label={t('profile.steam.candidates.openPrivacy')}
                 url={STEAM_PRIVACY_SETTINGS_URL}
-                accessibilityLabel="Open Privacy Settings on Steam. Opens Steam."
+                accessibilityLabel={t('profile.steam.candidates.openPrivacyLabel')}
                 weight={600}
               />
             }
@@ -101,23 +102,23 @@ export function SteamPrivacyScreen({ onImported, onNotNow }: SteamPrivacyScreenP
           <Separator />
           <Step
             number={2}
-            text="Set Game details to Public. My profile has to be Public too, or Steam won't allow it."
+            text={t('profile.steam.privacy.step2')}
           />
           <Separator />
           <Step
             number={3}
-            text="Untick “Always keep my total playtime private”, so your hours come with your games."
+            text={t('profile.steam.privacy.step3')}
           />
         </View>
 
         <View style={{ gap: theme.space[3] }}>
           <Button
-            label={importer.pending ? 'Trying again…' : 'Try again'}
+            label={importer.pending ? t('profile.steam.privacy.tryingAgain') : t('profile.steam.privacy.tryAgain')}
             disabled={importer.pending}
             onPress={importer.run}
             leading={importer.pending ? <ActivityIndicator color={theme.colors['bg/canvas']} /> : undefined}
           />
-          <Button label="Not now" variant="secondary" onPress={notNow} />
+          <Button label={t('profile.steam.privacy.notNow')} variant="secondary" onPress={notNow} />
           {importer.line ? <ErrorLine message={importer.line} /> : null}
         </View>
       </ScrollView>
@@ -132,6 +133,7 @@ export function SteamPrivacyScreen({ onImported, onNotNow }: SteamPrivacyScreenP
  * ("Step 2. Set Game details to Public…") and the link stays its own stop.
  */
 function Step({ number, text, link }: { number: number; text: string; link?: ReactNode }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -148,7 +150,7 @@ function Step({ number, text, link }: { number: number; text: string; link?: Rea
         </Text>
       </View>
       <View style={[styles.words, { gap: theme.space[2] }]}>
-        <Text size={15} accessibilityLabel={`Step ${number}. ${text}`}>
+        <Text size={15} accessibilityLabel={t('profile.steam.privacy.stepLabel', { number, text })}>
           {text}
         </Text>
         {link}

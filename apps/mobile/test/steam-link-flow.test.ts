@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { translate, type TranslationKey, type TranslationVars } from '../src/lib/i18n/dictionary';
 import {
   failureOf,
   IDLE,
@@ -9,6 +10,19 @@ import {
   type LinkEvent,
   type LinkPhase,
 } from '../src/screens/steam/link-flow';
+
+/** The screens' `t`, in English: the sentences these tests read are the English dictionary's. */
+const say = (key: TranslationKey, vars?: TranslationVars) => translate('en', key, vars);
+
+/** The line under the button, in English. */
+function failureText(phase: LinkPhase): string | null {
+  const key = failureOf(phase);
+  return key === null ? null : say(key);
+}
+
+/** Any two keys stand in for the start's failures; what the reducer does with them is the point. */
+const SERVER: TranslationKey = 'profile.steam.errors.linkNotSetUp';
+const BROWSER: TranslationKey = 'profile.steam.link.couldNotOpenSignIn';
 
 /** Run a list of events from idle. */
 function run(...events: LinkEvent[]): LinkPhase {
@@ -36,14 +50,14 @@ describe('the link round trip', () => {
   });
 
   it('starts again after a failure', () => {
-    const failed = run({ type: 'start' }, { type: 'start-failed', message: 'no' });
-    expect(failed).toEqual({ kind: 'failed', message: 'no' });
+    const failed = run({ type: 'start' }, { type: 'start-failed', message: SERVER });
+    expect(failed).toEqual({ kind: 'failed', message: SERVER });
     expect(linkReducer(failed, { type: 'start' })).toEqual({ kind: 'starting' });
   });
 
   it('fails when the URL cannot be had or the browser will not open', () => {
-    expect(failureOf(run({ type: 'start' }, { type: 'start-failed', message: 'server' }))).toBe('server');
-    expect(failureOf(run(...START, { type: 'start-failed', message: 'browser' }))).toBe('browser');
+    expect(failureOf(run({ type: 'start' }, { type: 'start-failed', message: SERVER }))).toBe(SERVER);
+    expect(failureOf(run(...START, { type: 'start-failed', message: BROWSER }))).toBe(BROWSER);
   });
 });
 
@@ -75,17 +89,17 @@ describe('the database decides', () => {
       { type: 'returned', result: { status: 'error', reason: 'already_linked_elsewhere' } },
       { type: 'confirmed', linked: false },
     );
-    expect(failureOf(phase)).toMatch(/another Verso account/);
+    expect(failureText(phase)).toMatch(/another Verso account/);
   });
 
   it('an ok with no row says the link did not save', () => {
     const phase = run(...START, { type: 'returned', result: { status: 'ok' } }, { type: 'confirmed', linked: false });
-    expect(failureOf(phase)).toMatch(/didn't save/);
+    expect(failureText(phase)).toMatch(/didn't save/);
   });
 
   it('a failed read says so', () => {
     const phase = run(...START, { type: 'returned', result: { status: 'ok' } }, { type: 'confirm-failed' });
-    expect(failureOf(phase)).toMatch(/Couldn't check/);
+    expect(failureText(phase)).toMatch(/Couldn't check/);
   });
 });
 
@@ -122,7 +136,7 @@ describe('two roads back', () => {
     expect(run({ type: 'confirmed', linked: true })).toEqual(IDLE);
     expect(run({ type: 'confirm-failed' })).toEqual(IDLE);
     expect(run({ type: 'opened' })).toEqual(IDLE);
-    expect(run({ type: 'start-failed', message: 'late' })).toEqual(IDLE);
+    expect(run({ type: 'start-failed', message: SERVER })).toEqual(IDLE);
   });
 });
 
@@ -133,15 +147,15 @@ describe('isBusy and the button label', () => {
     expect(isBusy({ kind: 'in-browser' })).toBe(true);
     expect(isBusy({ kind: 'confirming', returned: null })).toBe(true);
     expect(isBusy({ kind: 'linked' })).toBe(false);
-    expect(isBusy({ kind: 'failed', message: 'x' })).toBe(false);
+    expect(isBusy({ kind: 'failed', message: SERVER })).toBe(false);
   });
 
   it('says what it is waiting for', () => {
-    expect(linkButtonLabel(IDLE)).toBe('Link Steam');
-    expect(linkButtonLabel(IDLE, 'Link your Steam account')).toBe('Link your Steam account');
-    expect(linkButtonLabel({ kind: 'starting' })).toBe('Opening Steam…');
-    expect(linkButtonLabel({ kind: 'in-browser' })).toBe('Waiting for Steam…');
-    expect(linkButtonLabel({ kind: 'confirming', returned: null })).toBe('Checking the link…');
-    expect(linkButtonLabel({ kind: 'failed', message: 'x' })).toBe('Link Steam');
+    expect(linkButtonLabel(IDLE, say)).toBe('Link Steam');
+    expect(linkButtonLabel(IDLE, say, 'Link your Steam account')).toBe('Link your Steam account');
+    expect(linkButtonLabel({ kind: 'starting' }, say)).toBe('Opening Steam…');
+    expect(linkButtonLabel({ kind: 'in-browser' }, say)).toBe('Waiting for Steam…');
+    expect(linkButtonLabel({ kind: 'confirming', returned: null }, say)).toBe('Checking the link…');
+    expect(linkButtonLabel({ kind: 'failed', message: SERVER }, say)).toBe('Link Steam');
   });
 });

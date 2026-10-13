@@ -14,29 +14,42 @@
  * A watchlist is a pool, not a queue (rule 34): the sort is a starting point
  * the person picks, newest added first by default, and nothing is ranked.
  *
- * No React; relative imports only (`test/watchlist-filters.test.ts`).
+ * No React; relative imports only (`test/watchlist-filters.test.ts`). The
+ * words are the dictionary's (`lists.filterSheet`): what this returns is a
+ * `Phrase`, a key the component says with `t`, or a name that is data (a
+ * genre, a director) and is shown as it is.
  */
 
 import type { MovieWatchlistRow } from '@verso/api';
 
 import { filmGenreLabel, filmRuntime } from '../../lib/film';
+// Types only, erased at build: this module never loads `@/lib/i18n`.
+import type { TranslationKey, TranslationVars } from '../../lib/i18n/dictionary';
+
+/** A sentence to say (`t(key, vars)`), or text that is data and is shown as it is. */
+export type Phrase = { key: TranslationKey; vars?: TranslationVars } | { text: string };
+
+/** A `Phrase` in words, with the caller's `t`. */
+export function say(t: (key: TranslationKey, vars?: TranslationVars) => string, phrase: Phrase): string {
+  return 'text' in phrase ? phrase.text : t(phrase.key, phrase.vars);
+}
 
 export type WatchlistSort = 'added' | 'runtime' | 'year' | 'rating';
 export type Decade = '2020s' | '2010s' | '2000s' | '1990s' | 'older';
 
-export const SORTS: readonly { value: WatchlistSort; label: string }[] = [
-  { value: 'added', label: 'Added' },
-  { value: 'runtime', label: 'Runtime' },
-  { value: 'year', label: 'Year' },
-  { value: 'rating', label: 'Rating' },
+export const SORTS: readonly { value: WatchlistSort; label: TranslationKey }[] = [
+  { value: 'added', label: 'lists.filterSheet.sorts.added' },
+  { value: 'runtime', label: 'lists.filterSheet.sorts.runtime' },
+  { value: 'year', label: 'lists.filterSheet.sorts.year' },
+  { value: 'rating', label: 'lists.filterSheet.sorts.rating' },
 ];
 
-export const DECADES: readonly { value: Decade; label: string }[] = [
-  { value: '2020s', label: '2020s' },
-  { value: '2010s', label: '2010s' },
-  { value: '2000s', label: '2000s' },
-  { value: '1990s', label: '1990s' },
-  { value: 'older', label: 'Older' },
+export const DECADES: readonly { value: Decade; label: TranslationKey }[] = [
+  { value: '2020s', label: 'lists.filterSheet.decades.2020s' },
+  { value: '2010s', label: 'lists.filterSheet.decades.2010s' },
+  { value: '2000s', label: 'lists.filterSheet.decades.2000s' },
+  { value: '1990s', label: 'lists.filterSheet.decades.1990s' },
+  { value: 'older', label: 'lists.filterSheet.decades.older' },
 ];
 
 /**
@@ -113,13 +126,15 @@ export function activeCount(filters: WatchlistFilters): number {
 }
 
 /** "Under 2 h", "Under 1 h 30"; "Any length" for none. */
-export function lengthLabel(maxMinutes: number | null): string {
-  return maxMinutes === null ? 'Any length' : `Under ${filmRuntime(maxMinutes) ?? `${maxMinutes} min`}`;
+export function lengthLabel(maxMinutes: number | null): Phrase {
+  return maxMinutes === null
+    ? { key: 'lists.filterSheet.anyLength' }
+    : { key: 'lists.filterSheet.under', vars: { length: filmRuntime(maxMinutes) ?? `${maxMinutes} min` } };
 }
 
 /** A stop's tick under the slider: "1 h", "1 h 30", "Any". */
-export function stopLabel(stop: number | null): string {
-  return stop === null ? 'Any' : (filmRuntime(stop) ?? `${stop} min`);
+export function stopLabel(stop: number | null): Phrase {
+  return stop === null ? { key: 'lists.filterSheet.any' } : { text: filmRuntime(stop) ?? `${stop} min` };
 }
 
 export type FilterChipKey =
@@ -130,7 +145,7 @@ export type FilterChipKey =
 
 export interface SetFilterChip {
   key: FilterChipKey;
-  label: string;
+  label: Phrase;
 }
 
 /** The set filters as removable chips under the sub row, in the sheet's order. */
@@ -138,11 +153,12 @@ export function setChips(filters: WatchlistFilters): SetFilterChip[] {
   const chips: SetFilterChip[] = [];
   if (filters.maxMinutes !== null) chips.push({ key: { kind: 'length' }, label: lengthLabel(filters.maxMinutes) });
   for (const genre of filters.genres) {
-    chips.push({ key: { kind: 'genre', genre }, label: filmGenreLabel(genre) ?? genre });
+    chips.push({ key: { kind: 'genre', genre }, label: { text: filmGenreLabel(genre) ?? genre } });
   }
-  if (filters.director !== null) chips.push({ key: { kind: 'director' }, label: filters.director });
+  if (filters.director !== null) chips.push({ key: { kind: 'director' }, label: { text: filters.director } });
   for (const decade of filters.decades) {
-    chips.push({ key: { kind: 'decade', decade }, label: DECADES.find((d) => d.value === decade)?.label ?? decade });
+    const label = DECADES.find((d) => d.value === decade)?.label;
+    chips.push({ key: { kind: 'decade', decade }, label: label ? { key: label } : { text: decade } });
   }
   return chips;
 }
@@ -266,11 +282,11 @@ export function directorSuggestions(rows: readonly Pick<Row, 'directors'>[], typ
 }
 
 /** "Show 4 films", "Show 1 film". */
-export function showLabel(count: number): string {
-  return count === 1 ? 'Show 1 film' : `Show ${count} films`;
+export function showLabel(count: number): Phrase {
+  return count === 1 ? { key: 'lists.filterSheet.show.one' } : { key: 'lists.filterSheet.show.other', vars: { count } };
 }
 
 /** The sub row's count: "12 films", "1 film". */
-export function filmCount(count: number): string {
-  return count === 1 ? '1 film' : `${count} films`;
+export function filmCount(count: number): Phrase {
+  return count === 1 ? { key: 'lists.watchlist.films.one' } : { key: 'lists.watchlist.films.other', vars: { count } };
 }

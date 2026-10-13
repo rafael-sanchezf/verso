@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Sortable from 'react-native-sortables';
 
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
@@ -17,11 +18,12 @@ import { useTheme } from '@/ui/theme';
 import { BACKLOG_SORT_LABELS, sortBacklogEntries, type BacklogSort } from './backlog-sort';
 import { BacklogRow } from './backlog-row';
 import { ListEmptyState, ListErrorState, ListSkeleton } from './list-status';
-import { gameCount } from './row-text';
+import { gameCountKey } from './row-text';
 import { useBacklogQuery, useMoveBacklogEntry, useStartPlaying } from './queries';
 import { SortMenu } from './sort-menu';
 
 export function BacklogSegment() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -39,9 +41,9 @@ export function BacklogSegment() {
     return (
       <ListEmptyState
         icon="layers"
-        title="Your backlog is empty"
-        body="Add games you want to play from Search."
-        action={{ label: 'Search games', onPress: () => router.navigate('/search') }}
+        title={t('lists.next.backlogEmptyTitle')}
+        body={t('lists.next.backlogEmptyBody')}
+        action={{ label: t('lists.next.searchGames'), onPress: () => router.navigate('/search') }}
       />
     );
   }
@@ -55,7 +57,7 @@ export function BacklogSegment() {
     <View style={styles.fill}>
       <View style={[styles.subRow, { paddingHorizontal: theme.space[4], paddingBottom: theme.space[2] }]}>
         <Text size={13} color="text/secondary">
-          {gameCount(sorted.length)} · {BACKLOG_SORT_LABELS[sort]}
+          {t(gameCountKey(sorted.length), { count: sorted.length })} · {t(BACKLOG_SORT_LABELS[sort])}
         </Text>
         <SortMenu value={sort} onChange={setSort} />
       </View>

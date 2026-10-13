@@ -18,12 +18,21 @@ import {
   matchesAll,
   matchesClient,
   NO_FILTERS,
+  say,
   setChips,
   showLabel,
   sortRows,
   stopLabel,
+  type Phrase,
   type WatchlistFilters,
 } from '../src/screens/watchlist/filters';
+import { translate } from '../src/lib/i18n/dictionary';
+import type { Language } from '../src/lib/i18n/model';
+
+/** A phrase as the screen says it. */
+function words(phrase: Phrase, language: Language = 'en'): string {
+  return say((key, vars) => translate(language, key, vars), phrase);
+}
 
 function film(overrides: Partial<MovieWatchlistRow> & { mediaItemId: string }): MovieWatchlistRow {
   return {
@@ -138,20 +147,29 @@ describe('the chips and the words', () => {
       decades: ['older'],
       sort: 'added',
     });
-    expect(chips.map((chip) => chip.label)).toEqual(['Under 2 h', 'Sci-fi', 'Denis Villeneuve', 'Older']);
+    expect(chips.map((chip) => words(chip.label))).toEqual(['Under 2 h', 'Sci-fi', 'Denis Villeneuve', 'Older']);
+    // The names are data and stay as they are; the words around them translate.
+    expect(chips.map((chip) => words(chip.label, 'es'))).toEqual([
+      'Menos de 2 h',
+      'Sci-fi',
+      'Denis Villeneuve',
+      'Anteriores',
+    ]);
   });
 
   it('labels the six stops and the choice', () => {
-    expect(LENGTH_STOPS.map(stopLabel)).toEqual(['1 h', '1 h 30', '2 h', '2 h 30', '3 h', 'Any']);
-    expect(lengthLabel(90)).toBe('Under 1 h 30');
-    expect(lengthLabel(null)).toBe('Any length');
+    expect(LENGTH_STOPS.map((stop) => words(stopLabel(stop)))).toEqual(['1 h', '1 h 30', '2 h', '2 h 30', '3 h', 'Any']);
+    expect(words(lengthLabel(90))).toBe('Under 1 h 30');
+    expect(words(lengthLabel(null))).toBe('Any length');
   });
 
   it('counts films', () => {
-    expect(showLabel(4)).toBe('Show 4 films');
-    expect(showLabel(1)).toBe('Show 1 film');
-    expect(filmCount(12)).toBe('12 films');
-    expect(filmCount(1)).toBe('1 film');
+    expect(words(showLabel(4))).toBe('Show 4 films');
+    expect(words(showLabel(1))).toBe('Show 1 film');
+    expect(words(filmCount(12))).toBe('12 films');
+    expect(words(filmCount(1))).toBe('1 film');
+    expect(words(showLabel(4), 'es')).toBe('Mostrar 4 películas');
+    expect(words(filmCount(1), 'es')).toBe('1 película');
   });
 });
 

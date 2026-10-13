@@ -20,9 +20,10 @@ import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 're
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { Button, Cover, ErrorLine, Icon, Pressed, Sheet, Text, TextButton, useTheme } from '@/ui';
 
-import { askChipLabel, askQuestion, picksCaption, summaryLabel, type AskMedium } from './trace';
+import { askChipLabel, askQuestionKey, picksCaption, summaryLabel, type AskMedium, type TraceLine } from './trace';
 import type { AskPhase } from './use-ask';
 
 /** How far apart the trace's lines arrive. Three lines fill `TRACE_MIN_MS`. */
@@ -75,10 +76,11 @@ export function AskView(props: AskViewProps) {
 
 /** The close at the left, the medium at the right, 44 tall. */
 function TopRow({ medium, onClose }: { medium: AskMedium; onClose: () => void }) {
+  const t = useT();
   const theme = useTheme();
   return (
     <View style={[styles.topRow, { paddingHorizontal: theme.space[4] }]}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Close" hitSlop={11} onPress={onClose}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('lists.ask.close')} hitSlop={11} onPress={onClose}>
         <Icon name="x" size={22} />
       </Pressable>
       <View
@@ -88,7 +90,7 @@ function TopRow({ medium, onClose }: { medium: AskMedium; onClose: () => void })
         ]}>
         <Icon name={medium === 'movie' ? 'film' : 'gamepad-2'} size={14} color="brand/text" strokeWidth={2.25} />
         <Text size={13} weight={600}>
-          {askChipLabel(medium)}
+          {t(askChipLabel(medium))}
         </Text>
       </View>
     </View>
@@ -97,14 +99,16 @@ function TopRow({ medium, onClose }: { medium: AskMedium; onClose: () => void })
 
 /** The question, the field and, once sent, the trace. */
 function Question({ medium, note, onChangeNote, phase, onSend, onRetry, autoFocus, still }: AskViewProps) {
+  const t = useT();
   const theme = useTheme();
   const thinking = phase.kind === 'thinking';
+  const question = t(askQuestionKey(medium));
 
   return (
     <>
       <Animated.View entering={still ? undefined : FadeInDown.duration(320)}>
         <Text style="large-title" tracking={-0.021} layout={{ marginTop: 14 }} accessibilityRole="header">
-          {askQuestion(medium)}
+          {question}
         </Text>
       </Animated.View>
 
@@ -124,12 +128,12 @@ function Question({ medium, note, onChangeNote, phase, onSend, onRetry, autoFocu
           onChangeText={onChangeNote}
           editable={!thinking}
           autoFocus={autoFocus}
-          placeholder={medium === 'movie' ? 'something for the whole family' : 'something to play with a friend'}
+          placeholder={medium === 'movie' ? t('lists.ask.placeholder.movie') : t('lists.ask.placeholder.game')}
           placeholderTextColor={theme.colors['text/secondary']}
           returnKeyType="send"
           onSubmitEditing={onSend}
           maxLength={280}
-          accessibilityLabel={askQuestion(medium)}
+          accessibilityLabel={question}
           selectionColor={theme.colors['brand/text']}
           style={[
             styles.input,
@@ -146,7 +150,7 @@ function Question({ medium, note, onChangeNote, phase, onSend, onRetry, autoFocu
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Ask"
+          accessibilityLabel={t('lists.ask.send')}
           accessibilityState={{ disabled: thinking }}
           disabled={thinking}
           hitSlop={4}
@@ -162,7 +166,7 @@ function Question({ medium, note, onChangeNote, phase, onSend, onRetry, autoFocu
 
       {phase.kind === 'thinking' ? <Trace lines={phase.trace} still={still} /> : null}
       {phase.kind === 'error' ? (
-        <ErrorLine message="Couldn't get recommendations." onRetry={onRetry} style={{ marginTop: 18 }} />
+        <ErrorLine message={t('lists.ask.couldNotGet')} onRetry={onRetry} style={{ marginTop: 18 }} />
       ) : null}
     </>
   );
@@ -173,7 +177,8 @@ function Question({ medium, note, onChangeNote, phase, onSend, onRetry, autoFocu
  * one checked in the brand green as the one running, the others in gray. The
  * last stays green until the answer replaces the whole block.
  */
-function Trace({ lines, still }: { lines: readonly string[]; still?: boolean }) {
+function Trace({ lines, still }: { lines: readonly TraceLine[]; still?: boolean }) {
+  const t = useT();
   const theme = useTheme();
   const [reached, setReached] = useState(still ? lines.length : 1);
 
@@ -190,9 +195,9 @@ function Trace({ lines, still }: { lines: readonly string[]; still?: boolean }) 
       {lines.slice(0, reached).map((line, index) => {
         const running = index === reached - 1;
         return (
-          <Animated.View key={line} entering={still ? undefined : FadeIn.duration(240)} style={styles.traceRow}>
+          <Animated.View key={line.key} entering={still ? undefined : FadeIn.duration(240)} style={styles.traceRow}>
             <Icon name="check" size={16} strokeWidth={2.5} color={running ? 'brand/text' : 'text/secondary'} />
-            <Text style="subheadline">{line}</Text>
+            <Text style="subheadline">{t(line.key, line.vars)}</Text>
           </Animated.View>
         );
       })}
@@ -202,6 +207,7 @@ function Trace({ lines, still }: { lines: readonly string[]; still?: boolean }) 
 
 /** The collapsed question, then the picks, the limit, or nothing that fits. */
 function Answer({ medium, note, phase, onChange, onAnotherThree, onOpenPick, onServices, still }: AskViewProps) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -213,25 +219,25 @@ function Answer({ medium, note, phase, onChange, onAnotherThree, onOpenPick, onS
             { backgroundColor: theme.colors['bg/surface'], borderRadius: theme.radius.pill },
           ]}>
           <Text style="subheadline" numberOfLines={1}>
-            {summaryLabel(note)}
+            {summaryLabel(note) ?? t('lists.ask.anything')}
           </Text>
         </View>
-        <TextButton label="Change" color="brand/text" size={15} weight={400} onPress={onChange} />
+        <TextButton label={t('lists.ask.change')} color="brand/text" size={15} weight={400} onPress={onChange} />
       </View>
 
       {phase.kind === 'empty' ? (
         <Text style="subheadline" color="text/secondary" layout={{ marginTop: 24 }}>
-          Nothing on your list fits that yet. Try other words.
+          {t('lists.ask.empty')}
         </Text>
       ) : null}
 
       {phase.kind === 'limit' ? (
         <Animated.View entering={still ? undefined : FadeInDown.duration(320)} style={{ marginTop: 24, gap: theme.space[1] }}>
           <Text style="title-3" accessibilityRole="header">
-            That's all for today
+            {t('lists.ask.limitTitle')}
           </Text>
           <Text style="subheadline" color="text/secondary">
-            You've asked as many times as a day allows. These are the engine's top three, with plain reasons.
+            {t('lists.ask.limitBody')}
           </Text>
         </Animated.View>
       ) : null}
@@ -240,7 +246,7 @@ function Answer({ medium, note, phase, onChange, onAnotherThree, onOpenPick, onS
         <>
           <Animated.View entering={still ? undefined : FadeIn.duration(240)}>
             <Text style="subheadline" weight={600} color="text/secondary" layout={{ marginTop: 24 }}>
-              Our recommendations, with the reason
+              {t('lists.ask.picksLabel')}
             </Text>
           </Animated.View>
 
@@ -254,7 +260,13 @@ function Answer({ medium, note, phase, onChange, onAnotherThree, onOpenPick, onS
           </View>
 
           <Button
-            label={phase.loadingMore ? 'Finding three more…' : phase.exhausted ? 'No more picks for this' : 'Another three'}
+            label={
+              phase.loadingMore
+                ? t('lists.ask.findingMore')
+                : phase.exhausted
+                  ? t('lists.ask.noMore')
+                  : t('lists.ask.anotherThree')
+            }
             variant="secondary"
             size="compact"
             disabled={phase.loadingMore || phase.exhausted}
@@ -263,14 +275,14 @@ function Answer({ medium, note, phase, onChange, onAnotherThree, onOpenPick, onS
           />
           {phase.moreFailed ? (
             <ErrorLine
-              message="Couldn't get three more."
+              message={t('lists.ask.couldNotGetMore')}
               onRetry={onAnotherThree}
               align="center"
               style={{ marginTop: theme.space[2] }}
             />
           ) : null}
           <Text style="footnote" color="text/secondary" align="center" layout={{ marginTop: theme.space[2] }}>
-            {picksCaption(medium, onServices)}
+            {t(picksCaption(medium, onServices))}
           </Text>
           {__DEV__ && phase.kind === 'picks' && (phase.fallback || phase.modelVersion === SUGGEST_SQL_MODEL || phase.modelVersion === 'plain') ? (
             <Text style="caption" color="text/secondary" align="center" layout={{ marginTop: theme.space[1] }}>
@@ -360,20 +372,20 @@ export function tmdbPosterUrl(path: string | null): string | null {
  * the picks come from the plain path with the engine's own reasons.
  */
 function ConsentSheet({ visible, onAnswer }: { visible: boolean; onAnswer: (allowed: boolean) => void }) {
+  const t = useT();
   const theme = useTheme();
   return (
     <Sheet visible={visible} onDismiss={() => onAnswer(false)} dismissOnBackdropPress={false}>
       <View style={{ gap: theme.space[3], paddingTop: theme.space[2] }}>
         <Text style="title-3" accessibilityRole="header">
-          Before your first recommendation
+          {t('lists.ask.consentTitle')}
         </Text>
         <Text style="subheadline" color="text/secondary">
-          To write the reason behind each pick, Verso sends your question, your ranked list and your notes to an AI
-          model. Not now still shows picks, with plainer reasons.
+          {t('lists.ask.consentBody')}
         </Text>
         <View style={{ gap: theme.space[2], marginTop: theme.space[2] }}>
-          <Button label="Allow" onPress={() => onAnswer(true)} />
-          <Button label="Not now" variant="secondary" onPress={() => onAnswer(false)} />
+          <Button label={t('lists.ask.allow')} onPress={() => onAnswer(true)} />
+          <Button label={t('lists.ask.notNow')} variant="secondary" onPress={() => onAnswer(false)} />
         </View>
       </View>
     </Sheet>

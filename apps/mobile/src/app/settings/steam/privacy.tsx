@@ -3,10 +3,12 @@
  * answers `private_profile`.
  */
 
+import { useT } from '@/lib/i18n';
 import { useDocumentTitle } from '@/lib/use-document-title';
 import { SteamPrivacyScreen } from '@/screens/steam/privacy-screen';
 
 export default function SteamPrivacyRoute() {
-  useDocumentTitle('Steam privacy');
+  const t = useT();
+  useDocumentTitle(t('profile.steam.privacy.title'));
   return <SteamPrivacyScreen />;
 }

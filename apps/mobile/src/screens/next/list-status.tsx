@@ -12,6 +12,7 @@
 
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { coverHeight, EmptyState, ErrorLine, Skeleton, type EmptyStateProps } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -31,11 +32,12 @@ export function ListSkeleton({ rows = 6 }: { rows?: number }) {
 }
 
 export function ListErrorState({ onRetry }: { onRetry: () => void }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <ErrorLine
-      message="Something went wrong loading this list."
+      message={t('lists.next.couldNotLoad')}
       align="center"
       onRetry={onRetry}
       style={{ paddingVertical: theme.space[8] }}

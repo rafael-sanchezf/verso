@@ -16,6 +16,7 @@
 
 import { MenuView, type NativeActionEvent } from '@expo/ui/community/menu';
 
+import { useT } from '@/lib/i18n';
 import { Text } from '@/ui';
 
 import { BACKLOG_SORT_MENU, type BacklogSort } from './backlog-sort';
@@ -26,6 +27,7 @@ export interface SortMenuProps {
 }
 
 export function SortMenu({ value, onChange }: SortMenuProps) {
+  const t = useT();
   const handlePressAction = ({ nativeEvent: { event } }: NativeActionEvent) => {
     onChange(event as BacklogSort);
   };
@@ -35,11 +37,11 @@ export function SortMenu({ value, onChange }: SortMenuProps) {
       onPressAction={handlePressAction}
       actions={BACKLOG_SORT_MENU.map(({ value: sortValue, title }) => ({
         id: sortValue,
-        title,
+        title: t(title),
         state: sortValue === value ? 'on' : 'off',
       }))}>
       <Text size={13} weight={500}>
-        Sort ▾
+        {t('lists.next.sort')}
       </Text>
     </MenuView>
   );

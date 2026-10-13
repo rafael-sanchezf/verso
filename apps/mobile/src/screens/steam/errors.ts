@@ -12,8 +12,11 @@
  * The body is never shown: it is written for a log, and a screen that prints
  * a server's words is a screen that one day prints something it should not.
  *
- * Pure, relative imports only.
+ * Pure, relative imports only. The two messages are keys into the dictionary
+ * (`profile.steam.errors`); the hook that shows one translates it.
  */
+
+import type { TranslationKey } from '../../lib/i18n/dictionary';
 
 /** The HTTP status of a failed function call, or null when there was no response. */
 export function functionErrorStatus(error: unknown): number | null {
@@ -25,15 +28,15 @@ export function functionErrorStatus(error: unknown): number | null {
 }
 
 /** `startSteamLink` threw: the button could not even open Valve's page. */
-export function startFailureMessage(error: unknown): string {
-  if (functionErrorStatus(error) === 503) return "Linking Steam isn't set up on our server yet.";
-  return "Couldn't open Steam's sign-in page. Check your connection and try again.";
+export function startFailureMessage(error: unknown): TranslationKey {
+  if (functionErrorStatus(error) === 503) return 'profile.steam.errors.linkNotSetUp';
+  return 'profile.steam.errors.couldNotOpenSignIn';
 }
 
 /** `importSteamLibrary` threw. */
-export function importFailureMessage(error: unknown): string {
+export function importFailureMessage(error: unknown): TranslationKey {
   const status = functionErrorStatus(error);
-  if (status === 503) return "Importing from Steam isn't set up on our server yet.";
-  if (status === 502) return "Steam isn't answering. Try again in a few minutes.";
-  return "Couldn't import from Steam. Check your connection and try again.";
+  if (status === 503) return 'profile.steam.errors.importNotSetUp';
+  if (status === 502) return 'profile.steam.errors.notAnswering';
+  return 'profile.steam.errors.couldNotImport';
 }

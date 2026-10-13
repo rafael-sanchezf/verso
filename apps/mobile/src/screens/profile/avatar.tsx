@@ -10,6 +10,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -21,6 +22,7 @@ export interface ProfileAvatarProps {
 }
 
 export function ProfileAvatar({ avatarUrl, initials = '', size = 64 }: ProfileAvatarProps) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -35,7 +37,7 @@ export function ProfileAvatar({ avatarUrl, initials = '', size = 64 }: ProfileAv
           style={styles.image}
           contentFit="cover"
           transition={120}
-          accessibilityLabel="Your profile photo"
+          accessibilityLabel={t('profile.page.photo')}
         />
       ) : initials ? (
         <Text size={Math.round(size * 0.36)} weight={600} color="text/secondary">

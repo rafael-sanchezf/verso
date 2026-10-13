@@ -18,6 +18,7 @@ import { applyLetterboxdImport, matchLetterboxdFilms, tierList, type LetterboxdI
 import { foldFilms, TIERS, type LetterboxdFilm } from '@verso/core';
 import { useCallback, useState } from 'react';
 
+import { t } from '@/lib/i18n';
 import { invalidateAllEntries } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -65,7 +66,7 @@ async function readMovieTiers(): Promise<MovieTiers> {
 }
 
 function messageOf(cause: unknown): string {
-  return cause instanceof Error ? cause.message : 'Something went wrong. Try again.';
+  return cause instanceof Error ? cause.message : t('profile.letterboxd.errors.somethingWentWrong');
 }
 
 export function useLetterboxdImport(): LetterboxdImport {
@@ -88,8 +89,8 @@ export function useLetterboxdImport(): LetterboxdImport {
         setStep({ kind: 'pick' });
         setError(
           files.every((file) => file.kind === 'unknown')
-            ? 'None of those files is a Letterboxd export. Pick ratings.csv or diary.csv from the zip Letterboxd sent you.'
-            : `No films to import.\n${notes.join('\n')}`,
+            ? t('profile.letterboxd.errors.notAnExport')
+            : t('profile.letterboxd.errors.noFilms', { notes: notes.join('\n') }),
         );
         return;
       }

@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import { MEDIUM_WORDS, type LiveMedium } from '@/state/medium';
+import { type LiveMedium } from '@/state/medium';
 import { assembleRanking } from '@/screens/ranking/model';
 import { Button, Chip, Cover, Icon, PosterCard, Sheet, Skeleton, Text, textStyles } from '@/ui';
 import { useTheme } from '@/ui/theme';
@@ -38,13 +38,15 @@ export function ProfileSwitcher({
   value: ProfileView;
   onChange: (view: ProfileView) => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   if (options.length === 0) return null;
 
   return (
     <View style={[styles.row, { gap: 10 }]} accessibilityRole="tablist">
       {options.map((option) => {
-        const { word, icon } = viewWords(option);
+        const { word: wordKey, icon } = viewWords(option);
+        const word = t(wordKey);
         const active = option === value;
         return (
           <Pressable
@@ -137,30 +139,31 @@ export function SectionHeader({
  * rather than suggest blind.
  */
 export function FriendsDoor() {
+  const t = useT();
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
   return (
     <View style={{ gap: 12 }}>
       <SectionHeader
-        title="Friends"
+        title={t('profile.page.friends.title')}
         trailing="0 ›"
         onPress={() => setOpen(true)}
-        accessibilityLabel="Friends, none yet"
+        accessibilityLabel={t('profile.page.friends.noneYet')}
       />
       <View style={styles.row}>
-        <Chip label="Find friends" icon="user-plus" size={15} weight={500} onPress={() => setOpen(true)} />
+        <Chip label={t('profile.page.friends.find')} icon="user-plus" size={15} weight={500} onPress={() => setOpen(true)} />
       </View>
 
       <Sheet visible={open} onDismiss={() => setOpen(false)}>
         <View style={{ gap: theme.space[3], paddingBottom: theme.space[3] }}>
           <Text style="title-3" align="center">
-            Friends are coming
+            {t('profile.page.friends.comingTitle')}
           </Text>
           <Text size={15} color="text/secondary" align="center">
-            Following friends and seeing what they rank comes with the next release.
+            {t('profile.page.friends.comingBody')}
           </Text>
-          <Button label="OK" variant="secondary" onPress={() => setOpen(false)} />
+          <Button label={t('common.ok')} variant="secondary" onPress={() => setOpen(false)} />
         </View>
       </Sheet>
     </View>
@@ -199,15 +202,14 @@ export function MediumSection({
   const theme = useTheme();
   const ranking = useRanking(medium);
   const items = ranking.data ? assembleRanking(ranking.data).slice(0, SECTION_ROW_LIMIT) : null;
-  const noun = t(MEDIUM_WORDS[medium].noun);
 
   return (
     <View style={{ gap: 12 }}>
       <SectionHeader
         title={title}
-        trailing={counts ?? 'See all'}
+        trailing={counts ?? t('profile.page.seeAll')}
         onPress={onSeeAll}
-        accessibilityLabel={`See all ranked ${t(MEDIUM_WORDS[medium].plural).toLowerCase()}`}
+        accessibilityLabel={t(`profile.page.seeAllRanked.${medium}`)}
       />
       {items === null ? (
         <View style={[styles.row, { gap: 8 }]}>
@@ -217,7 +219,7 @@ export function MediumSection({
         </View>
       ) : items.length === 0 ? (
         <Text size={15} color="text/secondary">
-          {`No ${noun}s ranked yet.`}
+          {t(`profile.page.noneRanked.${medium}`)}
         </Text>
       ) : (
         <ScrollView
@@ -259,6 +261,7 @@ export function ActivityRow({
   trailing: string;
   onPress: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   return (
     <Pressable
@@ -267,7 +270,7 @@ export function ActivityRow({
       style={({ pressed }) => [styles.row, { paddingVertical: 10, gap: theme.space[3] }, pressed ? styles.pressed : undefined]}>
       <Cover width={32} radius={4} aspect="poster" candidates={coverCandidates(event)} />
       <Text size={15} numberOfLines={1} layout={textStyles.fill}>
-        {activityLine(event)}
+        {activityLine(event, t)}
       </Text>
       <Text size={13} color="text/secondary" numberOfLines={1}>
         {trailing}

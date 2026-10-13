@@ -12,6 +12,7 @@
 import { exportUserData, exportUserDataCsv, importEntries, ImportValidationError, type ImportResult } from '@verso/api';
 import * as DocumentPicker from 'expo-document-picker';
 
+import { t } from '@/lib/i18n';
 import { readTextFile, saveFile } from '@/lib/save-file';
 import { supabase } from '@/lib/supabase';
 
@@ -58,14 +59,18 @@ export async function importFromFile(picked: PickedFile): Promise<ImportResult> 
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new ImportValidationError(['the file is not valid JSON']);
+    throw new ImportValidationError([t('profile.data.notValidJson')]);
   }
 
   return importEntries(supabase, parsed);
 }
 
-/** A message worth putting in an alert: the validator's own wording, or a generic fallback. */
+/**
+ * A message worth putting in an alert: the validator's own wording, or a
+ * generic fallback. The validator's wording is @verso/api's and stays English
+ * until the api package has a dictionary.
+ */
 export function importErrorMessage(cause: unknown): string {
   if (cause instanceof ImportValidationError) return cause.message;
-  return cause instanceof Error ? cause.message : 'Something went wrong. Try again.';
+  return cause instanceof Error ? cause.message : t('profile.data.somethingWentWrong');
 }

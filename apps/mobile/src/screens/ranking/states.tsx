@@ -11,16 +11,18 @@
 
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { coverHeight, ErrorLine, Skeleton, useTheme } from '@/ui';
 
 /** Enough rows to reach the fold on the smallest phone the app runs on. */
 const SKELETON_ROWS = 8;
 
 export function RankingSkeleton() {
+  const t = useT();
   const theme = useTheme();
 
   return (
-    <View accessibilityLabel="Loading your ranking">
+    <View accessibilityLabel={t('lists.ranking.loading')}>
       {Array.from({ length: SKELETON_ROWS }, (_, index) => (
         <View key={index} style={[styles.row, { gap: theme.space[3] }]}>
           <Skeleton width={22} height={17} />
@@ -37,11 +39,12 @@ export function RankingSkeleton() {
 }
 
 export function RankingError({ onRetry }: { onRetry: () => void }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <ErrorLine
-      message="Couldn't load your ranking."
+      message={t('lists.ranking.couldNotLoad')}
       align="center"
       onRetry={onRetry}
       style={{ paddingVertical: theme.space[6] }}

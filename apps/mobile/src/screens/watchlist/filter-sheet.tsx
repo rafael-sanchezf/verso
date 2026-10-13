@@ -19,6 +19,7 @@ import { useEffect, useMemo, useReducer, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { filmGenreLabel } from '@/lib/film';
+import { useT } from '@/lib/i18n';
 import { Button, Chip, fontFamilyFor, Icon, SegmentedControl, Sheet, Text, TextButton, useTheme } from '@/ui';
 
 import {
@@ -27,6 +28,7 @@ import {
   filtersReducer,
   genreOptions,
   matchesAll,
+  say,
   showLabel,
   SORTS,
   type WatchlistFilters,
@@ -53,8 +55,10 @@ export function FilterSheet({
   onApply: (filters: WatchlistFilters) => void;
   onDismiss: () => void;
 }) {
+  const t = useT();
   const theme = useTheme();
   const { height } = useWindowDimensions();
+  const sorts = SORTS.map(({ value, label }) => ({ value, label: t(label) }));
   const [draft, dispatch] = useReducer(filtersReducer, applied);
   const [moreGenres, setMoreGenres] = useState(false);
   const [typed, setTyped] = useState('');
@@ -91,17 +95,22 @@ export function FilterSheet({
         contentContainerStyle={{ gap: 20, paddingTop: theme.space[3], paddingBottom: theme.space[2] }}>
         <View style={styles.header}>
           <Text size={20} weight={600}>
-            Filters
+            {t('lists.filterSheet.title')}
           </Text>
-          <TextButton label="Reset" size={15} color="text/secondary" onPress={() => dispatch({ type: 'reset' })} />
+          <TextButton
+            label={t('lists.filterSheet.reset')}
+            size={15}
+            color="text/secondary"
+            onPress={() => dispatch({ type: 'reset' })}
+          />
         </View>
 
-        <Block title="Length">
+        <Block title={t('lists.filterSheet.length')}>
           <LengthSlider value={draft.maxMinutes} onChange={(maxMinutes) => dispatch({ type: 'length', maxMinutes })} />
         </Block>
 
         {genres.length > 0 ? (
-          <Block title="Genre">
+          <Block title={t('lists.filterSheet.genre')}>
             <View style={[styles.wrap, { gap: theme.space[2] }]}>
               {shownGenres.map((genre) => {
                 const on = draft.genres.includes(genre);
@@ -116,13 +125,13 @@ export function FilterSheet({
                 );
               })}
               {genres.length > GENRES_FOLDED && !moreGenres ? (
-                <Chip label="More" size={14} icon="chevron-down" onPress={() => setMoreGenres(true)} />
+                <Chip label={t('lists.filterSheet.more')} size={14} icon="chevron-down" onPress={() => setMoreGenres(true)} />
               ) : null}
             </View>
           </Block>
         ) : null}
 
-        <Block title="Director">
+        <Block title={t('lists.filterSheet.director')}>
           <View
             style={[
               styles.field,
@@ -146,16 +155,16 @@ export function FilterSheet({
               onBlur={() => {
                 if (typed.trim() !== '') dispatch({ type: 'director', director: typed });
               }}
-              placeholder="Any director"
+              placeholder={t('lists.filterSheet.anyDirector')}
               placeholderTextColor={theme.colors['text/secondary']}
               autoCorrect={false}
-              accessibilityLabel="Director"
+              accessibilityLabel={t('lists.filterSheet.director')}
               style={[styles.input, { color: theme.colors['text/primary'], fontFamily: fontFamilyFor(400) }]}
             />
             {draft.director !== null ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Clear director"
+                accessibilityLabel={t('lists.filterSheet.clearDirector')}
                 hitSlop={12}
                 onPress={() => {
                   dispatch({ type: 'director', director: null });
@@ -184,12 +193,12 @@ export function FilterSheet({
           ) : null}
         </Block>
 
-        <Block title="Decade">
+        <Block title={t('lists.filterSheet.decade')}>
           <View style={[styles.wrap, { gap: theme.space[2] }]}>
             {DECADES.map(({ value, label }) => (
               <Chip
                 key={value}
-                label={label}
+                label={t(label)}
                 size={14}
                 variant={draft.decades.includes(value) ? 'played' : 'surface'}
                 onPress={() => dispatch({ type: 'decade', decade: value })}
@@ -198,15 +207,15 @@ export function FilterSheet({
           </View>
         </Block>
 
-        <Block title="Sort">
+        <Block title={t('lists.filterSheet.sort')}>
           <SegmentedControl<WatchlistSort>
-            segments={SORTS}
+            segments={sorts}
             value={draft.sort}
             onChange={(sort) => dispatch({ type: 'sort', sort })}
           />
         </Block>
 
-        <Button label={showLabel(count)} onPress={() => onApply(effective)} />
+        <Button label={say(t, showLabel(count))} onPress={() => onApply(effective)} />
       </ScrollView>
     </Sheet>
   );

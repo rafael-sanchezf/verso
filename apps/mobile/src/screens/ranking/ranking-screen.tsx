@@ -23,6 +23,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { RankingBanner } from '@/screens/onboarding/session/ranking-banner';
 import { useActiveMedium } from '@/state/medium';
 import { EmptyState, MediumChip, ScreenHeader, useTheme } from '@/ui';
@@ -51,6 +52,7 @@ import { ToolsRow, type RankingView } from './tools-row';
 import { useMoveRankingEntry, useRanking } from './use-ranking';
 
 export function RankingScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ focus?: string }>();
@@ -134,7 +136,7 @@ export function RankingScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
       <ScreenHeader
-        title="Ranking"
+        title={t('lists.ranking.title')}
         right={<MediumChip />}
         paddingBottom={view === 'list' ? 10 : theme.space[3]}
       />
@@ -199,13 +201,14 @@ export function RankingScreen() {
  * empty ranking, with the way out as its action (rule 7).
  */
 function NothingMatches({ film, onClear }: { film: boolean; onClear: () => void }) {
+  const t = useT();
   return (
     <View style={styles.emptyArea}>
       <EmptyState
         icon="search"
-        title={film ? 'No films match' : 'No games match'}
-        body="Nothing you have ranked fits that filter."
-        action={{ label: 'Clear filters', onPress: onClear }}
+        title={film ? t('lists.ranking.noFilmsMatch') : t('lists.ranking.noGamesMatch')}
+        body={t('lists.ranking.nothingFits')}
+        action={{ label: t('lists.ranking.clearFilters'), onPress: onClear }}
       />
     </View>
   );

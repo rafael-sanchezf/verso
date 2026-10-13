@@ -7,11 +7,13 @@
 
 import { useLocalSearchParams } from 'expo-router';
 
+import { useT } from '@/lib/i18n';
 import { useDocumentTitle } from '@/lib/use-document-title';
 import { AskScreen } from '@/screens/ask/ask-screen';
 
 export default function AskRoute() {
+  const t = useT();
   const { medium } = useLocalSearchParams<{ medium?: string }>();
-  useDocumentTitle('Ask');
+  useDocumentTitle(t('lists.ask.title'));
   return <AskScreen medium={medium === 'movie' ? 'movie' : 'game'} />;
 }

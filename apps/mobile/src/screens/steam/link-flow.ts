@@ -19,8 +19,12 @@
  * say when there is no link: nothing for a cancel or a closed browser, the
  * reason's own line for an error.
  *
- * Pure, relative imports only.
+ * Pure, relative imports only. A failure's message is a dictionary key
+ * (`profile.steam`), and the button's label comes through the screen's `t`, so
+ * no sentence lives here.
  */
+
+import type { TranslationKey, TranslationVars } from '../../lib/i18n/dictionary';
 
 import { linkFailureMessage, type LinkReturn } from './link-return';
 
@@ -31,14 +35,14 @@ export type LinkPhase =
   /** `returned` is null when the browser closed without saying why. */
   | { kind: 'confirming'; returned: LinkReturn | null }
   | { kind: 'linked' }
-  | { kind: 'failed'; message: string };
+  | { kind: 'failed'; message: TranslationKey };
 
 export type LinkEvent =
   | { type: 'start' }
   /** `startSteamLink` answered and the browser is opening. */
   | { type: 'opened' }
   /** `startSteamLink` threw, or the browser would not open. */
-  | { type: 'start-failed'; message: string }
+  | { type: 'start-failed'; message: TranslationKey }
   /** The browser is gone. `result` is null for a cancel, a dismiss, or a URL that is not ours. */
   | { type: 'returned'; result: LinkReturn | null }
   /** `getSteamLink` answered. */
@@ -53,8 +57,8 @@ export function isBusy(phase: LinkPhase): boolean {
   return phase.kind === 'starting' || phase.kind === 'in-browser' || phase.kind === 'confirming';
 }
 
-/** The line under the button, or null. */
-export function failureOf(phase: LinkPhase): string | null {
+/** The line under the button, as a key, or null. */
+export function failureOf(phase: LinkPhase): TranslationKey | null {
   return phase.kind === 'failed' ? phase.message : null;
 }
 
@@ -95,7 +99,7 @@ export function linkReducer(phase: LinkPhase, event: LinkEvent): LinkPhase {
       return phase.kind === 'confirming'
         ? {
             kind: 'failed',
-            message: "Couldn't check whether the link worked. Check your connection and try again.",
+            message: 'profile.steam.link.couldNotCheck',
           }
         : phase;
   }
@@ -108,21 +112,25 @@ function settle(returned: LinkReturn | null, linked: boolean): LinkPhase {
   if (returned.status === 'ok') {
     // Valve said yes and the function redirected with ok, but the row is not
     // there: a replica behind, or a write that did not land. Rare; say so.
-    return { kind: 'failed', message: "Steam signed you in, but the link didn't save. Please try again." };
+    return { kind: 'failed', message: 'profile.steam.link.didNotSave' };
   }
   const message = linkFailureMessage(returned.reason);
   return message === null ? IDLE : { kind: 'failed', message };
 }
 
-/** The button's label in each phase. */
-export function linkButtonLabel(phase: LinkPhase, idleLabel = 'Link Steam'): string {
+/** The button's label in each phase, through the screen's `t`. */
+export function linkButtonLabel(
+  phase: LinkPhase,
+  say: (key: TranslationKey, vars?: TranslationVars) => string,
+  idleLabel: string = say('profile.steam.link.button'),
+): string {
   switch (phase.kind) {
     case 'starting':
-      return 'Opening Steam…';
+      return say('profile.steam.link.opening');
     case 'in-browser':
-      return 'Waiting for Steam…';
+      return say('profile.steam.link.waiting');
     case 'confirming':
-      return 'Checking the link…';
+      return say('profile.steam.link.checking');
     default:
       return idleLabel;
   }

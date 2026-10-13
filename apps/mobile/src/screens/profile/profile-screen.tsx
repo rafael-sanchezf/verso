@@ -30,7 +30,7 @@ import { alert } from '@/lib/dialog';
 import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { assembleRanking } from '@/screens/ranking/model';
-import { MEDIUM_WORDS, setActiveMedium, trackedMedia, type LiveMedium } from '@/state/medium';
+import { setActiveMedium, trackedMedia, type LiveMedium } from '@/state/medium';
 import { Button, EmptyState, EmptyStateCard, ErrorLine, Icon, ScreenHeader, Skeleton, Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -46,6 +46,7 @@ import {
 import { subtitleFor } from './identity';
 import {
   initialsFor,
+  MEDIUM_KEYS,
   mediumOf,
   nameLine,
   profileShareText,
@@ -86,11 +87,16 @@ export function ProfileScreen() {
   const recent = useRecentActivity(medium);
 
   const tiles = shown
-    ? profileTiles(view, shown, {
-        stats: counts.stats,
-        percentile: percentile.isError ? null : percentile.data,
-        hours: hours.data,
-      })
+    ? profileTiles(
+        view,
+        shown,
+        {
+          stats: counts.stats,
+          percentile: percentile.isError ? null : percentile.data,
+          hours: hours.data,
+        },
+        t,
+      )
     : null;
   const tilesFailed = counts.isError || hours.isError;
   const retryTiles = () => {
@@ -102,8 +108,8 @@ export function ProfileScreen() {
   const rankedInScope = scope.reduce((total, each) => total + (counts.stats[each]?.ranked ?? 0), 0);
 
   const openItem = (id: string, itemMedium: string) => {
-    if (itemMedium === 'movie') router.push({ pathname: '/movie/[id]', params: { id, from: 'Profile' } });
-    else router.push({ pathname: '/game/[id]', params: { id, from: 'Profile' } });
+    if (itemMedium === 'movie') router.push({ pathname: '/movie/[id]', params: { id, from: t('profile.page.title') } });
+    else router.push({ pathname: '/game/[id]', params: { id, from: t('profile.page.title') } });
   };
 
   const seeRanking = (each: LiveMedium) => {
@@ -117,6 +123,7 @@ export function ProfileScreen() {
         const tiers = queryClient.getQueryData<TierRows>(queryKeys.ranking(each));
         return { medium: each, items: tiers ? assembleRanking(tiers) : [] };
       }),
+      t,
       profile?.username ?? null,
     );
     if (!message) return;
@@ -124,9 +131,9 @@ export function ProfileScreen() {
     if (Platform.OS === 'web' && typeof navigator.share !== 'function') {
       try {
         await navigator.clipboard.writeText(message);
-        alert('Copied', 'Paste it wherever you want to share it.');
+        alert(t('profile.page.copied'), t('profile.page.copiedBody'));
       } catch {
-        alert('Could not copy it', 'Your browser did not allow it.');
+        alert(t('profile.page.couldNotCopy'), t('profile.page.couldNotCopyBody'));
       }
       return;
     }
@@ -144,12 +151,12 @@ export function ProfileScreen() {
     <SafeAreaView style={styles.fill} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: theme.space[10] }}>
         <ScreenHeader
-          title="Profile"
+          title={t('profile.page.title')}
           paddingBottom={8}
           right={
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Settings"
+              accessibilityLabel={t('profile.page.settings')}
               hitSlop={10}
               onPress={() => router.push('/settings')}
               style={({ pressed }) => [styles.settingsButton, pressed ? styles.pressed : undefined]}>
@@ -174,16 +181,16 @@ export function ProfileScreen() {
                       hitSlop={8}
                       onPress={() => router.push('/profile/edit')}>
                       <Text size={22} weight={700} color="brand/text" numberOfLines={1}>
-                        Set your name
+                        {t('profile.page.setYourName')}
                       </Text>
                     </Pressable>
                   )}
                   <Text size={15} color="text/secondary" numberOfLines={1}>
-                    {subtitleFor(profile)}
+                    {subtitleFor(profile, t)}
                   </Text>
                 </>
               ) : identity.isError ? (
-                <ErrorLine message="Something went wrong." onRetry={() => void identity.refetch()} />
+                <ErrorLine message={t('profile.page.somethingWentWrong')} onRetry={() => void identity.refetch()} />
               ) : (
                 <>
                   <Skeleton width={160} height={22} radius={6} />
@@ -193,7 +200,7 @@ export function ProfileScreen() {
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Edit profile"
+              accessibilityLabel={t('profile.page.editProfile')}
               hitSlop={8}
               onPress={() => router.push('/profile/edit')}
               style={({ pressed }) => [
@@ -202,7 +209,7 @@ export function ProfileScreen() {
                 pressed ? styles.pressed : undefined,
               ]}>
               <Text size={14} weight={600}>
-                Edit
+                {t('profile.page.edit')}
               </Text>
             </Pressable>
           </View>
@@ -210,7 +217,7 @@ export function ProfileScreen() {
           <ProfileSwitcher options={options} value={view} onChange={setPicked} />
 
           {tilesFailed ? (
-            <ErrorLine message="Couldn't load your numbers." onRetry={retryTiles} />
+            <ErrorLine message={t('profile.page.couldNotLoadNumbers')} onRetry={retryTiles} />
           ) : tiles ? (
             <View style={[styles.row, { gap: 8 }]}>
               {tiles.map((tile) => (
@@ -233,8 +240,8 @@ export function ProfileScreen() {
               <MediumSection
                 key={each}
                 medium={each}
-                title={t(MEDIUM_WORDS[each].plural)}
-                counts={sectionCounts(each, counts.stats[each])}
+                title={t(MEDIUM_KEYS[each])}
+                counts={sectionCounts(each, counts.stats[each], t)}
                 onSeeAll={() => seeRanking(each)}
                 onOpen={openItem}
               />
@@ -242,7 +249,7 @@ export function ProfileScreen() {
           ) : (
             <MediumSection
               medium={view}
-              title={topTitle(view)}
+              title={t(topTitle(view))}
               counts={null}
               onSeeAll={() => seeRanking(view)}
               onOpen={openItem}
@@ -251,7 +258,7 @@ export function ProfileScreen() {
 
           {rankedInScope > 0 ? (
             <Button
-              label={view === 'all' ? 'Share my profile' : 'Share my top 10'}
+              label={view === 'all' ? t('profile.page.shareProfile') : t('profile.page.shareTop')}
               variant="secondary"
               onPress={onShare}
               style={styles.shareButton}
@@ -260,17 +267,17 @@ export function ProfileScreen() {
 
           <View style={{ gap: 4 }}>
             <SectionHeader
-              title="Recent"
-              trailing={recent.data && recent.data.length > 0 ? 'See all ›' : null}
+              title={t('profile.page.recent')}
+              trailing={recent.data && recent.data.length > 0 ? t('profile.page.seeAllLink') : null}
               trailingColor="brand/text"
               onPress={() =>
                 router.push({ pathname: '/profile/activity', params: medium ? { medium } : {} })
               }
-              accessibilityLabel="See all activity"
+              accessibilityLabel={t('profile.page.seeAllActivity')}
             />
 
             {recent.isError ? (
-              <ErrorLine message="Something went wrong." onRetry={() => void recent.refetch()} />
+              <ErrorLine message={t('profile.page.somethingWentWrong')} onRetry={() => void recent.refetch()} />
             ) : !recent.data ? (
               <View style={{ gap: 12, paddingTop: 8 }}>
                 {Array.from({ length: RECENT_ROWS }, (_, index) => (
@@ -283,7 +290,7 @@ export function ProfileScreen() {
                   <ActivityRow
                     key={`${event.kind}:${event.mediaItemId}:${event.onDate}:${event.occurredAt ?? ''}:${index}`}
                     event={event}
-                    trailing={shortAgo(event.onDate)}
+                    trailing={shortAgo(event.onDate, t)}
                     onPress={() => openItem(event.mediaItemId, event.medium)}
                   />
                 ))}
@@ -293,14 +300,8 @@ export function ProfileScreen() {
                 <EmptyStateCard>
                   <EmptyState
                     icon="trophy"
-                    title="Nothing yet"
-                    body={
-                      medium === 'movie'
-                        ? 'Log or rank a film and it shows up here.'
-                        : medium === 'game'
-                          ? 'Rank a game from its page and it shows up here.'
-                          : 'What you rank, watch and finish shows up here.'
-                    }
+                    title={t('profile.page.nothingYet')}
+                    body={t(`profile.page.nothingYetBody.${medium ?? 'all'}`)}
                   />
                 </EmptyStateCard>
               </View>

@@ -15,24 +15,27 @@
 
 import type { EntryRow } from '@verso/api';
 
+// A type only: the words are the dictionary's, said by the sub row and the menu.
+import type { TranslationKey } from '../../lib/i18n/dictionary';
+
 export const BACKLOG_SORTS = ['your-order', 'date-added', 'release-date', 'time-to-beat'] as const;
 
 export type BacklogSort = (typeof BACKLOG_SORTS)[number];
 
 /** The sub row's trailing words: "your order", "by date added", ... */
-export const BACKLOG_SORT_LABELS: Record<BacklogSort, string> = {
-  'your-order': 'your order',
-  'date-added': 'by date added',
-  'release-date': 'by release date',
-  'time-to-beat': 'by time to beat',
+export const BACKLOG_SORT_LABELS: Record<BacklogSort, TranslationKey> = {
+  'your-order': 'lists.next.sortLabel.yourOrder',
+  'date-added': 'lists.next.sortLabel.dateAdded',
+  'release-date': 'lists.next.sortLabel.releaseDate',
+  'time-to-beat': 'lists.next.sortLabel.timeToBeat',
 };
 
 /** The native menu's rows, in the order the spec lists them. */
-export const BACKLOG_SORT_MENU: readonly { value: BacklogSort; title: string }[] = [
-  { value: 'your-order', title: 'Your order' },
-  { value: 'date-added', title: 'Date added' },
-  { value: 'release-date', title: 'Release date' },
-  { value: 'time-to-beat', title: 'Time to beat' },
+export const BACKLOG_SORT_MENU: readonly { value: BacklogSort; title: TranslationKey }[] = [
+  { value: 'your-order', title: 'lists.next.sortMenu.yourOrder' },
+  { value: 'date-added', title: 'lists.next.sortMenu.dateAdded' },
+  { value: 'release-date', title: 'lists.next.sortMenu.releaseDate' },
+  { value: 'time-to-beat', title: 'lists.next.sortMenu.timeToBeat' },
 ];
 
 /** Newest first; a date-less row sorts to the end regardless of direction. */

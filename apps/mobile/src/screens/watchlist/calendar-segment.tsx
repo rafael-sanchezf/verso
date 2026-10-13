@@ -12,14 +12,17 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { Cover, EmptyState, ErrorLine, Pressed, Skeleton, Text, TextButton, useTheme } from '@/ui';
 
 import { calendarGroups, type CalendarRowView } from './calendar';
+import { say } from './filters';
 import { GoingSheet, type GoingTarget } from './going-sheet';
 
 export function CalendarSegment() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const today = todayLocal();
@@ -30,7 +33,8 @@ export function CalendarSegment() {
     queryFn: () => movieCalendar(supabase, { today }),
   });
 
-  const groups = useMemo(() => calendarGroups(calendar.data ?? [], today), [calendar.data, today]);
+  // `t` is new per language, so the month and weekday words follow a change of language too.
+  const groups = useMemo(() => calendarGroups(calendar.data ?? [], today), [calendar.data, today, t]);
 
   const openFilm = (id: string) =>
     router.push({ pathname: '/movie/[id]', params: { id, from: 'Watchlist' } });
@@ -56,7 +60,7 @@ export function CalendarSegment() {
   if (calendar.isError) {
     return (
       <ErrorLine
-        message="Couldn't load your calendar."
+        message={t('lists.calendar.couldNotLoad')}
         onRetry={() => void calendar.refetch()}
         style={{ paddingHorizontal: theme.space[4] }}
       />
@@ -68,8 +72,8 @@ export function CalendarSegment() {
       <View style={styles.empty}>
         <EmptyState
           icon="calendar"
-          title="Nothing coming up"
-          body="Films you want to watch that are in theaters or not out yet land here, with the day they stream."
+          title={t('lists.calendar.emptyTitle')}
+          body={t('lists.calendar.emptyBody')}
         />
       </View>
     );
@@ -79,9 +83,9 @@ export function CalendarSegment() {
     <>
       <ScrollView contentContainerStyle={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[6] }}>
         {groups.map((group) => (
-          <View key={group.title} style={{ paddingTop: theme.space[3] }}>
+          <View key={group.id} style={{ paddingTop: theme.space[3] }}>
             <Text size={13} weight={600} color="text/secondary" accessibilityRole="header">
-              {group.title}
+              {say(t, group.title)}
             </Text>
             {group.rows.map((view) => (
               <CalendarRow
@@ -100,6 +104,7 @@ export function CalendarSegment() {
 }
 
 function CalendarRow({ view, onOpen, onGoing }: { view: CalendarRowView; onOpen: () => void; onGoing: () => void }) {
+  const t = useT();
   const theme = useTheme();
   const { row } = view;
   const dateColor = view.going ? 'brand/text' : view.row.kind === 'in_theaters' ? 'text/secondary' : 'text/primary';
@@ -123,14 +128,14 @@ function CalendarRow({ view, onOpen, onGoing }: { view: CalendarRowView; onOpen:
             {row.title}
           </Text>
           <Text size={13} color={view.going ? 'brand/text' : 'text/secondary'} numberOfLines={1}>
-            {view.meta}
+            {say(t, view.meta)}
           </Text>
         </View>
       </Pressed>
       {view.trailing === 'going?' ? (
-        <TextButton label="Going? ›" size={13} color="brand/text" onPress={onGoing} />
+        <TextButton label={t('lists.calendar.goingQuestion')} size={13} color="brand/text" onPress={onGoing} />
       ) : view.trailing === 'change' ? (
-        <TextButton label="Change" size={13} color="brand/text" onPress={onGoing} />
+        <TextButton label={t('lists.calendar.change')} size={13} color="brand/text" onPress={onGoing} />
       ) : null}
     </View>
   );

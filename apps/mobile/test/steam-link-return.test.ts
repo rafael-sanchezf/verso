@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { translate } from '../src/lib/i18n/dictionary';
+
 import {
   isSteamLinkReturn,
   keepsRouterStill,
@@ -109,24 +111,29 @@ describe('linkReturnFromParams', () => {
   });
 });
 
+/** A failure's key, read in English. */
+function english(key: ReturnType<typeof linkFailureMessage>): string | null {
+  return key === null ? null : translate('en', key);
+}
+
 describe('linkFailureMessage', () => {
   it('says nothing about a cancel', () => {
     expect(linkFailureMessage('cancelled')).toBeNull();
   });
 
   it('gives the two reasons steam.ts names their own words', () => {
-    expect(linkFailureMessage('already_linked_elsewhere')).toMatch(/another Verso account/);
-    expect(linkFailureMessage('state_not_valid')).toMatch(/expired/);
+    expect(english(linkFailureMessage('already_linked_elsewhere'))).toMatch(/another Verso account/);
+    expect(english(linkFailureMessage('state_not_valid'))).toMatch(/expired/);
   });
 
   it('says plainly when the server is not set up', () => {
-    expect(linkFailureMessage('not_configured')).toMatch(/isn't set up/);
+    expect(english(linkFailureMessage('not_configured'))).toMatch(/isn't set up/);
   });
 
   it('apologises in one generic line for everything else', () => {
     const generic = "Steam didn't confirm the link. Please try again.";
     for (const reason of ['not_verified', 'return_to_mismatch', 'write_failed', 'server_error', 'unknown']) {
-      expect(linkFailureMessage(reason)).toBe(generic);
+      expect(english(linkFailureMessage(reason))).toBe(generic);
     }
   });
 });

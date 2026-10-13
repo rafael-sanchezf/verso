@@ -20,8 +20,12 @@
  * with one difference: every tier has a divider here even when it is empty,
  * because the whole point of the screen is that a film can be dragged into
  * the tier the rating got wrong.
+ *
+ * The counts' words are the dictionary's (`profile.letterboxd`): the screen
+ * passes its `t` as `say`, so this module never loads the i18n binding.
  */
 
+import type { TranslationKey, TranslationVars } from '../../lib/i18n/dictionary';
 import { coverCandidates, type LetterboxdImportArgs, type LetterboxdImportFilm, type LetterboxdMatchRow, type TierListRow } from '@verso/api';
 import { proposeRanking, scoreForPosition, TIERS, type LetterboxdFilm, type ProposalFilm, type Tier } from '@verso/core';
 
@@ -305,17 +309,42 @@ export function moveInList(list: readonly ReviewListItem[], key: string, delta: 
   return next;
 }
 
+/** The screen's `t` (`useT()`). */
+export type Say = (key: TranslationKey, vars?: TranslationVars) => string;
+
 /** "42 films" / "1 film". */
-export function filmCount(n: number): string {
-  return `${n} ${n === 1 ? 'film' : 'films'}`;
+export function filmCount(n: number, say: Say): string {
+  return n === 1 ? say('profile.letterboxd.films.one') : say('profile.letterboxd.films.other', { count: n });
+}
+
+/** One sentence for one and another for several, each with `{count}`. */
+function counted(n: number, one: TranslationKey, many: TranslationKey, say: Say): string {
+  return n === 1 ? say(one) : say(many, { count: n });
 }
 
 /** The one line above the list, for the choice as it stands. */
-export function reviewHeadline(review: Review, rank = false): string {
+export function reviewHeadline(review: Review, say: Say, rank = false): string {
+  const watched = review.watched.length;
   const parts = rank
-    ? [`${filmCount(review.rated.length)} to rank`, ...(review.watched.length > 0 ? [`${review.watched.length} watched, unrated`] : [])]
-    : [`${filmCount(review.rated.length + review.watched.length)} to mark watched`];
-  if (review.unmatched.length > 0) parts.push(`${review.unmatched.length} not found`);
+    ? [
+        say('profile.letterboxd.headline.toRank', { films: filmCount(review.rated.length, say) }),
+        ...(watched > 0
+          ? [counted(watched, 'profile.letterboxd.headline.watchedUnratedOne', 'profile.letterboxd.headline.watchedUnratedMany', say)]
+          : []),
+      ]
+    : [
+        counted(
+          review.rated.length + watched,
+          'profile.letterboxd.headline.toMarkWatchedOne',
+          'profile.letterboxd.headline.toMarkWatchedMany',
+          say,
+        ),
+      ];
+  if (review.unmatched.length > 0) {
+    parts.push(
+      counted(review.unmatched.length, 'profile.letterboxd.headline.notFoundOne', 'profile.letterboxd.headline.notFoundMany', say),
+    );
+  }
   return parts.join(' · ');
 }
 

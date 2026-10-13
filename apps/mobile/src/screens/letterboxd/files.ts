@@ -13,6 +13,8 @@ import { readLetterboxdFile, type LetterboxdFile } from '@verso/core';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 
+import { t } from '@/lib/i18n';
+
 export interface PickedFile {
   uri: string;
   name: string;
@@ -47,14 +49,18 @@ export function fileNote(file: LetterboxdFile): string {
     case 'reviews':
     case 'watched':
     case 'import': {
-      const rows = `${file.rows.length} ${file.rows.length === 1 ? 'row' : 'rows'}`;
-      return file.malformed > 0 ? `${file.name}: ${rows}, ${file.malformed} unreadable` : `${file.name}: ${rows}`;
+      const vars = { name: file.name, count: file.rows.length, malformed: file.malformed };
+      const one = file.rows.length === 1;
+      if (file.malformed > 0) {
+        return t(one ? 'profile.letterboxd.files.rowsOneUnreadable' : 'profile.letterboxd.files.rowsManyUnreadable', vars);
+      }
+      return t(one ? 'profile.letterboxd.files.rowsOne' : 'profile.letterboxd.files.rowsMany', vars);
     }
     case 'watchlist':
-      return `${file.name}: skipped, a watchlist is not watched`;
+      return t('profile.letterboxd.files.watchlist', { name: file.name });
     case 'ambiguous':
-      return `${file.name}: skipped, could not tell watched from watchlist by its name`;
+      return t('profile.letterboxd.files.ambiguous', { name: file.name });
     case 'unknown':
-      return `${file.name}: not a Letterboxd file`;
+      return t('profile.letterboxd.files.unknown', { name: file.name });
   }
 }

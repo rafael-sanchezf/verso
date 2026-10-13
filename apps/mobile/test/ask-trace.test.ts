@@ -1,14 +1,32 @@
 import { describe, expect, it } from 'vitest';
 
+import { translate } from '../src/lib/i18n/dictionary';
+import type { Language } from '../src/lib/i18n/model';
 import {
   askQuestion,
-  buildTrace,
-  lengthLine,
-  picksCaption,
+  askQuestionKey,
+  buildTrace as buildTraceLines,
+  lengthLine as lengthLineKey,
+  picksCaption as picksCaptionKey,
   readMaxMinutes,
-  readNote,
-  summaryLabel,
+  readNote as readNoteLine,
+  summaryLabel as summaryWords,
+  type AskMedium,
+  type TraceLine,
 } from '../src/screens/ask/trace';
+
+// The module returns keys; the sheet says them. These say them in English
+// (or the language given), so every line below reads as the sheet shows it.
+const say = (line: TraceLine, language: Language = 'en') => translate(language, line.key, line.vars);
+const buildTrace = (medium: AskMedium, note: string, language: Language = 'en') =>
+  buildTraceLines(medium, note).map((line) => say(line, language));
+const lengthLine = (minutes: number) => say(lengthLineKey(minutes));
+const readNote = (note: string, medium: AskMedium) => {
+  const { maxMinutes, line } = readNoteLine(note, medium);
+  return { maxMinutes, line: line === null ? null : say(line) };
+};
+const picksCaption = (medium: AskMedium, onServices: boolean) => translate('en', picksCaptionKey(medium, onServices));
+const summaryLabel = (note: string) => summaryWords(note) ?? translate('en', 'lists.ask.anything');
 
 describe('buildTrace', () => {
   it('writes the site hero\'s three lines for the family ask', () => {
@@ -127,6 +145,18 @@ describe('the sheet\'s other words', () => {
   it('asks the site\'s question per medium', () => {
     expect(askQuestion('movie')).toBe('What do you want to watch?');
     expect(askQuestion('game')).toBe('What do you feel like playing?');
+    // The sheet's own title is the key, and Home's English question is the same sentence.
+    expect(translate('en', askQuestionKey('movie'))).toBe(askQuestion('movie'));
+    expect(translate('en', askQuestionKey('game'))).toBe(askQuestion('game'));
+    expect(translate('es', askQuestionKey('movie'))).toBe('¿Qué quieres ver?');
+  });
+
+  it('writes the trace in Spanish', () => {
+    expect(buildTrace('movie', 'a family movie under 2 hours', 'es')).toEqual([
+      'Leyendo tu ranking',
+      'Dejando fuera lo que ya viste',
+      'Que dure menos de 2 horas',
+    ]);
   });
 
   it('names services under the picks only when the request carried them', () => {

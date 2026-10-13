@@ -25,6 +25,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { useMyProfile } from '@/state/medium';
@@ -37,6 +38,7 @@ import {
   filtersReducer,
   matchesClient,
   NO_FILTERS,
+  say,
   setChips,
   sortRows,
   type FilterChipKey,
@@ -61,6 +63,7 @@ export function WatchlistSegment({
   visit?: WatchlistVisit | null;
   onVisitApplied?: () => void;
 } = {}) {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
@@ -146,7 +149,7 @@ export function WatchlistSegment({
   if (all.isError) {
     return (
       <ErrorLine
-        message="Couldn't load your watchlist."
+        message={t('lists.watchlist.couldNotLoad')}
         onRetry={() => void all.refetch()}
         style={{ paddingHorizontal: theme.space[4] }}
       />
@@ -158,9 +161,9 @@ export function WatchlistSegment({
       <View style={styles.empty}>
         <EmptyState
           icon="layers"
-          title="Add films you want to watch"
-          body="Find one in Search and tap Want to watch."
-          action={{ label: 'Search', onPress: () => router.navigate('/search') }}
+          title={t('lists.watchlist.emptyTitle')}
+          body={t('lists.watchlist.emptyBody')}
+          action={{ label: t('lists.watchlist.search'), onPress: () => router.navigate('/search') }}
         />
       </View>
     );
@@ -171,21 +174,23 @@ export function WatchlistSegment({
       <View style={[styles.subRow, { paddingHorizontal: theme.space[4], paddingBottom: theme.space[2] }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={onMyServices ? 'On your services. Show everywhere' : 'Everywhere. Show on your services'}
+          accessibilityLabel={
+            onMyServices ? t('lists.watchlist.scopeOnServicesHint') : t('lists.watchlist.scopeEverywhereHint')
+          }
           hitSlop={10}
           onPress={() => setScope(!onMyServices)}
           style={styles.scope}>
           <Text size={13} color="text/secondary">
-            {filmCount(filtered.data ? rows.length : all.data.length)} ·{' '}
+            {say(t, filmCount(filtered.data ? rows.length : all.data.length))} ·{' '}
           </Text>
           <Text size={13} color="brand/text">
-            {onMyServices ? 'On your services' : 'Everywhere'}
+            {onMyServices ? t('lists.watchlist.onYourServices') : t('lists.watchlist.everywhere')}
           </Text>
           <Icon name="chevron-down" size={13} color="brand/text" />
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={count > 0 ? `Filters, ${count} set` : 'Filters'}
+          accessibilityLabel={count > 0 ? t('lists.watchlist.filtersSet', { count }) : t('lists.watchlist.filters')}
           hitSlop={6}
           onPress={() => setSheetOpen(true)}
           style={[
@@ -194,7 +199,7 @@ export function WatchlistSegment({
           ]}>
           <Icon name="sliders-horizontal" size={14} />
           <Text size={14} weight={500}>
-            Filters
+            {t('lists.watchlist.filters')}
           </Text>
           {count > 0 ? (
             <View style={[styles.badge, { backgroundColor: theme.colors['brand/primary'] }]}>
@@ -208,33 +213,36 @@ export function WatchlistSegment({
 
       {chips.length > 0 ? (
         <View style={[styles.chips, { paddingHorizontal: theme.space[4], paddingBottom: theme.space[3], gap: theme.space[2] }]}>
-          {chips.map((chip) => (
-            <Pressable
-              key={chip.label}
-              accessibilityRole="button"
-              accessibilityLabel={`Remove ${chip.label}`}
-              onPress={() => removeChip(chip.key)}
-              style={[styles.chip, { backgroundColor: theme.colors['bg/surface'], borderRadius: theme.radius.pill }]}>
-              <Text size={14} weight={500}>
-                {chip.label}
-              </Text>
-              <Icon name="x" size={13} color="text/secondary" />
-            </Pressable>
-          ))}
+          {chips.map((chip) => {
+            const label = say(t, chip.label);
+            return (
+              <Pressable
+                key={label}
+                accessibilityRole="button"
+                accessibilityLabel={t('lists.watchlist.remove', { label })}
+                onPress={() => removeChip(chip.key)}
+                style={[styles.chip, { backgroundColor: theme.colors['bg/surface'], borderRadius: theme.radius.pill }]}>
+                <Text size={14} weight={500}>
+                  {label}
+                </Text>
+                <Icon name="x" size={13} color="text/secondary" />
+              </Pressable>
+            );
+          })}
         </View>
       ) : null}
 
       {onMyServices && !hasServices && profile.isSuccess ? (
         <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[3] }}>
           <Text size={15} color="text/secondary">
-            Pick your services in Settings to see what's on them. Until then, tap the scope for everywhere.
+            {t('lists.watchlist.pickServices')}
           </Text>
         </View>
       ) : null}
 
       {filtered.isError ? (
         <ErrorLine
-          message="Couldn't filter your watchlist."
+          message={t('lists.watchlist.couldNotFilter')}
           onRetry={() => void filtered.refetch()}
           style={{ paddingHorizontal: theme.space[4] }}
         />
@@ -242,14 +250,10 @@ export function WatchlistSegment({
         <View style={styles.empty}>
           <EmptyState
             icon="search"
-            title="No films match"
-            body={
-              onMyServices
-                ? 'Nothing on your services fits. Try everywhere, or fewer filters.'
-                : 'Nothing on your watchlist fits those filters.'
-            }
+            title={t('lists.watchlist.noFilmsMatch')}
+            body={onMyServices ? t('lists.watchlist.nothingOnServices') : t('lists.watchlist.nothingFits')}
             action={{
-              label: 'Clear filters',
+              label: t('lists.watchlist.clearFilters'),
               onPress: () => {
                 setFilters({ ...NO_FILTERS, sort: filters.sort });
                 // With no services saved, "On your services" can only ever be

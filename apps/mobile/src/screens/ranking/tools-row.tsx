@@ -22,6 +22,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Medium } from '@verso/core';
 
 import { platformShortName } from '@/lib/format';
+import { useT, type TranslationKey } from '@/lib/i18n';
 import { Chip, GenreIcon, Icon, MenuChip, PlatformIcon, useTheme } from '@/ui';
 
 import { genreChipLabel, isFiltered, type RankingFilters } from './model';
@@ -53,6 +54,7 @@ export function ToolsRow({
   view,
   onViewChange,
 }: ToolsRowProps) {
+  const t = useT();
   const theme = useTheme();
   const filtered = isFiltered(filters);
 
@@ -64,14 +66,14 @@ export function ToolsRow({
       ]}>
       <View style={[styles.filters, { gap: theme.space[2] }]}>
         <Chip
-          label="All"
+          label={t('lists.ranking.all')}
           size={14}
           variant={filtered ? 'surface' : 'filled'}
           onPress={filtered ? () => onFiltersChange({ genre: null, platform: null }) : undefined}
         />
         {genres.length > 0 ? (
           <MenuChip
-            name="Genre"
+            name={t('lists.ranking.genre')}
             value={filters.genre}
             options={genres}
             // The chip and the sheet read "RPG"; the value that comes back is
@@ -84,7 +86,7 @@ export function ToolsRow({
         ) : null}
         {platforms.length > 0 ? (
           <MenuChip
-            name="Platform"
+            name={t('lists.ranking.platform')}
             value={filters.platform}
             options={platforms}
             // The chip and the sheet read "PS5"; the value that comes back, and
@@ -111,6 +113,7 @@ function ViewToggle({
   value: RankingView;
   onChange: (view: RankingView) => void;
 }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -126,7 +129,7 @@ function ViewToggle({
           <Pressable
             key={option.value}
             accessibilityRole="button"
-            accessibilityLabel={option.label}
+            accessibilityLabel={t(option.label)}
             accessibilityState={{ selected }}
             onPress={() => onChange(option.value)}
             style={({ pressed }) => [
@@ -146,9 +149,9 @@ function ViewToggle({
   );
 }
 
-const VIEWS: readonly { value: RankingView; label: string }[] = [
-  { value: 'list', label: 'List view' },
-  { value: 'grid', label: 'Grid view' },
+const VIEWS: readonly { value: RankingView; label: TranslationKey }[] = [
+  { value: 'list', label: 'lists.ranking.listView' },
+  { value: 'grid', label: 'lists.ranking.gridView' },
 ];
 
 const styles = StyleSheet.create({

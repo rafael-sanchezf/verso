@@ -13,9 +13,10 @@
 import { useRef, useState } from 'react';
 import { StyleSheet, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Text, useTheme } from '@/ui';
 
-import { LENGTH_STOPS, lengthLabel, stopLabel } from './filters';
+import { LENGTH_STOPS, lengthLabel, say, stopLabel } from './filters';
 
 const KNOB = 28;
 const LABEL_WIDTH = 52;
@@ -27,7 +28,9 @@ export function LengthSlider({
   value: number | null;
   onChange: (maxMinutes: number | null) => void;
 }) {
+  const t = useT();
   const theme = useTheme();
+  const valueLabel = say(t, lengthLabel(value));
   const track = useRef<View>(null);
   const [width, setWidth] = useState(0);
   const origin = useRef(0);
@@ -65,7 +68,7 @@ export function LengthSlider({
           numberOfLines={1}
           // Over the knob, kept inside the track at either end.
           layout={[styles.title, { left: Math.min(Math.max(0, knobX - 60), Math.max(0, width - 120)) }]}>
-          {lengthLabel(value)}
+          {valueLabel}
         </Text>
       </View>
 
@@ -74,8 +77,8 @@ export function LengthSlider({
         onLayout={onLayout}
         accessible
         accessibilityRole="adjustable"
-        accessibilityLabel="Length"
-        accessibilityValue={{ text: lengthLabel(value) }}
+        accessibilityLabel={t('lists.filterSheet.length')}
+        accessibilityValue={{ text: valueLabel }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(event) => {
           const step = event.nativeEvent.actionName === 'increment' ? 1 : -1;
@@ -110,13 +113,13 @@ export function LengthSlider({
           <View key={String(stop)} style={[styles.tick, { left: xOf(i) - LABEL_WIDTH / 2 }]}>
             <View style={[styles.mark, { backgroundColor: theme.colors['border/separator'] }]} />
             <Text size={12} color="text/secondary" align="center" numberOfLines={1}>
-              {stopLabel(stop)}
+              {say(t, stopLabel(stop))}
             </Text>
           </View>
         ))}
       </View>
       <Text size={11} color="text/secondary">
-        Runtime, by TMDB
+        {t('lists.filterSheet.runtimeByTmdb')}
       </Text>
     </View>
   );

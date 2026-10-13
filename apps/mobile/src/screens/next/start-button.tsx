@@ -11,6 +11,7 @@
 
 import { Pressable, StyleSheet } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -20,12 +21,13 @@ export interface StartButtonProps {
 }
 
 export function StartButton({ onPress, disabled = false }: StartButtonProps) {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Start playing"
+      accessibilityLabel={t('lists.next.startPlaying')}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}

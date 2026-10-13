@@ -84,6 +84,23 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | a watch (a diary row) / Log another watch | vez / Registrar otra vez | Verso; "2.ª vez"; wave 4 |
 | Move up / Move down (the confirm step) | Subir / Bajar | Verso; wave 4 |
 | You (the score line) | Tú | Verso; wave 4 |
+| Allow / Not now | Permitir / Ahora no | Apple; the ask sheet's permission step (wave 5) |
+| Filters / Reset / Clear (filters) | Filtros / Restablecer / Borrar | Apple; wave 5 |
+| Upcoming (the Next segment) | Por salir | Verso; games not out yet. Not Próximos, which is the tab (wave 5) |
+| Release date | Fecha de lanzamiento (games) / Fecha de estreno (films) | Verso; Apple's App Store says lanzamiento, cinema says estreno (wave 5) |
+| Date added / Time to beat | Fecha agregada / Tiempo para terminar | Verso; Next's sort menu (wave 5) |
+| Length / Runtime | Duración | Verso; one word for both (wave 5) |
+| In theaters / Streaming on X | En cines / Disponible en X | Verso; the Calendar (wave 5) |
+| Going (the planned day) / Going? | Vas a ir / ¿Vas? | Verso; the Calendar and its sheet (wave 5) |
+| Want to watch (the movie page's button) | Quiero ver | Verso; named by the Watchlist's empty state (wave 5), so wave 4's button should read the same |
+| Link / Unlink (an account) | Vincular / Desvincular | Wave 6; Apple es-419 |
+| Try again (button) / Not now | Reintentar / Ahora no | Wave 6; Apple |
+| Friends | Amigos | Wave 6 |
+| tier (the word, not a tier's name) | nivel | Wave 6; the Letterboxd draft's "tier line" |
+| a watch (one diary line, noun) | visionado | Wave 6; "3 visionados van a tu diario" |
+| Media you track (Edit profile) | Lo que sigues | Wave 6; avoids "medios", which reads as news media |
+| Top N% of rankers (Profile's tile) | Top N% / de usuarios | Wave 6; short enough for a quarter-width tile |
+| Recent (Profile's section) | Reciente | Wave 6 |
 | Steam / Letterboxd / Game Pass / PlayStation / Xbox / Switch | unchanged | Names |
 
 ## The rules for every wave

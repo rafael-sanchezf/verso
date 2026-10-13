@@ -18,12 +18,18 @@
  * nine minutes". That is the backend's rule, said honestly here; changing it is
  * a migration and out of this screen's reach.
  *
- * Pure, relative imports only (`test/steam-import-outcome.test.ts`).
+ * Pure, relative imports only (`test/steam-import-outcome.test.ts`). The words
+ * are the dictionary's (`profile.steam`): a line takes the screen's `t` as
+ * `say`, so this module never loads the i18n binding, which needs the device.
  */
 
 import type { CoverSource, Json, SteamCandidate, SteamImportResult, SteamLink } from '@verso/api';
 
 import { hours, relativeDate } from '../../lib/format';
+import type { TranslationKey, TranslationVars } from '../../lib/i18n/dictionary';
+
+/** The screen's `t` (`useT()`). */
+export type Say = (key: TranslationKey, vars?: TranslationVars) => string;
 
 /** Which screen asked: the Steam screen, or the privacy checklist's "Try again". */
 export type ImportAsker = 'steam' | 'privacy';
@@ -34,32 +40,31 @@ export type ImportStep =
   | { kind: 'line'; message: string };
 
 /** Where an import's answer sends the user. */
-export function importStep(result: SteamImportResult, asker: ImportAsker): ImportStep {
+export function importStep(result: SteamImportResult, asker: ImportAsker, say: Say): ImportStep {
   switch (result.status) {
     case 'imported':
       return { kind: 'candidates', playtimeHidden: result.playtimeHidden };
     case 'private_profile':
       return asker === 'privacy'
-        ? {
-            kind: 'line',
-            message: "Steam still isn't sharing your games. Check the three settings above, then try again.",
-          }
+        ? { kind: 'line', message: say('profile.steam.lines.stillPrivate') }
         : { kind: 'privacy' };
     case 'rate_limited':
       return {
         kind: 'line',
-        message: `Imports are ten minutes apart. Try again ${retryAfterText(result.retryAfterSeconds)}.`,
+        message: say('profile.steam.lines.rateLimited', { when: retryAfterText(result.retryAfterSeconds, say) }),
       };
     case 'not_linked':
-      return { kind: 'line', message: "Steam isn't linked to this account any more." };
+      return { kind: 'line', message: say('profile.steam.lines.notLinked') };
   }
 }
 
 /** `in about 8 minutes`, from what is left of the ten. */
-export function retryAfterText(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds <= 0) return 'now';
+export function retryAfterText(seconds: number, say: Say): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return say('profile.steam.retryAfter.now');
   const minutes = Math.ceil(seconds / 60);
-  return minutes <= 1 ? 'in about a minute' : `in about ${minutes} minutes`;
+  return minutes <= 1
+    ? say('profile.steam.retryAfter.aboutAMinute')
+    : say('profile.steam.retryAfter.aboutMinutes', { minutes });
 }
 
 /**
@@ -70,12 +75,12 @@ export function retryAfterText(seconds: number): string {
  * alone would call a failure a sync; the status word says which it was.
  * `syncStatus` is free text, so anything unknown is simply not mentioned.
  */
-export function lastImportText(link: SteamLink, now: Date = new Date()): string {
-  if (link.syncStatus === 'importing') return 'In progress';
+export function lastImportText(link: SteamLink, say: Say, now: Date = new Date()): string {
+  if (link.syncStatus === 'importing') return say('profile.steam.lastImportValue.inProgress');
   const when = relativeDate(link.lastSyncedAt, now);
-  if (!when) return 'Never';
-  if (link.syncStatus === 'private') return `${when} · Private profile`;
-  if (link.syncStatus === 'error') return `${when} · Failed`;
+  if (!when) return say('profile.steam.lastImportValue.never');
+  if (link.syncStatus === 'private') return say('profile.steam.lastImportValue.private', { when });
+  if (link.syncStatus === 'error') return say('profile.steam.lastImportValue.failed', { when });
   return when;
 }
 
@@ -95,14 +100,19 @@ export function hasImported(link: SteamLink): boolean {
  * hidden" (steam.ts, point 4), so it is reported as what Steam showed, never as
  * "not played".
  */
-export function steamHours(minutes: number): string {
+export function steamHours(minutes: number, say: Say): string {
   const figure = hours(minutes);
-  return figure === null ? 'No hours on Steam' : `${figure} on Steam`;
+  return figure === null
+    ? say('profile.steam.candidates.noHours')
+    : say('profile.steam.candidates.hours', { hours: figure });
 }
 
 /** A candidate row's subtitle: `14 h on Steam · 2017`. */
-export function candidateSubtitle(candidate: Pick<SteamCandidate, 'playtimeForeverMinutes' | 'year'>): string {
-  const parts = [steamHours(candidate.playtimeForeverMinutes)];
+export function candidateSubtitle(
+  candidate: Pick<SteamCandidate, 'playtimeForeverMinutes' | 'year'>,
+  say: Say,
+): string {
+  const parts = [steamHours(candidate.playtimeForeverMinutes, say)];
   if (candidate.year !== null) parts.push(String(candidate.year));
   return parts.join(' · ');
 }

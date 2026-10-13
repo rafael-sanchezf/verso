@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { alert } from '@/lib/dialog';
+import { useT } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { Button, DateField, Sheet, Text, useTheme } from '@/ui';
@@ -33,6 +34,7 @@ export interface GoingTarget {
 }
 
 export function GoingSheet({ target, onDismiss }: { target: GoingTarget | null; onDismiss: () => void }) {
+  const t = useT();
   const theme = useTheme();
   const queryClient = useQueryClient();
   const today = dateOnly(new Date());
@@ -53,7 +55,7 @@ export function GoingSheet({ target, onDismiss }: { target: GoingTarget | null; 
       invalidateEntry(queryClient, target!.mediaItemId);
       onDismiss();
     },
-    onError: () => alert("Couldn't save that day", 'Check your connection and try again.'),
+    onError: () => alert(t('lists.going.couldNotSave'), t('lists.checkConnection')),
   });
 
   return (
@@ -61,27 +63,27 @@ export function GoingSheet({ target, onDismiss }: { target: GoingTarget | null; 
       <View style={{ gap: theme.space[3], paddingTop: theme.space[3] }}>
         <View style={{ gap: 2 }}>
           <Text size={20} weight={600}>
-            When are you going?
+            {t('lists.going.title')}
           </Text>
           <Text size={15} color="text/secondary" numberOfLines={1}>
             {target?.title ?? ''}
           </Text>
         </View>
-        <DateField label="Day" value={day} min={today} onChange={(next) => next !== null && setDay(next)} />
+        <DateField label={t('lists.going.day')} value={day} min={today} onChange={(next) => next !== null && setDay(next)} />
         {/* The picker stops at today; a browser's typed date can still be earlier. */}
         {past ? (
           <Text size={13} color="text/destructive">
-            Pick today or a day ahead.
+            {t('lists.going.pickTodayOrAhead')}
           </Text>
         ) : null}
         <Button
-          label="Save"
+          label={t('common.save')}
           disabled={day === null || past || save.isPending}
           onPress={() => day !== null && save.mutate(day)}
         />
         {target?.plannedOn ? (
           <Button
-            label="Not going"
+            label={t('lists.going.notGoing')}
             variant="secondary"
             disabled={save.isPending}
             onPress={() => save.mutate(null)}
