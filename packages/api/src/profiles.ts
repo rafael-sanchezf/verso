@@ -48,7 +48,9 @@
  * policies, and the username constraints), 20260916120000_profiles_from_auth_metadata.sql
  * (the seed from the provider's metadata), and 20261007120000_onboarding_backend.sql
  * (`platforms` and `media`), and 20261008202000_watch_settings.sql
- * (`watch_region` and `watch_provider_ids`, as visible as `platforms`).
+ * (`watch_region` and `watch_provider_ids`, as visible as `platforms`), and
+ * 20261014100000_profile_reads.sql (`public`, and the `avatars` bucket
+ * `uploadAvatar` writes to).
  */
 
 import type { Medium } from '@verso/core';
@@ -76,7 +78,11 @@ export interface Profile {
   username: string | null;
   /** Seeded from the provider's `full_name` or `name` where there was one. */
   displayName: string | null;
-  /** Seeded from the provider's `avatar_url` or `picture`. A URL we do not host. */
+  /**
+   * Seeded from the provider's `avatar_url` or `picture`, a URL we do not host,
+   * until the person picks a photo: `uploadAvatar` then sets it to the public
+   * URL of their file in the `avatars` bucket.
+   */
   avatarUrl: string | null;
   /** When the account was made, as an ISO timestamp. The "joined {Mon YYYY}" line. */
   createdAt: string;
@@ -110,6 +116,13 @@ export interface Profile {
    * streams and offers "Pick your services".
    */
   watchProviderIds: number[];
+  /**
+   * Edit profile's "Public profile" switch, off by default. On, the public
+   * page at /u/<username> will show the rankings, tiers and scores, never
+   * notes, the diary, the backlog or hours. Nothing reads it until that page
+   * ships (the web brief's item 8).
+   */
+  isPublic: boolean;
 }
 
 /**
@@ -130,6 +143,8 @@ export interface ProfilePatch {
   watchRegion?: string;
   /** Replaces the list; empty is the skipped answer. Duplicates are dropped, first one kept. */
   watchProviderIds?: readonly number[];
+  /** The public profile switch. */
+  isPublic?: boolean;
 }
 
 /** Which username rule was broken. */
@@ -177,6 +192,7 @@ export function toProfile(row: ProfileRow): Profile {
     media: row.media,
     watchRegion: row.watch_region,
     watchProviderIds: row.watch_provider_ids,
+    isPublic: row.public,
   };
 }
 
@@ -250,6 +266,7 @@ export async function updateMyProfile(client: Client, patch: ProfilePatch): Prom
     }
     update.watch_provider_ids = distinct(patch.watchProviderIds);
   }
+  if (patch.isPublic !== undefined) update.public = patch.isPublic;
 
   if (Object.keys(update).length === 0) return getMyProfile(client);
 
@@ -352,4 +369,126 @@ function toProfileError(error: unknown, attempted: string | null | undefined): u
     return new UsernameError('username-invalid', attempted, error);
   }
   return error;
+}
+
+/** The bucket the profile photos live in (20261014100000_profile_reads.sql). */
+export const AVATAR_BUCKET = 'avatars';
+
+/** The bucket's limit: 2 MB. A 512 square, the size the app resizes to, is far under it. */
+export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+
+/** The image types the bucket takes. No HEIC: the web and Android cannot draw it. */
+export const AVATAR_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export type AvatarContentType = (typeof AVATAR_CONTENT_TYPES)[number];
+
+const AVATAR_EXTENSIONS: Record<AvatarContentType, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
+/** What `uploadAvatar` accepts: the bytes as the image picker and manipulator hand them over. */
+export type AvatarBody = ArrayBuffer | ArrayBufferView | Blob;
+
+export interface UploadAvatarOptions {
+  /** The file's type. Required unless `file` is a `Blob` that carries one. */
+  contentType?: AvatarContentType;
+}
+
+/**
+ * Edit profile's "Change photo": put the picked image in the caller's folder
+ * of the `avatars` bucket and point `profiles.avatar_url` at its public URL.
+ * Returns the profile as it now stands. The app resizes to 512 before calling
+ * this (profile-brief); this does not touch the pixels.
+ *
+ * Each upload gets a new name (`<uid>/<time>.<ext>`) rather than overwriting
+ * one fixed file, so the public URL changes with the photo and no cache, the
+ * CDN's or the image component's, keeps showing the old one. Afterwards the
+ * files written before this one are removed, never this one or a newer one,
+ * and only while the profile still points at this one (two uploads at once
+ * must not delete the winner's file). That clean-up is best effort: by then
+ * the photo is set, and a leftover file costs a few kilobytes of storage, not
+ * a wrong picture, so a failure there is not the caller's error.
+ *
+ * Throws `RangeError` without a round trip for a type the bucket refuses, an
+ * empty file or one over 2 MB (the bucket refuses those too),
+ * `NotSignedInError` signed out, and the storage or PostgREST error as it is
+ * otherwise. If the profile write fails after the upload, the uploaded file
+ * is removed before the error goes up, so a failed change leaves nothing.
+ */
+export async function uploadAvatar(
+  client: Client,
+  file: AvatarBody,
+  options: UploadAvatarOptions = {},
+): Promise<Profile> {
+  const contentType = options.contentType ?? (isBlob(file) ? file.type : undefined);
+  if (!isAvatarContentType(contentType)) {
+    throw new RangeError(
+      `a profile photo is ${AVATAR_CONTENT_TYPES.join(', ')}, got ${JSON.stringify(contentType ?? null)}`,
+    );
+  }
+  const size = isBlob(file) ? file.size : file.byteLength;
+  if (size === 0) throw new RangeError('a profile photo cannot be empty');
+  if (size > AVATAR_MAX_BYTES) {
+    throw new RangeError(`a profile photo is at most 2 MB, got ${size} bytes`);
+  }
+
+  const id = await currentUserId(client, 'uploadAvatar');
+  const bucket = client.storage.from(AVATAR_BUCKET);
+  const name = `${Date.now().toString(36)}.${AVATAR_EXTENSIONS[contentType]}`;
+  const path = `${id}/${name}`;
+
+  const uploaded = await bucket.upload(path, file, { contentType, upsert: false, cacheControl: '31536000' });
+  if (uploaded.error) throw uploaded.error;
+
+  const { publicUrl } = bucket.getPublicUrl(path).data;
+
+  let profile: Profile;
+  try {
+    profile = await updateMyProfile(client, { avatarUrl: publicUrl });
+  } catch (error) {
+    await bucket.remove([path]);
+    throw error;
+  }
+
+  await removeOlderAvatars(client, id, name);
+
+  return profile;
+}
+
+/** The time a file name was written at: the base36 stem `uploadAvatar` gives it, or NaN. */
+function avatarStamp(fileName: string): number {
+  const stem = fileName.split('.')[0] ?? '';
+  return /^[0-9a-z]+$/.test(stem) ? parseInt(stem, 36) : Number.NaN;
+}
+
+/**
+ * The clean-up after an upload: the files in the folder written before
+ * `written`, never `written` itself nor anything newer, which a second upload
+ * running alongside this one may have put there and pointed the profile at.
+ * And nothing at all when the profile, read again now, no longer points at
+ * `written`: another upload won, and its own clean-up is the one that knows
+ * what is current.
+ */
+async function removeOlderAvatars(client: Client, userId: string, written: string): Promise<void> {
+  const bucket = client.storage.from(AVATAR_BUCKET);
+  const current = await getMyProfile(client).catch(() => null);
+  if (!current?.avatarUrl || !current.avatarUrl.endsWith(`/${AVATAR_BUCKET}/${userId}/${written}`)) return;
+
+  const listed = await bucket.list(userId, { limit: 100 });
+  if (listed.error) return;
+  const cutoff = avatarStamp(written);
+  const older = (listed.data ?? [])
+    .map((object) => object.name)
+    .filter((fileName) => fileName !== written && avatarStamp(fileName) < cutoff)
+    .map((fileName) => `${userId}/${fileName}`);
+  if (older.length > 0) await bucket.remove(older);
+}
+
+function isBlob(file: AvatarBody): file is Blob {
+  return typeof Blob !== 'undefined' && file instanceof Blob;
+}
+
+function isAvatarContentType(value: string | undefined): value is AvatarContentType {
+  return (AVATAR_CONTENT_TYPES as readonly (string | undefined)[]).includes(value);
 }

@@ -30,6 +30,13 @@
  * join the release-date split already uses. The lists in `views.ts` are scoped
  * the same way and by the same default, which is what keeps a badge saying 3
  * above a list of 4 from happening across media.
+ *
+ * **The joint profile's reads come after them** (profile-brief, 2026-10-12,
+ * and 20261014100000_profile_reads.sql): `recentActivity` and `activityMonth`
+ * across media unless a medium is asked, with the verb by source ("Watched",
+ * "Finished", "Ranked"); `rankerPercentile` for "Top N% of rankers"; and
+ * `profileHours`. Those are RPCs and, unlike the counts above, throw signed
+ * out (28000). The two above stay until the Profile screen moves to them.
  */
 
 import { scoreForPosition, type Medium, type Tier } from '@verso/core';
@@ -288,4 +295,177 @@ async function countTiers(
   );
 
   return new Map(counted);
+}
+
+/**
+ * What a line of activity says happened (profile-brief, round two, the verb by
+ * source):
+ *
+ * - `ranked`: a placement, on the day it was placed. Every bulk-entry and
+ *   import row reads this way, since nothing says when it was watched.
+ * - `watched`: a film logged through the log sheet, on the day the person set.
+ * - `finished`: a game the log flow moved from Playing to played
+ *   (`user_entries.finished_from`), on its finished day.
+ *
+ * A placement on the same day as a watch or finish of the same item is folded
+ * into that line, which then carries the score ("Finished X · 9.4").
+ */
+export type ActivityKind = 'ranked' | 'watched' | 'finished';
+
+/** One line of activity: Recent on Profile, or a row of the Activity calendar's list. */
+export interface ActivityEvent {
+  kind: ActivityKind;
+  /** The day it happened, `YYYY-MM-DD`, where the person is. */
+  onDate: string;
+  /**
+   * The moment, an ISO timestamp, when one is stored: the placement's for
+   * `ranked`, the diary row's writing for `watched`. Null for `finished`,
+   * whose entry keeps a day only. For a relative time; `onDate` is the day.
+   */
+  occurredAt: string | null;
+  mediaItemId: string;
+  medium: Medium;
+  title: string;
+  coverImageId: string | null;
+  /** `media_items.external_ids`. Pass the row to `coverCandidates`; see covers.ts. */
+  externalIds: Json;
+  /** The item's 0-10 score now, on every kind; null when it is not ranked. Never a rank number. */
+  score: number | null;
+  /** Where a `watched` film was seen ("Netflix", `'theater'`, `'other'`), else null. */
+  place: string | null;
+}
+
+/** A row of `activityMonth`: an event and its day of the month, 1 to 31. */
+export interface ActivityMonthEvent extends ActivityEvent {
+  day: number;
+}
+
+export interface RecentActivityOptions {
+  /** How many lines, newest first. Defaults to 10; Profile shows two or three. */
+  limit?: number;
+  /** One medium's lines (Profile's medium switcher); every medium when absent. */
+  medium?: Medium;
+  /**
+   * The IANA time zone a placement's day is read in. Defaults to the
+   * device's (`deviceTimeZone`), so a game ranked at 9 pm in New York is that
+   * day's and not the next.
+   */
+  timeZone?: string;
+}
+
+export interface ActivityMonthOptions {
+  year: number;
+  /** 1 to 12. */
+  month: number;
+  medium?: Medium;
+  /** As `RecentActivityOptions.timeZone`. */
+  timeZone?: string;
+}
+
+/** The device's IANA time zone, or UTC where the runtime cannot say. */
+export function deviceTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+}
+
+type ActivityRow = {
+  kind: string;
+  on_date: string;
+  occurred_at: string | null;
+  media_item_id: string;
+  medium: Medium;
+  title: string;
+  cover_image_id: string | null;
+  external_ids: Json;
+  score: number | null;
+  place: string | null;
+};
+
+function toActivityEvent(row: ActivityRow): ActivityEvent {
+  return {
+    kind: row.kind as ActivityKind,
+    onDate: row.on_date,
+    occurredAt: row.occurred_at ?? null,
+    mediaItemId: row.media_item_id,
+    medium: row.medium,
+    title: row.title,
+    coverImageId: row.cover_image_id ?? null,
+    externalIds: row.external_ids,
+    score: row.score ?? null,
+    place: row.place ?? null,
+  };
+}
+
+/**
+ * Profile's Recent: the caller's newest activity across media (or in one),
+ * from `recent_activity`. Throws `RangeError` for a limit below one without a
+ * round trip, and the PostgrestError signed out (28000).
+ */
+export async function recentActivity(
+  client: Client,
+  options: RecentActivityOptions = {},
+): Promise<ActivityEvent[]> {
+  const limit = options.limit ?? 10;
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new RangeError(`limit must be a whole number, 1 or more, got ${limit}`);
+  }
+  const { data, error } = await client.rpc('recent_activity', {
+    p_limit: limit,
+    p_time_zone: options.timeZone ?? deviceTimeZone(),
+    ...(options.medium === undefined ? {} : { p_medium: options.medium }),
+  });
+  if (error) throw error;
+  return (data ?? []).map(toActivityEvent);
+}
+
+/**
+ * The Activity calendar: every event of one month, newest first, each with its
+ * day, from `activity_month`. The grid draws one poster per day and "+N" for
+ * the rest; the list under it is these rows in order. Throws `RangeError` for
+ * a month outside 1 to 12 without a round trip.
+ */
+export async function activityMonth(client: Client, options: ActivityMonthOptions): Promise<ActivityMonthEvent[]> {
+  const { year, month } = options;
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    throw new RangeError(`a month is a whole year and a month from 1 to 12, got ${year}-${month}`);
+  }
+  const { data, error } = await client.rpc('activity_month', {
+    p_year: year,
+    p_month: month,
+    p_time_zone: options.timeZone ?? deviceTimeZone(),
+    ...(options.medium === undefined ? {} : { p_medium: options.medium }),
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({ ...toActivityEvent(row), day: row.day }));
+}
+
+/**
+ * "Top N% of rankers": the caller's share of rankers who have ranked fewer
+ * items than they have, 0 to 100 with one decimal, across media or in one.
+ * Null while the cohort is under ten rankers or the caller has ranked nothing,
+ * and the tile then hides. The tile's N is `100 - percentile`.
+ */
+export async function rankerPercentile(client: Client, options: { medium?: Medium } = {}): Promise<number | null> {
+  const { data, error } = await client.rpc(
+    'ranker_percentile',
+    options.medium === undefined ? {} : { p_medium: options.medium },
+  );
+  if (error) throw error;
+  return data ?? null;
+}
+
+/**
+ * The Hours tile: games' recorded playtime plus one film runtime per diary
+ * row (a rewatch twice), across media or in one, in hours with one decimal.
+ */
+export async function profileHours(client: Client, options: { medium?: Medium } = {}): Promise<number> {
+  const { data, error } = await client.rpc(
+    'profile_hours',
+    options.medium === undefined ? {} : { p_medium: options.medium },
+  );
+  if (error) throw error;
+  return data ?? 0;
 }

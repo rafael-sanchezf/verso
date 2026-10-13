@@ -90,12 +90,14 @@ select has_trigger('public', 'user_entries', 'user_entries_derive_medium', 'the 
 -- Triggers on one table for one event fire in alphabetical order, and
 -- set_backlog_position reads new.medium, so the order is part of the design and
 -- not an accident of naming. This is the assertion that would fail if either
--- were renamed.
+-- were renamed. user_entries_finished_from (20261014100000_profile_reads.sql)
+-- reads only status, so where it sorts does not matter.
 select is(
   (select array_agg(t.tgname::text order by t.tgname::text)
      from pg_trigger t
     where t.tgrelid = 'public.user_entries'::regclass and not t.tgisinternal),
   array['user_entries_derive_medium',
+        'user_entries_finished_from',
         'user_entries_set_backlog_position',
         'user_entries_stamp_started_at'],
   'derive_medium sorts first, so the medium is on the row before the backlog position is computed from it'

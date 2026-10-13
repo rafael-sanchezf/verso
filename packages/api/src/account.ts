@@ -28,10 +28,18 @@
  * Like the writers in `entries.ts` this throws rather than returning a result:
  * a failure is a dead network or a bug, and the screen has one line of copy for
  * all of them.
+ *
+ * The profile photo is not in that cascade. It lives in the `avatars` bucket
+ * (20261014100000_profile_reads.sql), which is public, so a file left behind
+ * would stay on the web after the person asked to be gone. Storage objects are
+ * removed through the storage API, not by SQL (storage refuses a direct
+ * delete), so the photos go first, from here, while the session that owns the
+ * folder still exists.
  */
 
 import type { Client } from './client';
 import { NotSignedInError } from './entries';
+import { AVATAR_BUCKET } from './profiles';
 
 /**
  * Delete the caller's account and everything they own, then forget the session
@@ -49,11 +57,32 @@ export async function deleteMyAccount(client: Client): Promise<void> {
   if (sessionError) throw sessionError;
   if (!data.session) throw new NotSignedInError('deleteMyAccount');
 
+  await removeMyAvatars(client, data.session.user.id);
+
   const { error } = await client.rpc('delete_my_account');
   if (error) throw error;
 
   const { error: signOutError } = await client.auth.signOut({ scope: 'local' });
   if (signOutError) {
     console.error('[account] the account was deleted but the stored session was not cleared', signOutError);
+  }
+}
+
+/**
+ * Remove every file in the caller's avatar folder, best effort. A failure is
+ * logged and never blocks the deletion: the account going is what the person
+ * asked for, and a stack without storage (CI's) has no folder to empty.
+ */
+async function removeMyAvatars(client: Client, userId: string): Promise<void> {
+  try {
+    const bucket = client.storage.from(AVATAR_BUCKET);
+    const listed = await bucket.list(userId, { limit: 1000 });
+    if (listed.error) throw listed.error;
+    const paths = (listed.data ?? []).map((object) => `${userId}/${object.name}`);
+    if (paths.length === 0) return;
+    const removed = await bucket.remove(paths);
+    if (removed.error) throw removed.error;
+  } catch (error) {
+    console.error('[account] the profile photos could not be removed before the account was deleted', error);
   }
 }

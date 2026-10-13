@@ -18,7 +18,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { deleteMyAccount } from '../src/account';
 import type { Client } from '../src/client';
 import { getEntry, NotSignedInError, setStatus } from '../src/entries';
-import { getMyProfile } from '../src/profiles';
+import { AVATAR_BUCKET, getMyProfile, uploadAvatar } from '../src/profiles';
 import { insertRankingEntry, tierList } from '../src/ranking';
 import { anonClient, live, seedGames, serviceClient, signUpUser, stopClients } from './support';
 
@@ -140,5 +140,35 @@ describe.skipIf(!live)('deleting an account against a local stack', () => {
       .in('id', [gameId, otherGameId]);
     if (error) throw error;
     expect(data?.length).toBe(2);
+  });
+});
+
+describe.skipIf(!live)('deleting an account takes the profile photo with it', () => {
+  // The smallest valid PNG: one transparent pixel.
+  const pixel = Uint8Array.from(
+    atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='),
+    (char) => char.charCodeAt(0),
+  );
+
+  afterAll(async () => {
+    await stopClients();
+  });
+
+  it('empties the avatar folder before the account goes, where storage runs', async (context) => {
+    const service = serviceClient();
+    const probe = await service.storage.getBucket(AVATAR_BUCKET);
+    if (probe.error) context.skip('storage-api is not running on this stack (CI leaves it out)');
+
+    const carol = await signUpUser('account-photo');
+    const profile = await uploadAvatar(carol.client, pixel, { contentType: 'image/png' });
+    expect(profile.avatarUrl).not.toBeNull();
+    expect((await service.storage.from(AVATAR_BUCKET).list(carol.userId)).data).toHaveLength(1);
+
+    await deleteMyAccount(carol.client);
+
+    const after = await service.storage.from(AVATAR_BUCKET).list(carol.userId);
+    expect(after.error).toBeNull();
+    expect(after.data).toEqual([]);
+    expect((await fetch(profile.avatarUrl!)).status).not.toBe(200);
   });
 });

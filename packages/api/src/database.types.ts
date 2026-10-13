@@ -711,6 +711,7 @@ export type Database = {
           id: string
           media: Database["public"]["Enums"]["medium"][] | null
           platforms: string[]
+          public: boolean
           username: string | null
           watch_provider_ids: number[]
           watch_region: string
@@ -722,6 +723,7 @@ export type Database = {
           id: string
           media?: Database["public"]["Enums"]["medium"][] | null
           platforms?: string[]
+          public?: boolean
           username?: string | null
           watch_provider_ids?: number[]
           watch_region?: string
@@ -733,6 +735,7 @@ export type Database = {
           id?: string
           media?: Database["public"]["Enums"]["medium"][] | null
           platforms?: string[]
+          public?: boolean
           username?: string | null
           watch_provider_ids?: number[]
           watch_region?: string
@@ -1025,6 +1028,7 @@ export type Database = {
           added_at: string
           backlog_position: number | null
           finished_at: string | null
+          finished_from: string | null
           id: string
           media_item_id: string
           medium: Database["public"]["Enums"]["medium"]
@@ -1042,6 +1046,7 @@ export type Database = {
           added_at?: string
           backlog_position?: number | null
           finished_at?: string | null
+          finished_from?: string | null
           id?: string
           media_item_id: string
           medium?: Database["public"]["Enums"]["medium"]
@@ -1059,6 +1064,7 @@ export type Database = {
           added_at?: string
           backlog_position?: number | null
           finished_at?: string | null
+          finished_from?: string | null
           id?: string
           media_item_id?: string
           medium?: Database["public"]["Enums"]["medium"]
@@ -1271,6 +1277,47 @@ export type Database = {
       }
     }
     Functions: {
+      activity_events: {
+        Args: {
+          p_from?: string
+          p_medium?: Database["public"]["Enums"]["medium"]
+          p_time_zone?: string
+          p_to?: string
+        }
+        Returns: {
+          cover_image_id: string
+          external_ids: Json
+          kind: string
+          media_item_id: string
+          medium: Database["public"]["Enums"]["medium"]
+          occurred_at: string
+          on_date: string
+          place: string
+          score: number
+          title: string
+        }[]
+      }
+      activity_month: {
+        Args: {
+          p_medium?: Database["public"]["Enums"]["medium"]
+          p_month: number
+          p_time_zone?: string
+          p_year: number
+        }
+        Returns: {
+          cover_image_id: string
+          day: number
+          external_ids: Json
+          kind: string
+          media_item_id: string
+          medium: Database["public"]["Enums"]["medium"]
+          occurred_at: string
+          on_date: string
+          place: string
+          score: number
+          title: string
+        }[]
+      }
       apply_letterboxd_import: {
         Args: {
           p_file_names: string[]
@@ -1548,6 +1595,14 @@ export type Database = {
           year: number
         }[]
       }
+      profile_hours: {
+        Args: { p_medium?: Database["public"]["Enums"]["medium"] }
+        Returns: number
+      }
+      ranker_percentile: {
+        Args: { p_medium?: Database["public"]["Enums"]["medium"] }
+        Returns: number
+      }
       ranking_score: {
         Args: {
           p_position: number
@@ -1559,6 +1614,25 @@ export type Database = {
       ranking_tier_for_score: {
         Args: { p_score: number }
         Returns: Database["public"]["Enums"]["tier"]
+      }
+      recent_activity: {
+        Args: {
+          p_limit?: number
+          p_medium?: Database["public"]["Enums"]["medium"]
+          p_time_zone?: string
+        }
+        Returns: {
+          cover_image_id: string
+          external_ids: Json
+          kind: string
+          media_item_id: string
+          medium: Database["public"]["Enums"]["medium"]
+          occurred_at: string
+          on_date: string
+          place: string
+          score: number
+          title: string
+        }[]
       }
       recommendation_content_profile: {
         Args: {
@@ -1692,6 +1766,7 @@ export type Database = {
           added_at: string
           backlog_position: number | null
           finished_at: string | null
+          finished_from: string | null
           id: string
           media_item_id: string
           medium: Database["public"]["Enums"]["medium"]
