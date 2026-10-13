@@ -6,8 +6,14 @@
  * - On the watchlist, not watched: "On your watchlist".
  * - Watched once: "Watched Sep 2 · Change".
  * - Watched more than once: "Watched 2× · last Sep 2 ›", which opens the rows.
- * - Watched with no dated row (a film marked played before the diary existed,
- *   or by an import or bulk entry once those land): "Watched".
+ * - Watched with no diary row at all (a film marked played before the diary
+ *   existed): "Watched".
+ * - Seen with only an undated row (`watchedOn` null: a bulk "seen it" from
+ *   the film deck or an import with no day, `watch_log.source` `bulk` or
+ *   `import`): "Seen before Verso ›", which opens the rows, where the day can
+ *   be added. Never "Watched null". Several undated rows: "Seen 2× before
+ *   Verso ›". A mix reads as several watches, "last" being the newest dated
+ *   one (the diary sorts undated rows last).
  * - Watched and not ranked: the line gains "Rank it ›" in the brand green,
  *   and the page has no primary button any more (question 18's default:
  *   the diary line alone once a film is watched).
@@ -44,12 +50,16 @@ export function diaryLine(
   const watched = diary.length > 0 || entry?.status === 'played';
   const rankIt = watched && !ranked;
 
-  if (diary.length === 1) {
-    return { text: `Watched ${personalDate(diary[0]!.watchedOn, now) ?? diary[0]!.watchedOn}`, action: 'change', rankIt, watched };
+  const latest = diary.find((row) => row.watchedOn !== null)?.watchedOn ?? null;
+  if (diary.length > 0 && latest === null) {
+    const text = diary.length === 1 ? 'Seen before Verso' : `Seen ${diary.length}× before Verso`;
+    return { text, action: 'open', rankIt, watched };
   }
-  if (diary.length > 1) {
-    const last = personalDate(diary[0]!.watchedOn, now) ?? diary[0]!.watchedOn;
-    return { text: `Watched ${diary.length}× · last ${last}`, action: 'open', rankIt, watched };
+  if (diary.length === 1 && latest !== null) {
+    return { text: `Watched ${personalDate(latest, now) ?? latest}`, action: 'change', rankIt, watched };
+  }
+  if (diary.length > 1 && latest !== null) {
+    return { text: `Watched ${diary.length}× · last ${personalDate(latest, now) ?? latest}`, action: 'open', rankIt, watched };
   }
   if (watched) return { text: 'Watched', action: null, rankIt, watched };
   if (entry?.status === 'backlog') return { text: 'On your watchlist', action: null, rankIt: false, watched: false };

@@ -17,18 +17,21 @@
  * default): the diary line's "Change" or "›" opens the diary, where "Log
  * another watch" is.
  *
- * The read is `moviePageFallback` until PR 1's `moviePage` merges (see
- * fallback.ts); the release state and the diary are their own reads.
+ * The read is `moviePage` (PR 1's `movie_page` RPC) with the caller's entry
+ * and ranking beside it (`reads.ts`); the release state comes in the same
+ * row, and the diary is its own read. Rotten Tomatoes and the awards line
+ * show when the catalog carries them.
  */
 
 import {
   coverCandidates,
   diaryFor,
-  movieReleaseState,
   moveToBacklog,
   removeEntry,
   removeMovieEntry,
   todayLocal,
+  type MovieCastMember,
+  type MoviePage,
 } from '@verso/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
@@ -41,7 +44,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { alert, select, showDialog } from '@/lib/dialog';
 import { filmFactsLine, filmGenreLabels, filmRuntime, tmdbScoreText } from '@/lib/film';
 import { fullDate } from '@/lib/format';
-import { invalidateEntry } from '@/lib/invalidate';
+import { invalidateEntry, invalidateMovieHome } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { GoingSheet, type GoingTarget } from '@/screens/watchlist/going-sheet';
@@ -50,7 +53,7 @@ import { Button, Chip, Cover, ErrorLine, Icon, Skeleton, Text, TextButton, useTh
 
 import { diaryLine, streamingRow, theatricalLine } from './diary-line';
 import { DiarySheet } from './diary-sheet';
-import { moviePageFallback, type CastMember, type MoviePageData } from './fallback';
+import { readMoviePage } from './reads';
 import { whereToWatch } from './where-to-watch';
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -76,12 +79,7 @@ export function MoviePageScreen() {
 
   const page = useQuery({
     queryKey: queryKeys.moviePage(id, region),
-    queryFn: () => moviePageFallback(supabase, id, region),
-    enabled: id !== '',
-  });
-  const release = useQuery({
-    queryKey: queryKeys.movieRelease(id, region),
-    queryFn: () => movieReleaseState(supabase, id, region, { today }),
+    queryFn: () => readMoviePage(supabase, id, { region, today }),
     enabled: id !== '',
   });
   const diary = useQuery({
@@ -98,7 +96,10 @@ export function MoviePageScreen() {
       if (onList) await removeEntry(supabase, id);
       else await moveToBacklog(supabase, id);
     },
-    onSuccess: () => invalidateEntry(queryClient, id),
+    onSuccess: () => {
+      invalidateEntry(queryClient, id);
+      invalidateMovieHome(queryClient);
+    },
     onError: () => alert('Could not save', 'Check your connection and try again.'),
   });
 
@@ -107,14 +108,19 @@ export function MoviePageScreen() {
   // `['movies']` keys, the diary among them.
   const removal = useMutation({
     mutationFn: () => removeMovieEntry(supabase, id),
-    onSuccess: () => invalidateEntry(queryClient, id),
+    onSuccess: () => {
+      invalidateEntry(queryClient, id);
+      invalidateMovieHome(queryClient);
+    },
     onError: () => alert('Could not remove it', 'Check your connection and try again.'),
   });
 
   const openLog = (rank = false) =>
     router.push({ pathname: '/log/[id]', params: rank ? { id, rank: '1' } : { id } });
 
-  const data = page.data ?? null;
+  const data = page.data?.page ?? null;
+  const entry = page.data?.entry ?? null;
+  const ranking = page.data?.ranking ?? null;
 
   const header = (
     <Stack.Screen
@@ -138,7 +144,7 @@ export function MoviePageScreen() {
                         },
                       ]
                     : []),
-                  ...(data?.entry
+                  ...(entry
                     ? [
                         {
                           label: 'Remove from library',
@@ -195,26 +201,31 @@ export function MoviePageScreen() {
   }
 
   const rows = diary.data ?? [];
-  const line = diaryLine(data.entry, rows, data.ranking !== null);
-  const theatrical = theatricalLine(
-    release.data?.placement ?? null,
-    release.data?.placementOn ?? null,
-    data.entry?.plannedOn ?? null,
-    today,
+  const release = data.releaseState;
+  const line = diaryLine(entry, rows, ranking !== null);
+  const theatrical = theatricalLine(release.placement, release.placementOn, entry?.plannedOn ?? null, today);
+  const onList = entry?.status === 'backlog';
+  const inTheaters = release.placement === 'in_theaters';
+  // The RPC's offers are already in JustWatch's display order; that order is
+  // the priority the chips sort by after "mine" and the offer kind.
+  const chips = whereToWatch(
+    data.availability.map((offer, index) => ({ ...offer, priority: index })),
+    myProviders,
+    inTheaters,
   );
-  const onList = data.entry?.status === 'backlog';
-  const inTheaters = release.data?.placement === 'in_theaters';
-  const chips = whereToWatch(data.offers, myProviders, inTheaters);
   const genres = filmGenreLabels(data.genres);
-  const tmdb = tmdbScoreText(data.tmdbScore);
-  const streaming = streamingRow(release.data?.digitalOn ?? null, today);
+  const tmdb = tmdbScoreText(data.scores['tmdb']?.score);
+  const rottenTomatoes = rottenTomatoesText(data.scores['rotten_tomatoes']?.score);
+  const streaming = streamingRow(release.digitalOn, today);
+  // TMDB's cast as the catalog stores it; a member with no name is not drawn.
+  const cast = data.topCast.filter((member) => typeof member.name === 'string' && member.name.trim() !== '');
 
   const askGoing = () =>
     setGoing({
       mediaItemId: id,
       title: data.title,
-      plannedOn: data.entry?.plannedOn ?? null,
-      suggested: release.data?.placement === 'opening' ? (release.data.placementOn ?? null) : null,
+      plannedOn: entry?.plannedOn ?? null,
+      suggested: release.placement === 'opening' ? release.placementOn : null,
     });
 
   const toggleWatchlist = () => {
@@ -318,10 +329,10 @@ export function MoviePageScreen() {
           <View style={{ gap: 4 }}>
             <View style={[styles.row, { gap: 16 }]}>
               <Score value={tmdb} source="TMDB" />
-              {data.rottenTomatoes !== null ? <Score value={`${data.rottenTomatoes}%`} source="Tomatometer" /> : null}
+              {rottenTomatoes !== null ? <Score value={rottenTomatoes} source="Tomatometer" /> : null}
             </View>
             <Text size={12} color="text/secondary">
-              {data.rottenTomatoes !== null ? 'Scores from TMDB and Wikidata' : 'Score from TMDB'}
+              {rottenTomatoes !== null ? 'Scores from TMDB and Wikidata' : 'Score from TMDB'}
             </Text>
           </View>
         ) : null}
@@ -346,12 +357,12 @@ export function MoviePageScreen() {
           </Text>
         </View>
 
-        {data.topCast.length > 0 ? (
+        {cast.length > 0 ? (
           <View style={{ gap: theme.space[2] }}>
             <BlockTitle title="Cast" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-              {data.topCast.map((member) => (
-                <CastColumn key={member.name} member={member} />
+              {cast.map((member, index) => (
+                <CastColumn key={`${index}:${member.name}`} member={member} />
               ))}
             </ScrollView>
           </View>
@@ -413,12 +424,18 @@ function Score({ value, source }: { value: string; source: string }) {
   );
 }
 
-function CastColumn({ member }: { member: CastMember }) {
+/** Rotten Tomatoes as the page prints it, `94%`; null when the catalog has none. */
+function rottenTomatoesText(score: number | null | undefined): string | null {
+  if (score === null || score === undefined || !Number.isFinite(score)) return null;
+  return `${Math.round(score)}%`;
+}
+
+function CastColumn({ member }: { member: MovieCastMember }) {
   const theme = useTheme();
   return (
     <View style={{ width: 64, alignItems: 'center', gap: 6 }}>
       <View style={[styles.face, { backgroundColor: theme.colors['bg/placeholder'] }]}>
-        {member.profilePath ? (
+        {member.profilePath?.startsWith('/') ? (
           <Image
             source={{ uri: `${TMDB_PROFILE_BASE}${member.profilePath}` }}
             style={styles.faceImage}
@@ -434,7 +451,7 @@ function CastColumn({ member }: { member: CastMember }) {
   );
 }
 
-function Details({ data, streaming }: { data: MoviePageData; streaming: { label: string; value: string } | null }) {
+function Details({ data, streaming }: { data: MoviePage; streaming: { label: string; value: string } | null }) {
   const theme = useTheme();
   const rows = useMemo(
     () =>

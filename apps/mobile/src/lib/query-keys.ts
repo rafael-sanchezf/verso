@@ -112,10 +112,23 @@ export const queryKeys = {
   movieCalendar: () => ['movies', 'calendar'] as const,
   /** The movie page's read for one film in one region. */
   moviePage: (id: string, region: string) => ['movies', 'page', id, region] as const,
-  /** `movieReleaseState` for one film in one region: the theatrical line. */
-  movieRelease: (id: string, region: string) => ['movies', 'release', id, region] as const,
   /** `diaryFor(client, id)`: one film's diary, newest first. */
   diaryFor: (id: string) => ['movies', 'diary', id] as const,
   /** `movieFacts(client, id)`: the log sheet's and the log flow's few facts about a film. */
   movieFacts: (id: string) => ['movies', 'facts', id] as const,
+  /**
+   * `movieHomeRows(client)`: movies Home's rows by reason (movies-build.md,
+   * PR 7). Not under `['movies']`: it is the most expensive read the app
+   * makes, and the deck writes entries one film at a time, so an entry write
+   * only marks it stale (`invalidateEntry`) and Home refetches it on its next
+   * focus; the movie writes that change the watchlist refetch it at once
+   * (`invalidateMovieHome`). The row page reads it from the same key.
+   */
+  movieHomeRows: () => ['home-rows', 'movie'] as const,
+  /**
+   * `watchProviders(client, region)`: the streaming services' names for a
+   * region, which the posters' service pill reads by id. Catalog data, so no
+   * entry write clears it.
+   */
+  watchProviders: (region: string) => ['watch-providers', region] as const,
 } as const;

@@ -21,7 +21,7 @@
 import { coverCandidates, movieWatchlist, todayLocal, type MovieWatchlistRow } from '@verso/api';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
@@ -45,7 +45,22 @@ import {
 import { useColumns } from './use-columns';
 import { cardWidth, columnsAfterPinch, gapFor } from './zoom';
 
-export function WatchlistSegment() {
+/**
+ * A visit's one-shot asks from the route (watchlist-screen.tsx): `start` with
+ * the genre and the scope asked for, `end` when the visit is over, which undoes
+ * what the last `start` set and leaves anything the person set themselves.
+ */
+export type WatchlistVisit =
+  | { kind: 'start'; genre: string | null; everywhere: boolean }
+  | { kind: 'end' };
+
+export function WatchlistSegment({
+  visit = null,
+  onVisitApplied,
+}: {
+  visit?: WatchlistVisit | null;
+  onVisitApplied?: () => void;
+} = {}) {
   const theme = useTheme();
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
@@ -57,6 +72,29 @@ export function WatchlistSegment() {
   const [filters, setFilters] = useState<WatchlistFilters>(NO_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [columns, setColumns] = useColumns();
+
+  // The visit's one-shot asks: what the last one set, so `end` undoes only that.
+  const oneShot = useRef<{ genre: string | null; everywhere: boolean }>({ genre: null, everywhere: false });
+  useEffect(() => {
+    if (visit === null) return;
+    const last = oneShot.current;
+    if (last.genre !== null) {
+      const genre = last.genre;
+      setFilters((current) => ({ ...current, genres: current.genres.filter((g) => g !== genre) }));
+    }
+    if (last.everywhere) setScope(null);
+    if (visit.kind === 'start') {
+      if (visit.genre !== null) {
+        const genre = visit.genre;
+        setFilters((current) => ({ ...NO_FILTERS, sort: current.sort, genres: [genre] }));
+      }
+      if (visit.everywhere) setScope(false);
+      oneShot.current = { genre: visit.genre, everywhere: visit.everywhere };
+    } else {
+      oneShot.current = { genre: null, everywhere: false };
+    }
+    onVisitApplied?.();
+  }, [visit, onVisitApplied]);
 
   const today = todayLocal();
   const rpcFilters = { onMyServices, maxMinutes: filters.maxMinutes, genres: filters.genres };

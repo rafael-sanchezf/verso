@@ -13,6 +13,8 @@ import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+// Bold Italic for one use: the variable part of a movies Home row title (decision 28).
+import { Inter_700Bold_Italic } from '@expo-google-fonts/inter/700Bold_Italic';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider } from 'expo-router';
@@ -101,6 +103,7 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Inter_700Bold_Italic,
   });
 
   // A missing font is not worth a blank app: the system face is wrong but
@@ -158,6 +161,11 @@ export default function RootLayout() {
               {/* The movie page, pushed over the tabs like the game page (movies-build.md, PR 2). */}
               <Stack.Screen
                 name="movie/[id]/index"
+                options={{ headerShown: true, headerTransparent: false, title: '' }}
+              />
+              {/* A movies Home row's "See all": the row's films as a grid (movies-build.md, PR 7). */}
+              <Stack.Screen
+                name="home/row"
                 options={{ headerShown: true, headerTransparent: false, title: '' }}
               />
               <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />

@@ -416,12 +416,19 @@ export async function moviePage(
     genres: data.genres ?? [],
     directors: data.directors ?? [],
     writers: data.writers ?? [],
-    topCast: ((data.top_cast ?? []) as unknown as RawCastMember[]).map((member) => ({
-      tmdbPersonId: member.tmdb_person_id ?? null,
-      name: member.name,
-      character: member.character ?? null,
-      profilePath: member.profile_path ?? null,
-    })),
+    // jsonb with no shape the database enforces: anything but an array of
+    // members with a name is left out rather than thrown on.
+    topCast: (Array.isArray(data.top_cast) ? (data.top_cast as unknown as Partial<RawCastMember>[]) : [])
+      .filter(
+        (member): member is RawCastMember =>
+          typeof member === 'object' && member !== null && typeof member.name === 'string' && member.name.trim() !== '',
+      )
+      .map((member) => ({
+        tmdbPersonId: member.tmdb_person_id ?? null,
+        name: member.name,
+        character: member.character ?? null,
+        profilePath: member.profile_path ?? null,
+      })),
     studio: data.studio ?? null,
     collectionTmdbId: data.collection_tmdb_id ?? null,
     collectionName: data.collection_name ?? null,

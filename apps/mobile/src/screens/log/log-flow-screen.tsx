@@ -32,7 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { invalidateRanking } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
-import { movieFacts } from '@/screens/movie/fallback';
+import { movieFacts } from '@/screens/movie/reads';
 import { logTenRankedIfReached } from '@/screens/onboarding/ten-ranked';
 import { ErrorLine } from '@/ui';
 import { useTheme } from '@/ui/theme';

@@ -21,11 +21,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
 import { filmFactsLine } from '@/lib/film';
-import { invalidateEntry } from '@/lib/invalidate';
+import { invalidateEntry, invalidateMovieHome } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { watchOrdinal } from '@/screens/movie/diary-line';
-import type { MovieFacts } from '@/screens/movie/fallback';
+import type { MovieFacts } from '@/screens/movie/reads';
 import { Button, Cover, DateField, fontFamilyFor, Text, useTheme } from '@/ui';
 
 export function MovieLogStep({
@@ -54,6 +54,7 @@ export function MovieLogStep({
       logWatch(supabase, film.mediaItemId, { watchedOn: day, note: note.trim() === '' ? null : note.trim() }),
     onSuccess: (result, rank) => {
       invalidateEntry(queryClient, film.mediaItemId);
+      invalidateMovieHome(queryClient);
       onSaved(rank && !result.alreadyRanked);
     },
     onError: () => alert("That didn't save", 'Check your connection and try again.'),

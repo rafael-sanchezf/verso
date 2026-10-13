@@ -32,7 +32,7 @@ import { useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { invalidateEntry } from '@/lib/invalidate';
+import { invalidateEntry, invalidateMovieHome } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { Cover, ErrorLine, Icon, Text } from '@/ui';
@@ -62,6 +62,8 @@ export function AddSheet({ id }: { id: string }) {
     },
     onSuccess: (_result, choice) => {
       invalidateEntry(queryClient, id);
+      // A film onto the watchlist is a row on movies Home.
+      if (choice === 'backlog') invalidateMovieHome(queryClient);
       router.back();
       // A film's "I watched this" is its log sheet (movies-build.md, PR 2, item 5).
       if (choice === 'watched') {

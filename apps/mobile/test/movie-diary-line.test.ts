@@ -59,6 +59,23 @@ describe('diaryLine', () => {
       watched: true,
     });
   });
+
+  it('reads "Seen before Verso" for a film whose only row is undated, never "Watched null"', () => {
+    expect(diaryLine({ status: 'played' }, [{ watchedOn: null }], false, NOW)).toEqual({
+      text: 'Seen before Verso',
+      action: 'open',
+      rankIt: true,
+      watched: true,
+    });
+    expect(diaryLine({ status: 'played' }, [{ watchedOn: null }, { watchedOn: null }], true, NOW).text).toBe(
+      'Seen 2× before Verso',
+    );
+  });
+
+  it('takes "last" from the newest dated row when undated rows sit beside dated ones', () => {
+    const line = diaryLine({ status: 'played' }, [{ watchedOn: '2026-09-02' }, { watchedOn: null }], true, NOW);
+    expect(line).toEqual({ text: 'Watched 2× · last Sep 2', action: 'open', rankIt: false, watched: true });
+  });
 });
 
 describe('theatricalLine', () => {

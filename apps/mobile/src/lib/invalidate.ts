@@ -78,6 +78,18 @@ export function invalidateEntry(queryClient: QueryClient, id: string): void {
   // A diary row, a planned day or a watchlist write moves a film between all
   // four, and they are cheap reads.
   void queryClient.invalidateQueries({ queryKey: ['movies'], ...REFETCH_EVERYTHING });
+  // Marked stale, not refetched: movies Home refetches it on its next focus.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.movieHomeRows(), refetchType: 'none' });
+}
+
+/**
+ * After a movie write that changes the watchlist (want to watch, a log, a
+ * removal): movies Home's rows, refetched now if Home is mounted. Every other
+ * entry write leaves them stale for Home's next focus (`invalidateEntry`), so
+ * a deck that writes thirty films does not re-read Home thirty times.
+ */
+export function invalidateMovieHome(queryClient: QueryClient): void {
+  void queryClient.invalidateQueries({ queryKey: queryKeys.movieHomeRows(), refetchType: 'active' });
 }
 
 /**
@@ -102,6 +114,8 @@ export function invalidateAllEntries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: ['tracked'], ...REFETCH_EVERYTHING });
   invalidateOnboarding(queryClient);
   void queryClient.invalidateQueries({ queryKey: ['movies'], ...REFETCH_EVERYTHING });
+  // Marked stale, not refetched: movies Home refetches it on its next focus.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.movieHomeRows(), refetchType: 'none' });
 }
 
 /**

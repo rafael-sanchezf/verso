@@ -1,30 +1,32 @@
 /**
- * Home: what you are playing, what is next, what is coming.
+ * Home. For games: what you are playing, what is next, what is coming. For
+ * movies: the rows by reason (decision 28, `movies-home.tsx`).
  *
- * Three blocks and nothing else (rule 3), three items to a block, and every one
- * of them one tap from the game page. The screen owns the medium switch, the
+ * Games Home is three blocks and nothing else (rule 3), three items to a
+ * block, and every one of them one tap from the game page. The screen owns the medium switch, the
  * pull to refresh and the navigation; each block owns its own loading, error
  * and empty states, because two lists can be fine while the third is not and
  * the screen should show what it has.
  *
  * Above the blocks, under the switcher, the ask button opens the question
  * sheet (`/ask`, movies-build.md PR 3) for games and movies alike; on movies
- * it sits over the placeholder until the rows by reason land.
+ * the rows by reason sit under it (PR 7).
  */
 
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { askQuestion } from '@/screens/ask/trace';
 import { searchHref } from '@/screens/search/intent';
 import { useActiveMedium } from '@/state/medium';
-import { EmptyState, useTheme } from '@/ui';
+import { useTheme } from '@/ui';
 
 import { AskButton } from './ask-button';
 import { ComingUpBlock } from './coming-up-block';
 import { MediaSwitcher } from './media-switcher';
+import { MoviesHome } from './movies-home';
 import { PlayingBlock } from './playing-block';
 import { homeState } from './rules';
 import { UpNextBlock } from './up-next-block';
@@ -112,40 +114,12 @@ export function HomeScreen() {
           <ComingUpBlock query={data.comingUp} onOpenGame={openGame} />
         </ScrollView>
       ) : (
-        <MoviesHomePlaceholder onOpenWatchlist={goToBacklog} />
+        <MoviesHome />
       )}
     </SafeAreaView>
   );
 }
 
-/**
- * Movies Home until its rows land.
- *
- * Decision 28's rows by reason come from `movie_home_rows` (PR 1's read in
- * the movies build); the ask button above already works (PR 3). Until the
- * rows land Home says so plainly and points at the Watchlist, which is real. Bare and centred, as an `EmptyState` that stands
- * in for the whole content area (shell.md).
- */
-function MoviesHomePlaceholder({ onOpenWatchlist }: { onOpenWatchlist: () => void }) {
-  return (
-    <View style={styles.placeholder}>
-      <EmptyState
-        icon="film"
-        title="Our recommendations arrive here soon"
-        body="Your watchlist and calendar are ready now."
-        action={{ label: 'Open Watchlist', onPress: onOpenWatchlist }}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  placeholder: {
-    flex: 1,
-    justifyContent: 'center',
-    // The list area's own centre rather than the screen's, so the block does
-    // not sit under the tab bar (shell.md).
-    paddingBottom: 120,
-  },
 });
