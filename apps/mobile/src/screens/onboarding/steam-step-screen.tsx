@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import {
@@ -40,6 +41,7 @@ import { TitleBlock } from './pieces';
 type Phase = 'offer' | 'importing' | 'privacy' | 'candidates';
 
 export function SteamStepScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -82,7 +84,7 @@ export function SteamStepScreen() {
     return (
       <View style={[styles.fill, { paddingTop: insets.top + theme.space[2] }]}>
         <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[2] }}>
-          <TitleBlock title="From Steam" />
+          <TitleBlock title={t('onboarding.steam.fromSteam')} />
         </View>
         <SteamCandidatesScreen onDone={toTabs} />
       </View>
@@ -108,17 +110,15 @@ export function SteamStepScreen() {
           style={[styles.mark, { backgroundColor: theme.colors['bg/placeholder'], borderRadius: theme.radius.md }]}
         />
         <Text size={28} weight={700} align="center" accessibilityRole="header">
-          Play on PC?
+          {t('onboarding.steam.title')}
         </Text>
         <Text size={15} color="text/secondary" align="center" layout={styles.body}>
-          Link Steam and we read your game list and hours played, so ranking is one tap per game.
+          {t('onboarding.steam.body')}
         </Text>
 
         <View style={{ gap: theme.space[2], alignSelf: 'stretch' }}>
-          <Line icon="list">
-            We read: your games and hours. Steam needs Game details set to Public; we show you how.
-          </Line>
-          <Line icon="shield">We never read friends, messages or purchases. Unlink any time in Settings.</Line>
+          <Line icon="list">{t('onboarding.steam.weRead')}</Line>
+          <Line icon="shield">{t('onboarding.steam.weNeverRead')}</Line>
         </View>
 
         <View style={{ gap: theme.space[3], alignSelf: 'stretch', paddingTop: theme.space[2] }}>
@@ -133,13 +133,13 @@ export function SteamStepScreen() {
             <View style={[styles.importing, { gap: theme.space[2] }]} accessibilityLiveRegion="polite">
               <ActivityIndicator color={theme.colors['text/secondary']} />
               <Text size={15} color="text/secondary">
-                Reading your Steam library…
+                {t('onboarding.steam.reading')}
               </Text>
             </View>
           ) : importer.line ? (
             <ErrorLine message={importer.line} onRetry={importer.run} />
           ) : null}
-          <Button label="Not now" variant="secondary" onPress={toTabs} />
+          <Button label={t('onboarding.steam.notNow')} variant="secondary" onPress={toTabs} />
         </View>
       </View>
     </ScrollView>

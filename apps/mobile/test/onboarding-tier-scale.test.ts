@@ -15,6 +15,7 @@ import {
   usableWidth,
   xAtPosition,
 } from '../src/screens/onboarding/tier-scale';
+import { translate } from '../src/lib/i18n/dictionary';
 
 /** The frame's track: about 220 wide. */
 const WIDTH = 220;
@@ -27,7 +28,7 @@ describe('the stops', () => {
   });
 
   it('names each stop with the axis words and one icon each', () => {
-    expect(TIER_STOPS.map((tier) => TIER_WORDS[tier])).toEqual(["Didn't like", 'Fine', 'Liked', 'Loved']);
+    expect(TIER_STOPS.map((tier) => translate('en', TIER_WORDS[tier]))).toEqual(["Didn't like", 'Fine', 'Liked', 'Loved']);
     expect(TIER_STOPS.map((tier) => TIER_THUMB_ICONS[tier])).toEqual(['thumbs-down', 'meh', 'thumbs-up', 'heart']);
   });
 
@@ -45,9 +46,9 @@ describe('the stops', () => {
   });
 
   it('says "Slide" while untouched and the tier word after', () => {
-    expect(sliderWord(null)).toBe('Slide');
-    expect(sliderWord('disliked')).toBe("Didn't like");
-    expect(sliderWord('loved')).toBe('Loved');
+    expect(translate('en', sliderWord(null))).toBe('Slide');
+    expect(translate('en', sliderWord('disliked'))).toBe("Didn't like");
+    expect(translate('en', sliderWord('loved'))).toBe('Loved');
   });
 });
 

@@ -30,6 +30,13 @@ import {
   type ReviewToken,
 } from '../src/screens/onboarding/session/review-model';
 import type { TierIds } from '../src/screens/onboarding/session/batch-start';
+import { translate } from '../src/lib/i18n/dictionary';
+
+/** The meta line as the screen draws it, in English. */
+function meta(state: ReviewState): { text: string; emphasis: boolean } {
+  const line = metaLine(state);
+  return { text: line.parts.map((part) => translate('en', part.key, part.vars)).join(' · '), emphasis: line.emphasis };
+}
 
 /** A finished session as `applyBatch` returns it: the final orders, and the new games with their marks. */
 function result(order: Partial<Record<Tier, string[]>>, fresh: Record<string, PlacedBy>): BatchResult {
@@ -140,7 +147,7 @@ describe('a drag inside a tier', () => {
     expect(next.order.liked).toEqual(['a', 'b', 'c', 'd', ...range('h', 8), 'N', 'e', 'f', 'M']);
     expect(next.placedBy).toEqual({ N: 'user', M: 'prior' });
     expect(drawn(next).liked).toEqual(['a', 'b', 'c', 'd', '…8', 'N*', 'e', 'f', 'M*≈']);
-    expect(metaLine(next).text).toBe('2 new · 1 placed by us · drag to fix');
+    expect(meta(next).text).toBe('2 new · 1 placed by us · drag to fix');
   });
 
   it('refuses a drop that carries a ranked row, reorders the ranked rows, or names another tier', () => {
@@ -170,21 +177,21 @@ describe('moving a row without a drag (VoiceOver)', () => {
 
 describe('the meta line', () => {
   it('counts the new and the provisional rows', () => {
-    expect(metaLine(review({ liked: ['a', 'N', 'M'] }, { N: 'prior', M: 'user' }))).toEqual({
+    expect(meta(review({ liked: ['a', 'N', 'M'] }, { N: 'prior', M: 'user' }))).toEqual({
       text: '2 new · 1 placed by us · drag to fix',
       emphasis: false,
     });
-    expect(metaLine(review({ liked: ['a', 'N'] }, { N: 'user' })).text).toBe('1 new · drag to fix');
+    expect(meta(review({ liked: ['a', 'N'] }, { N: 'user' })).text).toBe('1 new · drag to fix');
   });
 
   it('says "Ten ranked." when this session takes the count to ten, and only then', () => {
     const seven = range('e', 7);
     const reaching = review({ loved: [...seven, 'x', 'y', 'z'] }, { x: 'user', y: 'user', z: 'prior' });
     expect(reviewCounts(reaching)).toEqual({ fresh: 3, provisional: 1, rankedAfter: 10 });
-    expect(metaLine(reaching)).toEqual({ text: 'Ten ranked.', emphasis: true });
+    expect(meta(reaching)).toEqual({ text: 'Ten ranked.', emphasis: true });
 
     const past = review({ loved: [...range('e', 10), 'x'] }, { x: 'user' });
-    expect(metaLine(past).emphasis).toBe(false);
+    expect(meta(past).emphasis).toBe(false);
     expect(crossesTen(9, 10)).toBe(true);
     expect(crossesTen(10, 12)).toBe(false);
     expect(crossesTen(3, 9)).toBe(false);

@@ -37,6 +37,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -84,6 +85,7 @@ function combinePages(results: UseQueryResult<DeckCandidateRow[]>[]): DeckPages 
 }
 
 export function DeckScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -170,19 +172,22 @@ export function DeckScreen() {
   const loadingFirst = profile.data === undefined || deck.pages[0] === undefined;
   const loadingMore = !loadingFirst && deck.pending;
   const failure = profile.isError ? profile : deck.failed;
+  const caption = progressLabel(count);
+  const metaLine = deckMetaLine(platforms);
+  const rankLabel = rankButtonLabel(marks.size);
 
   return (
     <View style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'], paddingTop: insets.top + theme.space[2] }]}>
       <ProgressHeader
         onClose={onClose}
-        closeLabel="Done for now"
+        closeLabel={t('onboarding.deck.doneForNow')}
         fraction={progressFraction(count)}
-        caption={progressLabel(count)}
+        caption={t(caption.key, caption.vars)}
       />
 
       <View style={[styles.meta, { paddingHorizontal: theme.space[4], paddingTop: theme.space[2], gap: theme.space[3] }]}>
         <Text size={13} color="text/secondary" numberOfLines={2} layout={styles.fill}>
-          {deckMetaLine(platforms)}
+          {t(metaLine.key, metaLine.vars)}
         </Text>
         {returning ? <AddPlatform onPress={() => router.push({ pathname: '/onboarding/platforms', params: { edit: '1' } })} /> : null}
       </View>
@@ -192,7 +197,7 @@ export function DeckScreen() {
       </View>
 
       {loadingFirst && !failure ? (
-        <View accessibilityLabel="Loading" style={{ paddingHorizontal: theme.space[4] }}>
+        <View accessibilityLabel={t('onboarding.deck.loading')} style={{ paddingHorizontal: theme.space[4] }}>
           <GameRowSkeletons count={6} />
         </View>
       ) : (
@@ -212,7 +217,7 @@ export function DeckScreen() {
           ListEmptyComponent={
             failure ? null : (
               <Text size={15} color="text/secondary" align="center" layout={{ paddingVertical: theme.space[6] }}>
-                That's every popular game on your platforms.
+                {t('onboarding.deck.empty')}
               </Text>
             )
           }
@@ -220,7 +225,7 @@ export function DeckScreen() {
             <View style={[styles.centre, { paddingTop: theme.space[5], minHeight: 64 }]}>
               {failure ? (
                 <ErrorLine
-                  message="Couldn't load these games."
+                  message={t('onboarding.deck.couldNotLoad')}
                   onRetry={() => void failure.refetch()}
                   style={styles.stretch}
                 />
@@ -228,7 +233,7 @@ export function DeckScreen() {
                 <ActivityIndicator color={theme.colors['text/secondary']} />
               ) : hasMorePages(deck.pages) ? (
                 <TextButton
-                  label="Show 10 more"
+                  label={t('onboarding.deck.showMore', { count: DECK_PAGE_SIZE })}
                   weight={400}
                   color="text/secondary"
                   onPress={() => setPageCount((current) => current + 1)}
@@ -241,9 +246,9 @@ export function DeckScreen() {
 
       <BottomActions>
         {rank.isError ? (
-          <ErrorLine message="Couldn't save some of these. Check your connection and try again." />
+          <ErrorLine message={t('onboarding.deck.couldNotSave')} />
         ) : null}
-        <Button label={rankButtonLabel(marks.size)} disabled={marks.size === 0 || rank.isPending} onPress={rankMarked} />
+        <Button label={t(rankLabel.key, rankLabel.vars)} disabled={marks.size === 0 || rank.isPending} onPress={rankMarked} />
       </BottomActions>
     </View>
   );
@@ -293,15 +298,18 @@ const DeckRow = memo(function DeckRow({
 
 /** "Add a platform ›" at the meta line's end, for a returning user. */
 function AddPlatform({ onPress }: { onPress: () => void }) {
+  const t = useT();
+  const label = t('onboarding.deck.addPlatform');
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Add a platform"
+      accessibilityLabel={label}
       onPress={onPress}
       hitSlop={14}
       style={({ pressed }) => [styles.addPlatform, pressed && styles.pressed]}>
       <Text size={13} weight={500}>
-        Add a platform
+        {label}
       </Text>
       <Icon name="chevron-right" size={13} color="text/primary" />
     </Pressable>

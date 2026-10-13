@@ -15,6 +15,13 @@ import {
   stopPass,
   withPassTiers,
 } from '../src/screens/onboarding/session/tier-pass';
+import { translate } from '../src/lib/i18n/dictionary';
+
+/** The pass's line as the header draws it, in English. */
+const label = (pass: Parameters<typeof passLabel>[0]) => {
+  const line = passLabel(pass);
+  return translate('en', line.key, line.vars);
+};
 
 const items = [
   { mediaItemId: 'a', tier: null },
@@ -28,7 +35,7 @@ describe('the tier pass', () => {
     const pass = startTierPass(items);
     expect(pass.ids).toEqual(['a', 'c', 'd']);
     expect(passCurrent(pass)).toBe('a');
-    expect(passLabel(pass)).toBe('1 of 3');
+    expect(label(pass)).toBe('1 of 3');
     expect(passFill(pass)).toBe(0);
   });
 
@@ -43,11 +50,11 @@ describe('the tier pass', () => {
     let pass = startTierPass(items);
     pass = assignPassTier(pass, 'loved');
     expect(passCurrent(pass)).toBe('c');
-    expect(passLabel(pass)).toBe('2 of 3');
+    expect(label(pass)).toBe('2 of 3');
     pass = assignPassTier(pass, 'fine');
     pass = assignPassTier(pass, 'disliked');
     expect(passDone(pass)).toBe(true);
-    expect(passLabel(pass)).toBe('3 of 3');
+    expect(label(pass)).toBe('3 of 3');
     expect(assignPassTier(pass, 'loved')).toBe(pass);
 
     expect(withPassTiers(items, pass).map((i) => [i.mediaItemId, i.tier])).toEqual([

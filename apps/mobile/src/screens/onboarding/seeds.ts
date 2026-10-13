@@ -8,11 +8,17 @@
 
 import type { OnboardingGameRow } from '@verso/api';
 
+import type { TranslationKey } from './sentence';
+
 export const SEED_COUNT = 3;
 export const SEEDS_TO_RANK = 2;
 
-/** What each empty slot says, by position. The frame draws the third. */
-export const EMPTY_SLOT_LABELS = ['Add a first', 'Add a second', 'Add a third'] as const;
+/** What each empty slot says, by position, as dictionary keys. The frame draws the third. */
+export const EMPTY_SLOT_LABELS: readonly TranslationKey[] = [
+  'onboarding.seeds.slots.first',
+  'onboarding.seeds.slots.second',
+  'onboarding.seeds.slots.third',
+];
 
 /** Add a seed: ignored when the game is already there or the three are full. */
 export function addSeed(seeds: readonly OnboardingGameRow[], row: OnboardingGameRow): OnboardingGameRow[] {
@@ -35,7 +41,7 @@ export function canAddSeed(seeds: readonly OnboardingGameRow[], mediaItemId: str
   return seeds.length < SEED_COUNT && !seeds.some((seed) => seed.mediaItemId === mediaItemId);
 }
 
-/** The labels of the empty slots under the filled ones. */
-export function emptySlots(seeds: readonly OnboardingGameRow[]): string[] {
+/** The labels (dictionary keys) of the empty slots under the filled ones. */
+export function emptySlots(seeds: readonly OnboardingGameRow[]): TranslationKey[] {
   return EMPTY_SLOT_LABELS.slice(Math.min(seeds.length, SEED_COUNT));
 }

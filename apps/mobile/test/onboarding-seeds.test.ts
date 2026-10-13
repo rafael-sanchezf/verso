@@ -8,6 +8,10 @@ import {
   emptySlots,
   removeSeed,
 } from '../src/screens/onboarding/seeds';
+import { translate } from '../src/lib/i18n/dictionary';
+
+/** The empty slots' labels as the screen draws them, in English. */
+const slots = (seeds: OnboardingGameRow[]) => emptySlots(seeds).map((key) => translate('en', key));
 
 function game(id: string): OnboardingGameRow {
   return {
@@ -49,8 +53,8 @@ describe('the seeds', () => {
   });
 
   it('label the empty slots after the filled ones', () => {
-    expect(emptySlots([])).toEqual(['Add a first', 'Add a second', 'Add a third']);
-    expect(emptySlots([game('a'), game('b')])).toEqual(['Add a third']);
-    expect(emptySlots([game('a'), game('b'), game('c')])).toEqual([]);
+    expect(slots([])).toEqual(['Add a first', 'Add a second', 'Add a third']);
+    expect(slots([game('a'), game('b')])).toEqual(['Add a third']);
+    expect(slots([game('a'), game('b'), game('c')])).toEqual([]);
   });
 });

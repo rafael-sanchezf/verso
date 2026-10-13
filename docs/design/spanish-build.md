@@ -67,6 +67,11 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | Switch to (a medium) | Cambiar a | Verso, wave 2 |
 | Clear (a field's value) | Borrar | Apple es-419, wave 2 |
 | Any (a filter's no-choice row) | Cualquiera | Verso, wave 2 |
+| Not now / Coming soon | Ahora no / Próximamente | Apple; wave 3 |
+| Link / Unlink (an account) | Vincular / Desvincular | Apple es-419; wave 3 (Link Steam) |
+| TV / Books (the held media) | TV / Libros | Verso; wave 3, the media questionnaire |
+| place (a game in the list) / placed by us | ubicar / ubicado por nosotros | Verso; wave 3, the session and the review |
+| Slide (the untouched deck slider) | Desliza | Verso; wave 3 |
 | Steam / Letterboxd / Game Pass / PlayStation / Xbox / Switch | unchanged | Names |
 
 ## The rules for every wave

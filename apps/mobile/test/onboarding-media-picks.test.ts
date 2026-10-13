@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { translate } from '../src/lib/i18n/dictionary';
 import {
   MEDIA_TILES,
   afterMedia,
@@ -15,7 +16,7 @@ const none = new Set<LiveMedium>();
 
 describe('the tiles', () => {
   it('draws Games and Movies live, TV and Books held, in that order', () => {
-    expect(MEDIA_TILES.map((tile) => [tile.name, tile.live])).toEqual([
+    expect(MEDIA_TILES.map((tile) => [translate('en', tile.name), tile.live])).toEqual([
       ['Games', true],
       ['Movies', true],
       ['TV', false],

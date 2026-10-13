@@ -36,6 +36,8 @@ import {
   type Tier,
 } from '@verso/core';
 
+import type { Sentence } from '../sentence';
+
 import type { TierIds } from './batch-start';
 
 /** Ranked rows drawn either side of each new row (the spec's "up to two"). */
@@ -316,14 +318,29 @@ export function crossesTen(rankedBefore: number, rankedAfter: number): boolean {
  * The line under "Look right?": "{new} new · {provisional} placed by us · drag
  * to fix", the middle part dropped when nothing is provisional, and "Ten
  * ranked." in `text/primary` instead when this session reaches ten.
+ *
+ * The parts are sentences the screen says and joins with ` · `; each count
+ * picks its one-or-many key, which English spells the same and Spanish does not.
  */
-export function metaLine(state: ReviewState): { text: string; emphasis: boolean } {
+export function metaLine(state: ReviewState): { parts: Sentence[]; emphasis: boolean } {
   const counts = reviewCounts(state);
-  if (crossesTen(state.rankedBefore, counts.rankedAfter)) return { text: 'Ten ranked.', emphasis: true };
-  const parts = [`${counts.fresh} new`];
-  if (counts.provisional > 0) parts.push(`${counts.provisional} placed by us`);
-  parts.push('drag to fix');
-  return { text: parts.join(' · '), emphasis: false };
+  if (crossesTen(state.rankedBefore, counts.rankedAfter)) {
+    return { parts: [{ key: 'onboarding.review.tenRanked' }], emphasis: true };
+  }
+  const parts: Sentence[] = [
+    {
+      key: counts.fresh === 1 ? 'onboarding.review.freshOne' : 'onboarding.review.freshOther',
+      vars: { count: counts.fresh },
+    },
+  ];
+  if (counts.provisional > 0) {
+    parts.push({
+      key: counts.provisional === 1 ? 'onboarding.review.provisionalOne' : 'onboarding.review.provisionalOther',
+      vars: { count: counts.provisional },
+    });
+  }
+  parts.push({ key: 'onboarding.review.dragToFix' });
+  return { parts, emphasis: false };
 }
 
 /**

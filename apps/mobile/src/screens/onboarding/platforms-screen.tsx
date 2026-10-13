@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { invalidateProfile } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +34,7 @@ import { BottomActions, TitleBlock } from './pieces';
 import { isFamilyPicked, orderedPicks, picksFromPlatforms, toggleFamily, togglePick } from './platform-picks';
 
 export function PlatformsScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -79,14 +81,14 @@ export function PlatformsScreen() {
           gap: 18,
         }}>
         <TitleBlock
-          kicker={editing ? undefined : "Let's set up your ranking"}
-          title={editing ? 'Add a platform' : 'Where do you play?'}
-          subtitle="Now or before. Tap every one."
+          kicker={editing ? undefined : t('onboarding.platforms.kicker')}
+          title={editing ? t('onboarding.platforms.editTitle') : t('onboarding.platforms.title')}
+          subtitle={t('onboarding.platforms.subtitle')}
         />
 
         {loadingProfile ? (
           profile.isError ? (
-            <ErrorLine message="Couldn't load your platforms." onRetry={() => void profile.refetch()} />
+            <ErrorLine message={t('onboarding.platforms.couldNotLoad')} onRetry={() => void profile.refetch()} />
           ) : (
             <View style={{ gap: 10 }}>
               {PLATFORM_FAMILIES.map((family) => (
@@ -111,19 +113,19 @@ export function PlatformsScreen() {
 
       <BottomActions>
         {save.isError ? (
-          <ErrorLine message="Couldn't save your platforms. Check your connection and try again." />
+          <ErrorLine message={t('onboarding.platforms.couldNotSave')} />
         ) : null}
         <Button
-          label="Continue"
+          label={t('common.continue')}
           disabled={picks.size === 0 || save.isPending || loadingProfile}
           onPress={() => save.mutate(expandPlatforms(orderedPicks(picks).map((pick) => pick.id)))}
         />
         <View style={styles.centre}>
           {editing ? (
-            <TextButton label="Cancel" weight={400} color="text/secondary" onPress={() => router.back()} />
+            <TextButton label={t('common.cancel')} weight={400} color="text/secondary" onPress={() => router.back()} />
           ) : (
             <TextButton
-              label="Skip for now"
+              label={t('onboarding.platforms.skipForNow')}
               weight={400}
               color="text/secondary"
               disabled={save.isPending}

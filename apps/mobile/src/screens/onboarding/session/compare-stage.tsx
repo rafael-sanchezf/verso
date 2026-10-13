@@ -20,6 +20,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 
 import { filmComparisonWords } from '@/lib/film';
+import { useT } from '@/lib/i18n';
 import { Button, Text, TierChip, useTheme } from '@/ui';
 
 import { CompareCard } from '../../log/compare-card';
@@ -51,6 +52,7 @@ export function CompareStage({
   onAnswer,
   onPlaceRest,
 }: CompareStageProps) {
+  const t = useT();
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const filmWords = medium === 'movie' ? filmComparisonWords(question.insertion) : null;
@@ -74,7 +76,7 @@ export function CompareStage({
           {prompt}
         </Text>
         <View style={[styles.pair, { gap: theme.space[3] }]}>
-          <CompareCard game={game} subtitle={medium === 'movie' ? 'just watched' : NEW_GAME_SUBTITLE} cue={cue} onPress={() => onAnswer('a')} />
+          <CompareCard game={game} subtitle={medium === 'movie' ? t('onboarding.session.justWatched') : t(NEW_GAME_SUBTITLE.key)} cue={cue} onPress={() => onAnswer('a')} />
           <CompareCard game={pivot} subtitle={pivotSubtitle} cue={cue} onPress={() => onAnswer('b')} />
         </View>
       </Animated.View>
@@ -82,7 +84,7 @@ export function CompareStage({
       <View>
         <View style={[styles.hatches, { gap: theme.space[3] }]}>
           <Button
-            label="Too close to call"
+            label={t('onboarding.session.tooClose')}
             variant="secondary"
             size="small"
             weight={500}
@@ -90,7 +92,7 @@ export function CompareStage({
             onPress={() => onAnswer('too_close')}
           />
           <Button
-            label="Can't compare these"
+            label={t('onboarding.session.cantCompare')}
             variant="secondary"
             size="small"
             weight={500}
@@ -99,7 +101,7 @@ export function CompareStage({
           />
         </View>
         <View style={{ paddingTop: theme.space[2] }}>
-          <TextAction label="Place the rest for me" onPress={onPlaceRest} />
+          <TextAction label={t('onboarding.session.placeRest')} onPress={onPlaceRest} />
         </View>
       </View>
     </ScrollView>

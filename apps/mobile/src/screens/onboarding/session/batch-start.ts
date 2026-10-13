@@ -33,6 +33,7 @@ import {
 } from '@verso/core';
 
 import { scoreText } from '../../log/game';
+import type { Sentence } from '../sentence';
 
 /** The four `tier_list` reads, best tier first when iterated with `TIERS`. */
 export type TierRows = Readonly<Record<Tier, readonly TierListRow[]>>;
@@ -147,22 +148,22 @@ export function existingPlace(existing: TierIds, id: string): ExistingPlace | nu
 }
 
 /** The new game's card: every game in a batch was just played. */
-export const NEW_GAME_SUBTITLE = 'just played';
+export const NEW_GAME_SUBTITLE: Sentence = { key: 'onboarding.session.justPlayed' };
 
 /**
  * The opponent's card: "ranked #12 · 8.9" for a game already ranked, "just
  * played" for another game of this batch (it has no rank yet).
  */
-export function pivotSubtitle(question: Pick<BatchQuestion, 'pivot' | 'pivotIsNew'>, existing: TierIds): string {
+export function pivotSubtitle(question: Pick<BatchQuestion, 'pivot' | 'pivotIsNew'>, existing: TierIds): Sentence {
   if (question.pivotIsNew) return NEW_GAME_SUBTITLE;
   const place = existingPlace(existing, question.pivot.id);
   if (place === null) return NEW_GAME_SUBTITLE;
-  return `ranked #${place.rank} · ${scoreText(place.score)}`;
+  return { key: 'onboarding.session.rankedPlace', vars: { rank: place.rank, score: scoreText(place.score) } };
 }
 
 /** The header's line under the bar. The count is an estimate, so it says "About". */
-export function remainingLabel(remaining: number): string {
-  return `About ${remaining} more to place everything`;
+export function remainingLabel(remaining: number): Sentence {
+  return { key: 'onboarding.session.remaining', vars: { count: remaining } };
 }
 
 /**

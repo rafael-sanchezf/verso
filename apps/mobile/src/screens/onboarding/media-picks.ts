@@ -12,6 +12,8 @@
 
 import type { Medium } from '@verso/core';
 
+import type { TranslationKey } from './sentence';
+
 /** The media a user can pick now. */
 export type LiveMedium = Extract<Medium, 'game' | 'movie'>;
 
@@ -20,22 +22,23 @@ export type HeldMedium = 'tv' | 'books';
 
 export interface MediaTile {
   key: LiveMedium | HeldMedium;
-  name: string;
+  /** The tile's word, as a dictionary key; the screen says it. */
+  name: TranslationKey;
   icon: 'gamepad-2' | 'film' | 'tv' | 'book-open';
   live: boolean;
 }
 
 /** The 2 by 2 grid, in reading order. */
 export const MEDIA_TILES: readonly MediaTile[] = [
-  { key: 'game', name: 'Games', icon: 'gamepad-2', live: true },
-  { key: 'movie', name: 'Movies', icon: 'film', live: true },
-  { key: 'tv', name: 'TV', icon: 'tv', live: false },
-  { key: 'books', name: 'Books', icon: 'book-open', live: false },
+  { key: 'game', name: 'onboarding.media.tiles.game', icon: 'gamepad-2', live: true },
+  { key: 'movie', name: 'onboarding.media.tiles.movie', icon: 'film', live: true },
+  { key: 'tv', name: 'onboarding.media.tiles.tv', icon: 'tv', live: false },
+  { key: 'books', name: 'onboarding.media.tiles.books', icon: 'book-open', live: false },
 ];
 
-/** The held tile's line before and after the tap. */
-export const NOTIFY_LINE = 'Notify me when available';
-export const NOTIFIED_LINE = "We'll tell you";
+/** The held tile's line before and after the tap, as dictionary keys. */
+export const NOTIFY_LINE: TranslationKey = 'onboarding.media.notify';
+export const NOTIFIED_LINE: TranslationKey = 'onboarding.media.notified';
 
 /** A tap on a live tile. */
 export function toggleMedium(picked: ReadonlySet<LiveMedium>, medium: LiveMedium): Set<LiveMedium> {

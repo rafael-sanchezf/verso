@@ -48,18 +48,25 @@ export interface ReviewRowProps {
 }
 
 export function ReviewRow({ token, game, movable, canMoveUp, canMoveDown, onMove }: ReviewRowProps) {
+  const t = useT();
   const theme = useTheme();
   const title = game?.title ?? '';
   const subtitle = game ? gameSubtitle(game) : null;
   const draggable = token.isNew && movable;
 
-  const scoreWords = token.provisional ? `placed by us, about ${scoreText(token.score)}` : scoreText(token.score);
-  const label = `${token.rank}. ${title}${token.isNew ? ', new' : ''}, ${scoreWords}`;
+  const score = token.provisional
+    ? t('onboarding.review.placedAbout', { score: scoreText(token.score) })
+    : scoreText(token.score);
+  const label = t(token.isNew ? 'onboarding.review.rowLabelNew' : 'onboarding.review.rowLabel', {
+    rank: token.rank,
+    title,
+    score,
+  });
 
   const actions = draggable
     ? [
-        ...(canMoveUp ? [{ name: 'moveUp', label: 'Move up' }] : []),
-        ...(canMoveDown ? [{ name: 'moveDown', label: 'Move down' }] : []),
+        ...(canMoveUp ? [{ name: 'moveUp', label: t('onboarding.review.moveUp') }] : []),
+        ...(canMoveDown ? [{ name: 'moveDown', label: t('onboarding.review.moveDown') }] : []),
       ]
     : [];
 
@@ -105,7 +112,7 @@ export function ReviewRow({ token, game, movable, canMoveUp, canMoveDown, onMove
 
       {draggable ? (
         <Sortable.Handle>
-          <View accessibilityLabel={`Drag ${title}`} style={styles.handle}>
+          <View accessibilityLabel={t('onboarding.review.drag', { title })} style={styles.handle}>
             <Text size={16} color="text/secondary">
               ≡
             </Text>
@@ -120,16 +127,17 @@ export function ReviewRow({ token, game, movable, canMoveUp, canMoveDown, onMove
 
 /** A run of ranked rows folded into one: tap to see them. */
 export function StretchRow({ token, onExpand }: { token: StretchToken; onExpand: () => void }) {
+  const t = useT();
   const count = token.ids.length;
 
   return (
     <Sortable.Touchable
       accessibilityRole="button"
-      accessibilityLabel={`${count} more ranked games. Show them`}
+      accessibilityLabel={t('onboarding.review.stretchLabel', { count })}
       onTap={onExpand}>
       <View style={styles.stretch}>
         <Text size={13} color="text/secondary" align="center">
-          {`· · ·  ${count} more  · · ·`}
+          {t('onboarding.review.stretch', { count })}
         </Text>
       </View>
     </Sortable.Touchable>

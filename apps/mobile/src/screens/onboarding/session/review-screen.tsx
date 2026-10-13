@@ -25,6 +25,7 @@ import Animated, { useAnimatedRef, useReducedMotion } from 'react-native-reanima
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Sortable from 'react-native-sortables';
 
+import { useT } from '@/lib/i18n';
 import { Button, ErrorLine, Text, useTheme } from '@/ui';
 
 import { rankMoreTarget } from './navigation';
@@ -50,6 +51,7 @@ import { useBatchWrites } from './use-batch-writes';
 import { useGoOnAfterDone } from './use-next-screen';
 
 export function ReviewScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   // Read once: Done clears the store, and this screen must keep drawing
@@ -59,9 +61,9 @@ export function ReviewScreen() {
   if (run === null) {
     return (
       <SafeAreaView style={[styles.fill, styles.centered, { backgroundColor: theme.colors['bg/canvas'] }]}>
-        <ErrorLine message="Nothing to review here." align="center" />
+        <ErrorLine message={t('onboarding.review.nothingToReview')} align="center" />
         <TextAction
-          label="Close"
+          label={t('onboarding.review.close')}
           onPress={() => (router.canGoBack() ? router.back() : router.replace(TABS_HREF))}
         />
       </SafeAreaView>
@@ -72,6 +74,7 @@ export function ReviewScreen() {
 }
 
 function Review({ run }: { run: FinishedRun }) {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -169,12 +172,12 @@ function Review({ run }: { run: FinishedRun }) {
           paddingBottom: theme.space[6],
         }}>
         <View style={{ gap: 6, paddingBottom: theme.space[2] }}>
-          <Text style="title-1">Look right?</Text>
+          <Text style="title-1">{t('onboarding.review.title')}</Text>
           <Text
             size={15}
             weight={meta.emphasis ? 500 : 400}
             color={meta.emphasis ? 'text/primary' : 'text/secondary'}>
-            {meta.text}
+            {meta.parts.map((part) => t(part.key, part.vars)).join(' · ')}
           </Text>
         </View>
 
@@ -216,13 +219,17 @@ function Review({ run }: { run: FinishedRun }) {
           paddingBottom: theme.space[3],
           gap: theme.space[3],
         }}>
-        <Button label="Done" variant="primary" disabled={busy} onPress={() => void onDone()} />
+        <Button label={t('onboarding.review.done')} variant="primary" disabled={busy} onPress={() => void onDone()} />
         {writes.pending > 0 && !writes.saving ? (
           <ErrorLine
-            message={`Couldn't save ${writes.pending === 1 ? 'one game' : `${writes.pending} games`}. Done tries again.`}
+            message={
+              writes.pending === 1
+                ? t('onboarding.review.couldNotSaveOne')
+                : t('onboarding.review.couldNotSaveOther', { count: writes.pending })
+            }
           />
         ) : null}
-        <TextAction label="Rank more" disabled={busy} onPress={() => void onRankMore()} />
+        <TextAction label={t('onboarding.review.rankMore')} disabled={busy} onPress={() => void onRankMore()} />
       </View>
     </SafeAreaView>
   );

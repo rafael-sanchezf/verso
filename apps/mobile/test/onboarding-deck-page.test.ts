@@ -2,6 +2,8 @@ import type { DeckCandidateRow } from '@verso/api';
 import { expandPlatforms, type Tier } from '@verso/core';
 import { describe, expect, it } from 'vitest';
 
+import { translate } from '../src/lib/i18n/dictionary';
+import type { Sentence } from '../src/screens/onboarding/sentence';
 import {
   deckMetaLine,
   deckRowMeta,
@@ -17,6 +19,9 @@ import {
   progressLabel,
   rankButtonLabel,
 } from '../src/screens/onboarding/deck-page';
+
+/** The sentence a screen would show, in English. */
+const say = (sentence: Sentence) => translate('en', sentence.key, sentence.vars);
 
 function row(id: string, popularityRank: number, overrides: Partial<DeckCandidateRow> = {}): DeckCandidateRow {
   return {
@@ -61,18 +66,18 @@ describe('the marks and the count', () => {
   });
 
   it('keeps counting past ten while the line and the bar stop at ten', () => {
-    expect(progressLabel(4)).toBe('4 of 10');
-    expect(progressLabel(10)).toBe('10 of 10');
-    expect(progressLabel(14)).toBe('10 of 10');
+    expect(say(progressLabel(4))).toBe('4 of 10');
+    expect(say(progressLabel(10))).toBe('10 of 10');
+    expect(say(progressLabel(14))).toBe('10 of 10');
     expect(progressFraction(4)).toBeCloseTo(0.4);
     expect(progressFraction(14)).toBe(1);
     expect(progressFraction(-1)).toBe(0);
   });
 
   it('labels the button with the marked count, and plainly at zero', () => {
-    expect(rankButtonLabel(0)).toBe('Rank these');
-    expect(rankButtonLabel(1)).toBe('Rank these 1');
-    expect(rankButtonLabel(7)).toBe('Rank these 7');
+    expect(say(rankButtonLabel(0))).toBe('Rank these');
+    expect(say(rankButtonLabel(1))).toBe('Rank these 1');
+    expect(say(rankButtonLabel(7))).toBe('Rank these 7');
   });
 });
 
@@ -120,19 +125,19 @@ describe('the pages', () => {
 
 describe('the meta lines', () => {
   it('names where the rows come from, the first two picks only', () => {
-    expect(deckMetaLine(expandPlatforms(['ps5', 'switch-2', 'pc']))).toBe(
+    expect(say(deckMetaLine(expandPlatforms(['ps5', 'switch-2', 'pc'])))).toBe(
       'Popular on PS5 and Switch 2 · tap how it was',
     );
-    expect(deckMetaLine(expandPlatforms(['switch-2']))).toBe('Popular on Switch 2 · tap how it was');
+    expect(say(deckMetaLine(expandPlatforms(['switch-2'])))).toBe('Popular on Switch 2 · tap how it was');
   });
 
   it('does not name a fold as a pick', () => {
-    expect(deckMetaLine(expandPlatforms(['ps5']))).toBe('Popular on PS5 · tap how it was');
+    expect(say(deckMetaLine(expandPlatforms(['ps5'])))).toBe('Popular on PS5 · tap how it was');
   });
 
   it('says "Popular everywhere" with no platforms', () => {
-    expect(deckMetaLine([])).toBe('Popular everywhere · tap how it was');
-    expect(deckMetaLine(null)).toBe('Popular everywhere · tap how it was');
+    expect(say(deckMetaLine([]))).toBe('Popular everywhere · tap how it was');
+    expect(say(deckMetaLine(null))).toBe('Popular everywhere · tap how it was');
   });
 
   it('gives a row its year and platforms, the user\'s first', () => {

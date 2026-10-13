@@ -16,6 +16,8 @@
 
 import type { Tier } from '@verso/core';
 
+import type { TranslationKey } from './sentence';
+
 /** The slider's value: a tier, or null while the row is untouched ("not played"). */
 export type TierValue = Tier | null;
 
@@ -25,16 +27,16 @@ export const TIER_STOPS: readonly Tier[] = ['disliked', 'fine', 'liked', 'loved'
 /** The last stop's index, and the top of the position scale. */
 export const LAST_STOP = TIER_STOPS.length - 1;
 
-/** The word after the track and over each stop on the axis. */
-export const TIER_WORDS: Readonly<Record<Tier, string>> = {
-  disliked: "Didn't like",
-  fine: 'Fine',
-  liked: 'Liked',
-  loved: 'Loved',
+/** The word after the track and over each stop on the axis, as dictionary keys. */
+export const TIER_WORDS: Readonly<Record<Tier, TranslationKey>> = {
+  disliked: 'onboarding.slider.tiers.disliked',
+  fine: 'onboarding.slider.tiers.fine',
+  liked: 'onboarding.slider.tiers.liked',
+  loved: 'onboarding.slider.tiers.loved',
 };
 
-/** What the word says while the row is untouched. */
-export const UNTOUCHED_WORD = 'Slide';
+/** What the word says while the row is untouched, as a dictionary key. */
+export const UNTOUCHED_WORD: TranslationKey = 'onboarding.slider.slide';
 
 /**
  * The glyph the thumb carries at each stop. One map, because the fidelity round
@@ -62,8 +64,8 @@ export function tierAtStop(index: number): Tier {
   return TIER_STOPS[clamped]!;
 }
 
-/** The word after the track for a value. */
-export function sliderWord(value: TierValue): string {
+/** The word after the track for a value, as a dictionary key. */
+export function sliderWord(value: TierValue): TranslationKey {
   return value === null ? UNTOUCHED_WORD : TIER_WORDS[value];
 }
 

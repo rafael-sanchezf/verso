@@ -13,6 +13,8 @@
 
 import type { Tier } from '@verso/core';
 
+import type { Sentence } from '../sentence';
+
 export interface TierPass {
   /** The games that need a tier, in the order they arrived. */
   readonly ids: readonly string[];
@@ -53,8 +55,11 @@ export function stopPass(pass: TierPass): TierPass {
 }
 
 /** "3 of 8": the game on screen, counting from 1, over the games the pass asks about. */
-export function passLabel(pass: TierPass): string {
-  return `${Math.min(pass.index + 1, pass.ids.length)} of ${pass.ids.length}`;
+export function passLabel(pass: TierPass): Sentence {
+  return {
+    key: 'onboarding.session.passProgress',
+    vars: { index: Math.min(pass.index + 1, pass.ids.length), total: pass.ids.length },
+  };
 }
 
 /** How far through the pass the bar is, 0 to 1. */

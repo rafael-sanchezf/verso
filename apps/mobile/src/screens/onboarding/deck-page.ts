@@ -14,6 +14,7 @@ import type { DeckCandidateRow } from '@verso/api';
 
 import { platformShortName } from '../../lib/format';
 import { orderedPicks, picksFromPlatforms, pickShortName } from './platform-picks';
+import type { Sentence } from './sentence';
 
 /** A page is ten rows; "Show 10 more" asks for the next ten. */
 export const DECK_PAGE_SIZE = 10;
@@ -80,8 +81,8 @@ export function progressCount(ranked: number, marks: DeckMarks): number {
  * only: past ten the line reads "10 of 10" and the bar stays full, while the
  * count itself keeps going (the button says how many are marked).
  */
-export function progressLabel(count: number): string {
-  return `${Math.min(count, DECK_GOAL)} of ${DECK_GOAL}`;
+export function progressLabel(count: number): Sentence {
+  return { key: 'onboarding.deck.progress', vars: { count: Math.min(count, DECK_GOAL), goal: DECK_GOAL } };
 }
 
 /** How full the header's bar is, 0 to 1; full from ten. */
@@ -90,19 +91,24 @@ export function progressFraction(count: number): number {
 }
 
 /** "Rank these {n}"; at zero the button is disabled and reads "Rank these". */
-export function rankButtonLabel(marked: number): string {
-  return marked > 0 ? `Rank these ${marked}` : 'Rank these';
+export function rankButtonLabel(marked: number): Sentence {
+  return marked > 0
+    ? { key: 'onboarding.deck.rankTheseCount', vars: { count: marked } }
+    : { key: 'onboarding.deck.rankThese' };
 }
 
 /**
  * The deck's meta line: where the rows come from, then what to do.
  * "Popular on Switch 2 and PS5 · tap how it was"; the first two picks by the
  * picker's order and the rest dropped; "Popular everywhere" with no platforms.
+ * The platform names are data and go in as variables.
  */
-export function deckMetaLine(profilePlatforms: readonly string[] | null | undefined): string {
+export function deckMetaLine(profilePlatforms: readonly string[] | null | undefined): Sentence {
   const labels = [...new Set(orderedPicks(picksFromPlatforms(profilePlatforms)).map(pickShortName))];
-  const where = labels.length === 0 ? 'Popular everywhere' : `Popular on ${labels.slice(0, 2).join(' and ')}`;
-  return `${where} · tap how it was`;
+  const [first, second] = labels;
+  if (first === undefined) return { key: 'onboarding.deck.popularEverywhere' };
+  if (second === undefined) return { key: 'onboarding.deck.popularOnOne', vars: { platform: first } };
+  return { key: 'onboarding.deck.popularOnTwo', vars: { first, second } };
 }
 
 /**

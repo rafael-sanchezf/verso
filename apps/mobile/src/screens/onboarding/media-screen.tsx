@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { invalidateProfile } from '@/lib/invalidate';
 import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
@@ -46,6 +47,7 @@ import {
 import { BottomActions, TitleBlock } from './pieces';
 
 export function MediaScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -91,9 +93,9 @@ export function MediaScreen() {
           gap: 18,
         }}>
         <TitleBlock
-          kicker="Let's set up Verso"
-          title="What do you want to keep track of?"
-          subtitle="Pick one or more. You can add the rest later."
+          kicker={t('onboarding.media.kicker')}
+          title={t('onboarding.media.title')}
+          subtitle={t('onboarding.media.subtitle')}
         />
 
         <View style={[styles.grid, { gap: 10 }]}>
@@ -123,10 +125,10 @@ export function MediaScreen() {
 
       <BottomActions>
         {save.isError ? (
-          <ErrorLine message="Couldn't save that. Check your connection and try again." />
+          <ErrorLine message={t('onboarding.media.couldNotSave')} />
         ) : null}
         <Button
-          label="Continue"
+          label={t('common.continue')}
           disabled={!canContinue(picked) || save.isPending || toTabs}
           onPress={() => save.mutate(mediaToStore(picked))}
         />
@@ -174,11 +176,14 @@ function Tile({
 }
 
 function LiveTile({ tile, picked, onPress }: { tile: MediaTile; picked: boolean; onPress: () => void }) {
+  const t = useT();
+  const name = t(tile.name);
+
   return (
-    <Tile label={tile.name} selected={picked} onPress={onPress} bordered={picked}>
+    <Tile label={name} selected={picked} onPress={onPress} bordered={picked}>
       <Icon name={tile.icon} size={28} color="text/secondary" />
       <Text size={17} weight={600}>
-        {tile.name}
+        {name}
       </Text>
       {/* The third line: a check when picked, an empty line of the same height when not. */}
       <View style={styles.third}>{picked ? <Icon name="check" size={15} color="brand/text" /> : null}</View>
@@ -187,16 +192,18 @@ function LiveTile({ tile, picked, onPress }: { tile: MediaTile; picked: boolean;
 }
 
 function HeldTile({ tile, notified, onPress }: { tile: MediaTile; notified: boolean; onPress: () => void }) {
+  const t = useT();
   const theme = useTheme();
-  const line = notified ? NOTIFIED_LINE : NOTIFY_LINE;
+  const name = t(tile.name);
+  const line = t(notified ? NOTIFIED_LINE : NOTIFY_LINE);
 
   return (
-    <Tile label={`${tile.name}, coming soon. ${line}`} onPress={onPress} bordered={false}>
+    <Tile label={t('onboarding.media.heldLabel', { name, line })} onPress={onPress} bordered={false}>
       <Icon name={tile.icon} size={28} color="text/secondary" />
       <Text size={17} weight={600} color="text/secondary">
-        {tile.name}
+        {name}
       </Text>
-      <Chip label="Coming soon" style={{ backgroundColor: theme.colors['bg/placeholder'], alignSelf: 'center' }} />
+      <Chip label={t('onboarding.media.comingSoon')} style={{ backgroundColor: theme.colors['bg/placeholder'], alignSelf: 'center' }} />
       <View style={[styles.bell, { gap: 6 }]}>
         <Icon name={notified ? 'bell-ring' : 'bell'} size={14} color="text/secondary" />
         <Text size={11} color="text/secondary">

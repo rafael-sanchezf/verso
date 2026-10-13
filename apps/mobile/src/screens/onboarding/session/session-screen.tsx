@@ -40,6 +40,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { coverHeight, ErrorLine, Skeleton, useTheme } from '@/ui';
 
 import {
@@ -64,9 +65,8 @@ import { useBatchWrites } from './use-batch-writes';
 import { useGoOnAfterDone } from './use-next-screen';
 import { TextAction } from './text-action';
 
-const STOP_LABEL = 'Stop here';
-
 export function SessionScreen() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const live = useSessionRequest();
@@ -83,9 +83,9 @@ export function SessionScreen() {
   if (request === null) {
     return (
       <SafeAreaView style={[styles.fill, styles.centered, { backgroundColor: theme.colors['bg/canvas'] }]}>
-        <ErrorLine message="Nothing to rank here." align="center" />
+        <ErrorLine message={t('onboarding.session.nothingToRank')} align="center" />
         <TextAction
-          label="Close"
+          label={t('onboarding.session.close')}
           onPress={() => (router.canGoBack() ? router.back() : router.replace(TABS_HREF))}
         />
       </SafeAreaView>
@@ -102,7 +102,9 @@ interface Running {
 }
 
 function Session({ request }: { request: SessionRequest }) {
+  const t = useT();
   const theme = useTheme();
+  const stopLabel = t('onboarding.session.stopHere');
   const router = useRouter();
   const writes = useBatchWrites();
   const goOn = useGoOnAfterDone();
@@ -240,12 +242,12 @@ function Session({ request }: { request: SessionRequest }) {
       <SafeAreaView style={[styles.fill, styles.centered, canvas]}>
         {writes.pending > 0 && !writes.saving ? (
           <ErrorLine
-            message="Couldn't save your ranking."
+            message={t('onboarding.session.couldNotSave')}
             align="center"
             onRetry={() => void saveSeeds(finishing, running)}
           />
         ) : (
-          <ActivityIndicator accessibilityLabel="Saving" color={theme.colors['text/secondary']} />
+          <ActivityIndicator accessibilityLabel={t('onboarding.session.saving')} color={theme.colors['text/secondary']} />
         )}
       </SafeAreaView>
     );
@@ -255,9 +257,15 @@ function Session({ request }: { request: SessionRequest }) {
   const passing = passCurrent(pass);
   if (passing !== null) {
     const game = newGames.get(passing);
+    const passLine = passLabel(pass);
     return (
       <SafeAreaView style={[styles.fill, canvas]} edges={['top', 'bottom']}>
-        <SessionHeader fill={passFill(pass)} label={passLabel(pass)} closeLabel={STOP_LABEL} onClose={onClose} />
+        <SessionHeader
+          fill={passFill(pass)}
+          label={t(passLine.key, passLine.vars)}
+          closeLabel={stopLabel}
+          onClose={onClose}
+        />
         {game ? <TierPassStep game={game} index={pass.index} onChoose={onChooseTier} /> : null}
       </SafeAreaView>
     );
@@ -269,12 +277,14 @@ function Session({ request }: { request: SessionRequest }) {
     const remaining = remainingEstimate(batch);
     const game = running.games.get(question.item.id);
     const pivot = running.games.get(question.pivot.id);
+    const remainingLine = remainingLabel(remaining);
+    const pivotLine = pivotSubtitle(question, running.started.existing);
     return (
       <SafeAreaView style={[styles.fill, canvas]} edges={['top', 'bottom']}>
         <SessionHeader
           fill={progressFill(batch.log.length, remaining, running.started.firstEstimate)}
-          label={remainingLabel(remaining)}
-          closeLabel={STOP_LABEL}
+          label={t(remainingLine.key, remainingLine.vars)}
+          closeLabel={stopLabel}
           onClose={onClose}
         />
         {game && pivot ? (
@@ -284,14 +294,14 @@ function Session({ request }: { request: SessionRequest }) {
             answered={batch.log.length}
             game={game}
             pivot={pivot}
-            pivotSubtitle={pivotSubtitle(question, running.started.existing)}
+            pivotSubtitle={t(pivotLine.key, pivotLine.vars)}
             onAnswer={onAnswer}
             onPlaceRest={onPlaceRest}
           />
         ) : (
           <View style={[styles.fill, styles.centered]}>
-            <ErrorLine message="Couldn't load that comparison." align="center" />
-            <TextAction label="Place the rest for me" onPress={onPlaceRest} />
+            <ErrorLine message={t('onboarding.session.couldNotLoadComparison')} align="center" />
+            <TextAction label={t('onboarding.session.placeRest')} onPress={onPlaceRest} />
           </View>
         )}
       </SafeAreaView>
@@ -301,10 +311,10 @@ function Session({ request }: { request: SessionRequest }) {
   // 2. The reads, or the moment between the last answer and the review.
   return (
     <SafeAreaView style={[styles.fill, canvas]} edges={['top', 'bottom']}>
-      <SessionHeader fill={0} label={null} closeLabel={STOP_LABEL} onClose={onClose} />
+      <SessionHeader fill={0} label={null} closeLabel={stopLabel} onClose={onClose} />
       {reads.failed ? (
         <View style={[styles.fill, styles.centered]}>
-          <ErrorLine message="Couldn't load your ranking." align="center" onRetry={reads.retry} />
+          <ErrorLine message={t('onboarding.session.couldNotLoadRanking')} align="center" onRetry={reads.retry} />
         </View>
       ) : (
         <StageSkeleton />
@@ -315,11 +325,12 @@ function Session({ request }: { request: SessionRequest }) {
 
 /** The question's shape in `bg/placeholder` while the reads are out: the chip, the prompt, two cards. */
 function StageSkeleton() {
+  const t = useT();
   const theme = useTheme();
 
   return (
     <View
-      accessibilityLabel="Loading"
+      accessibilityLabel={t('onboarding.session.loading')}
       style={[styles.fill, styles.centered, { paddingHorizontal: theme.space[4], gap: theme.space[4] }]}>
       <Skeleton width={96} height={26} radius={theme.radius.pill} />
       <Skeleton width="70%" height={26} />

@@ -43,6 +43,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useT } from '@/lib/i18n';
 import { Icon, Text, tierPalette, useTheme } from '@/ui';
 
 import {
@@ -84,6 +85,7 @@ export interface TierSliderProps {
 }
 
 export function TierSlider({ value, onChange, title }: TierSliderProps) {
+  const t = useT();
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const palette = tierPalette(theme);
@@ -205,8 +207,8 @@ export function TierSlider({ value, onChange, title }: TierSliderProps) {
     <View
       accessible
       accessibilityRole="adjustable"
-      accessibilityLabel={`How was ${title}`}
-      accessibilityValue={{ text: sliderWord(shownTier) }}
+      accessibilityLabel={t('onboarding.slider.howWas', { title })}
+      accessibilityValue={{ text: t(sliderWord(shownTier)) }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={onAccessibilityAction}
       style={[styles.row, { gap: GAP }]}>
@@ -245,11 +247,11 @@ export function TierSlider({ value, onChange, title }: TierSliderProps) {
 
       {shownTier ? (
         <Text size={13} weight={600} numberOfLines={1} layout={styles.word}>
-          {TIER_WORDS[shownTier]}
+          {t(TIER_WORDS[shownTier])}
         </Text>
       ) : (
         <Text size={13} color="text/secondary" numberOfLines={1} layout={styles.word}>
-          {sliderWord(null)}
+          {t(sliderWord(null))}
         </Text>
       )}
     </View>
@@ -292,6 +294,7 @@ function StopDot({
  * slider's own value already says its word to a screen reader.
  */
 export function TierAxis() {
+  const t = useT();
   const [width, setWidth] = useState(0);
 
   return (
@@ -309,7 +312,7 @@ export function TierAxis() {
                 align="center"
                 numberOfLines={1}
                 layout={[styles.axisWord, { left: xAtPosition(index, width) - AXIS_WORD / 2 }]}>
-                {TIER_WORDS[tier]}
+                {t(TIER_WORDS[tier])}
               </Text>
             ))
           : null}

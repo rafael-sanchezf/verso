@@ -13,6 +13,7 @@
 
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon, Skeleton, Text, useTheme } from '@/ui';
 
 const BAR_WIDTH = 160;
@@ -32,6 +33,7 @@ export interface SessionHeaderProps {
 }
 
 export function SessionHeader({ fill, label, closeLabel, onClose }: SessionHeaderProps) {
+  const t = useT();
   const theme = useTheme();
   const clamped = Math.min(Math.max(fill, 0), 1);
 
@@ -54,7 +56,7 @@ export function SessionHeader({ fill, label, closeLabel, onClose }: SessionHeade
         <View
           accessible
           accessibilityRole="progressbar"
-          accessibilityLabel={label ?? 'Progress'}
+          accessibilityLabel={label ?? t('onboarding.session.progress')}
           accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
           style={[styles.track, { backgroundColor: theme.colors['bg/placeholder'] }]}>
           <View

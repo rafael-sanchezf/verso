@@ -16,6 +16,7 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { Icon, Pressed, Text, useTheme } from '@/ui';
 
 import { usePlayedNotRanked } from './queries';
@@ -23,6 +24,7 @@ import { SESSION_HREF } from './routes';
 import { startSession } from './session-store';
 
 export function RankingBanner() {
+  const t = useT();
   const theme = useTheme();
   const router = useRouter();
   const drain = usePlayedNotRanked();
@@ -30,7 +32,8 @@ export function RankingBanner() {
 
   if (rows.length === 0) return null;
 
-  const label = rows.length === 1 ? '1 played game to rank' : `${rows.length} played games to rank`;
+  const label =
+    rows.length === 1 ? t('onboarding.rankingBanner.one') : t('onboarding.rankingBanner.other', { count: rows.length });
 
   const open = () => {
     startSession({

@@ -19,6 +19,11 @@ import {
   type PlaceableItem,
   type TierRows,
 } from '../src/screens/onboarding/session/batch-start';
+import { translate } from '../src/lib/i18n/dictionary';
+import type { Sentence } from '../src/screens/onboarding/sentence';
+
+/** The sentence a screen would show, in English. */
+const say = (sentence: Sentence) => translate('en', sentence.key, sentence.vars);
 
 function row(id: string, genres: string[] = []): TierListRow {
   return {
@@ -137,14 +142,14 @@ describe('existingPlace and the opponent card', () => {
   });
 
   it('says "ranked #N · score" for a ranked opponent and "just played" for one of this batch', () => {
-    expect(pivotSubtitle({ pivot: { id: 'd', genres: [] }, pivotIsNew: false }, existing)).toBe('ranked #4 · 7.5');
-    expect(pivotSubtitle({ pivot: { id: 'x', genres: [] }, pivotIsNew: true }, existing)).toBe('just played');
+    expect(say(pivotSubtitle({ pivot: { id: 'd', genres: [] }, pivotIsNew: false }, existing))).toBe('ranked #4 · 7.5');
+    expect(say(pivotSubtitle({ pivot: { id: 'x', genres: [] }, pivotIsNew: true }, existing))).toBe('just played');
   });
 });
 
 describe('the header', () => {
   it('says the count is an estimate', () => {
-    expect(remainingLabel(6)).toBe('About 6 more to place everything');
+    expect(say(remainingLabel(6))).toBe('About 6 more to place everything');
   });
 
   it('fills against the first estimate, never backwards, and full only when nothing is left', () => {

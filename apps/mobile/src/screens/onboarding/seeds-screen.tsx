@@ -24,6 +24,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/lib/i18n';
 import { invalidateEntry } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -43,6 +44,7 @@ import { startSession } from './session/session-store';
 const RESULT_LIMIT = 20;
 
 export function SeedsScreen() {
+  const t = useT();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -92,13 +94,10 @@ export function SeedsScreen() {
   return (
     <View style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'], paddingTop: insets.top + theme.space[2] }]}>
       <View style={{ paddingHorizontal: theme.space[4], paddingBottom: 18 }}>
-        <TitleBlock
-          title="Three games you love"
-          subtitle="They go straight into your ranking and tune what we ask about next."
-        />
+        <TitleBlock title={t('onboarding.seeds.title')} subtitle={t('onboarding.seeds.subtitle')} />
       </View>
 
-      <SearchField value={query} onChangeValue={setQuery} />
+      <SearchField value={query} onChangeValue={setQuery} placeholder={t('onboarding.seeds.searchPlaceholder')} />
 
       <ScrollView
         style={styles.fill}
@@ -109,10 +108,10 @@ export function SeedsScreen() {
           settling || results.isPending ? (
             <GameRowSkeletons count={4} />
           ) : results.isError ? (
-            <ErrorLine message="Couldn't search just now." onRetry={() => void results.refetch()} />
+            <ErrorLine message={t('onboarding.seeds.couldNotSearch')} onRetry={() => void results.refetch()} />
           ) : hits.length === 0 ? (
             <Text size={15} color="text/secondary">
-              No games match “{trimmed}”.
+              {t('onboarding.seeds.noMatch', { query: trimmed })}
             </Text>
           ) : (
             <View>
@@ -142,7 +141,7 @@ export function SeedsScreen() {
 
         <View style={{ gap: theme.space[1] }}>
           <Text size={12} weight={600} color="text/secondary">
-            YOUR THREE
+            {t('onboarding.seeds.yourThree')}
           </Text>
           {seeds.map((seed) => (
             <SeedRow
@@ -152,18 +151,22 @@ export function SeedsScreen() {
             />
           ))}
           {emptySlots(seeds).map((label) => (
-            <EmptySlot key={label} label={label} />
+            <EmptySlot key={label} label={t(label)} />
           ))}
         </View>
       </ScrollView>
 
       <BottomActions>
         {rank.isError ? (
-          <ErrorLine message="Couldn't save these. Check your connection and try again." />
+          <ErrorLine message={t('onboarding.seeds.couldNotSave')} />
         ) : null}
-        <Button label="Rank these" disabled={!canRankSeeds(seeds) || rank.isPending} onPress={() => rank.mutate(seeds)} />
+        <Button
+          label={t('onboarding.seeds.rankThese')}
+          disabled={!canRankSeeds(seeds) || rank.isPending}
+          onPress={() => rank.mutate(seeds)}
+        />
         <Text size={13} color="text/secondary" align="center">
-          Their genres tune the deck; you can always add more later.
+          {t('onboarding.seeds.footnote')}
         </Text>
       </BottomActions>
     </View>
@@ -192,6 +195,7 @@ function AddPill({ added, disabled }: { added: boolean; disabled: boolean }) {
 }
 
 function SeedRow({ seed, onRemove }: { seed: OnboardingGameRow; onRemove: () => void }) {
+  const t = useT();
   const theme = useTheme();
 
   return (
@@ -203,7 +207,7 @@ function SeedRow({ seed, onRemove }: { seed: OnboardingGameRow; onRemove: () => 
       trailing={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Remove ${seed.title}`}
+          accessibilityLabel={t('onboarding.seeds.remove', { title: seed.title })}
           onPress={onRemove}
           hitSlop={10}
           style={({ pressed }) => [
