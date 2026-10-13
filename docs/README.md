@@ -14,7 +14,8 @@ The index of `docs/`, one line per document, with its date. Decided designs are 
 - [design/onboarding-guidelines.md](design/onboarding-guidelines.md) (2026-10-06, living): the two users, the principles, what was borrowed and refused.
 - [design/onboarding-brief.md](design/onboarding-brief.md) (2026-10-01): the questionnaire, the bulk-entry deck and the first pick.
 - [design/media-brief.md](design/media-brief.md) (2026-09-16): the structure round for movies, TV and books, where each medium differs.
-- [design/movies-brief.md](design/movies-brief.md) (2026-09-22, Home reframed 2026-10-06): the film product designed from the medium outward.
+- [design/movies-brief.md](design/movies-brief.md) (2026-09-22, Home reframed 2026-10-06, the site as source of truth 2026-10-12): the film product designed from the medium outward.
+- [design/profile-brief.md](design/profile-brief.md) (2026-10-12): one profile across media, the identity a person chooses, the page shaped by the media they track.
 - [design/web-brief.md](design/web-brief.md) (2026-10-07): the web app at parity with V0, the two-width layout, the web waves.
 - [design/film-tv-catalog.md](design/film-tv-catalog.md) (2026-09-16): the TMDB mirror, its scope, requests, schema and schedule.
 - [design/igdb-setup.md](design/igdb-setup.md) (2026-09-08): registering the Twitch application that grants IGDB access.

@@ -2,6 +2,53 @@
 
 Written 2026-09-22 by the orchestrating session (Fable) after Rafa's reaction to the media structure round. His reaction, in one line: the media frames were built by reusing the games UI and swapping the nouns, without asking what each medium wants as its own product. He is right, and the cause was rule 24 as first written ("same skeleton, different facts"). This brief supersedes the Movies section of [media-brief.md](media-brief.md); the TV and Books sections there are held (see "What is held"). The catalog facts and the licensing calls of that round survive unchanged and are listed at the end.
 
+## Third pass, 2026-10-12: the site is the source of truth
+
+**Status: a round in Figma, drawn from this pass; nothing below is decided until Rafa's letters on the frames.** The drawing brief is [figma-kit/movies-site-round.md](../private/design/figma-kit/movies-site-round.md); the joint profile has its own brief, [profile-brief.md](profile-brief.md), drawn in the same round at his ask.
+
+### What he said, decoded
+
+Rafa, by voice, after seeing the eight frames of 2026-09-22 next to rankverso.com: the eight are "too outdated to rank after what I've seen from the mock". The site's phones under "Inside the app" (`apps/site/src/components/movie-screens.tsx`, drawn live on the tokens with real posters) are the source of truth for how the app looks: Home "is perfect as is", the compare step and the Ranking screen too, and the ask button at the top ("What do you want to watch?") is "absolutely needed". The site's hero, where the question is typed in the person's words and answered with three picks and a reason each (`ask-moment.tsx`), is what tapping that button should open. What he wants drawn is the screens the site does not show, in the site's language, plus the joint profile. Four things follow.
+
+1. **The site's four phones are the design.** Home (`Home · Movies H · Rows by reason`, 143:173, in color on the brand board as 230:60), the compare step, Search and Ranking stand as drawn there: the poster is the card with the four facts as pills on its scrim and no title, the brand green is the one color, Inter at three weights, the tab bar's active tab in green. Every other movie screen is drawn in that language. The eight grayscale frames of 2026-09-22 are retired as drawings; what they decided about structure (the diary line, the two actions, the calendar's three kinds of date, the banner, the log sheet's two buttons) stands where this pass does not say otherwise, and the open questions below stand with them.
+2. **The search row's second line is the year and the genre by default, and the person when the query is a person.** On the site, Search rows read "2021 · Denis Villeneuve" and Ranking rows "2024 · Sci-fi"; he wants one rule: genre is the default everywhere, as Ranking has it, and the line changes to what was searched for when that explains the result ("if I'm searching Denis Villeneuve and you show me two Dune movies, the director should show up"). So a title query shows "2021 · Sci-fi", and a query that matches a person (director first; actors later, when the catalog has them) shows "2021 · Denis Villeneuve". The year tells remakes apart. The Search spec and `search_games`'s movie twin carry the rule: the RPC returns both the genre and the matched person, and the row picks.
+3. **The question screen is the site's hero.** Tapping the ask button opens a full-height sheet: the question as the large title, a field where the person types in their own words ("something for the whole family"), a short trace that names what the engine is doing ("Reading your ranked list", "Leaving out what you've seen", "Keeping it for every age"), then "Our recommendations, with the reason" and three picks, each a poster, the title with its number, and a reason that cites the person's own list. Drawn as two frames, `Ask · The question` and `Ask · The picks`. This replaces `Home · Movies E1 · The question` (132:106), whose three controls (how long, what kind, in your words) were the form version of the same ask; the typed line absorbs them, and chips for length and genre can return under the field if his letters want them (question 15). "Another three" is kept on the picks, bounded to three at a time as decision 24 says.
+4. **The numbered picks over the list are a desktop thought.** How it works, step 3 on the site, shows six films on the watchlist with three of them numbered and the first one's reason. His read: "obviously you shouldn't be showing movies that you're not recommending", but the picks-over-the-list treatment "is something to consider, maybe for the desktop version". Recorded here and in [web-brief.md](web-brief.md)'s open items; not drawn in this round, which is the phone.
+
+### The screens of the round
+
+Twelve frames, 402 wide, drawn 2026-10-12 on the new page `Site round · movies` (256:2); the node ids and the drawing report are in the drawing brief. In the order of the brief: `Ask · The question`, `Ask · The picks`, `Movie page`, `Log sheet`, `Watchlist`, `Calendar`, `Search · A title`, `Search · A person`, `Ranking · To rank`, `Profile · Every medium`, `Profile · One medium`, `Edit profile`. Home and the compare step are not redrawn.
+
+Where the site's language changes a screen's shape, against the sections below:
+
+- **Movie page**: the poster leads the header at 120 wide (was 100); the diary line sits under it; "I watched this" is the brand green primary and "Want to watch" reads as the state when the film is already on the list; everything else as the Movie page section says.
+- **Watchlist**: a grid of posters, three across, one pill on each for where it streams ("Netflix", "Rent", "Not streaming"), instead of rows with a trailing check; the film page is where "I watched this" lives, so the check leaves the row (question 16 asks whether a long press should log from the grid). The filters and the sort stay as the sub row.
+- **Calendar**: rows, because dates lead; the date column in the brand green when the person is going (the medium color is gone, decision 29).
+- **Ranking**: the site's phone plus the banner above the tools row.
+- **Log sheet, Search**: unchanged in structure; redrawn on the tokens with posters.
+- **Profile**: see [profile-brief.md](profile-brief.md).
+
+### Rafa's letters on the site round, 2026-10-12
+
+By voice, the same evening, after reading all twelve frames. Ranking: "beautiful in its current state", approved. Search: the person rule is "perfect"; add more match kinds, actors first. Calendar stays. His letters on the rest, decoded, with what changes:
+
+- **Log sheet.** "Where" goes: which service you watched on does not matter when logging. The note is "Notes", marked optional, so nobody skips ranking because they do not want to write. The sheet is Date, Notes (optional), Save and rank, Save.
+- **Watchlist.** The service pill on each card goes: "our platform should be smart and know which subscriptions I have", so the grid shows what is on your services by default, and where a film streams is a fact for the movie page, "not something relevant on my home screen". Keep the grid; add zoom, "zoom in and zoom out and see a huge panel". The three pills "don't accomplish" filtering: he wants on my services, under X hours with a slider, genre, director, "a ton of ways to filter", the design left to Claude. The proposal is below.
+- **Search.** Beyond the director, actors; and other kinds Claude proposes. The catalog already carries `directors`, `writers` and `top_cast` on `movie_details`, so director, writer and the ten top-billed actors cost one index each; studio, franchise ("Part of") and decade are the next three, from fields the mirror has. Query 17's default stands, widened: directors and actors at the beta, writers behind them.
+
+**The Watchlist filters, proposed.** The sub row becomes "12 films · On your services" (the default scope, a tap toggles to "Everywhere") at the left and one "Filters" chip at the right with a count when any is set. The chip opens a sheet: Length, a slider from 1 h to 4 h with "Any" at the end ("Under 2 h" reads above the knob); Genre, chips, multi-select; Director, a field with suggestions from the list's own films; Decade, chips; Mood, the engine's tags, later; Sort, Added · Runtime · Year · Rating. Set filters show as removable chips under the sub row. Zoom is a pinch, three columns by default, two for large cards, five for the dense panel; the same `pickCard` at three widths, no control on screen. Drawn as `Watchlist` redrawn, `Watchlist · Filters` and `Watchlist · Zoomed`.
+
+### Questions for Rafa, with the defaults
+
+Numbered after the second pass's list.
+
+15. Does the ask sheet need chips under the field for length and genre, or is the typed line enough? Default: the typed line alone, chips later if people type the same constraints every time.
+16. On the Watchlist grid, should a long press open the log sheet, so a film can be logged without opening its page? Default yes, undrawn (a gesture, not a control).
+17. Search by person: directors only at the beta, actors when the catalog mirrors cast? Default yes.
+15 to 18 stand as asked on 2026-10-12 with their defaults, 16 now answered by the pinch (a long press on a card opens the log sheet).
+
+18. The movie page's primary once a film is watched: "Log another watch" in the brand green, or the diary line's "Change" with no primary button? Default: the diary line alone, the primary button gone, "Rank it ›" on the line when unranked.
+
 ## Second pass, 2026-10-06: Home is the engine's front door
 
 **Status: decided 2026-10-07**, after seven drawn rounds in one day (D1 to D3, E1, F1 and F2, G, H). The approved Home is `Home · Movies H · Rows by reason` (143:173): a filled, iconed "What do you want to watch?" button that opens the question as a sheet (`Home · Movies E1 · The question`, 132:106); under it rows of picks, every row a reason, the watchlist first as a large carousel, then two or three genre rows (the genre word alone), then two or three "Because you loved *Film*" rows, the engine choosing which rows appear and seven at most; the poster is the card, with four pills on its foot (service, genre, year, duration) and no title; services never title a row; nothing on Home is the diary or the calendar. The italics on the film title are kept for now, decided later. The sections below are the record of how it got there: the first proposal (one question, three answers, with the evidence), then Rafa's letters round by round.

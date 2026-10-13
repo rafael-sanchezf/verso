@@ -147,6 +147,10 @@ The three milestones and waves A to D stand; the web follows them and never pull
 6. Four frames in the web round; everything else is coded from the phone frames plus conventions.
 7. The web is a second door into the beta cohort.
 
+## A thought for the desktop, 2026-10-12
+
+Rafa on the site's How it works, step 3 (six films on the watchlist, three of them numbered as the picks, the first one's reason): the app should never show films it is not recommending, but the picks numbered over the list "is something to consider, maybe for the desktop version". Recorded for the web round's finder at the wide width, where the list and the picks can share the screen; not drawn on the phone (movies-brief.md, third pass, point 4).
+
 ## Questions for Rafa, with the defaults
 
 Silence means the default.

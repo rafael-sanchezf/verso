@@ -261,7 +261,7 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 
 **What Rafa described** (2026-10-08). Profile should be one place across every medium, "essentially your taste profile", easy to share with friends and with an AI. Possibly cross-media picks too ("because you liked this book you should like this game").
 
-**Where it sits.** Not scheduled. Inferred: V1, with the share image and follows, since that is when Profile is next touched and friends exist.
+**Where it sits.** Not scheduled. Inferred: V1, with the share image and follows, since that is when Profile is next touched and friends exist. Proposed 2026-10-12 in [design/profile-brief.md](design/profile-brief.md) at Rafa's ask, drawn in the movies site round, riding the beta's Profile work.
 
 **What exists.**
 - Profile today ([design/specs/profile.md](design/specs/profile.md)) is games-shaped: the stats row reads Ranked, Backlog, Upcoming, and "Share my top 10" shares one list.
