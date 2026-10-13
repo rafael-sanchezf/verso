@@ -577,11 +577,12 @@ export function platformGlyphs(list: readonly string[] | null | undefined): Plat
  * `genreDisplayName` returns null for a genre the app does not show (IGDB's
  * own categories are a mix of genres and marketing), and those are skipped
  * before the two are counted, so a game tagged Indie first still shows two real
- * genres.
+ * genres. In the app's language: core has a table per language (wave 7).
  */
 export function genres(list: readonly string[] | null | undefined): string | null {
+  const language = languageStore.language();
   const names = (list ?? [])
-    .map((genre) => genreDisplayName(genre))
+    .map((genre) => genreDisplayName(genre, language))
     .filter((name): name is string => name !== null);
 
   return names.length === 0 ? null : names.slice(0, 2).join(', ');
@@ -603,10 +604,10 @@ export function genres(list: readonly string[] | null | undefined): string | nul
  * same, so a genre reads the same on the chip as on the rows it filters.
  *
  * Null for a genre the app does not name (Indie), which is also a genre the
- * filter does not offer.
+ * filter does not offer. In the app's language: `Juego de plataformas` in Spanish.
  */
 export function genreLabel(genre: string): string | null {
-  const display = genreDisplayName(genre);
+  const display = genreDisplayName(genre, languageStore.language());
   if (display === null || display === '') return null;
   return display.charAt(0).toUpperCase() + display.slice(1);
 }
@@ -686,17 +687,19 @@ export const GENRE_ICONS: Readonly<Record<string, GenreIconName>> = {
 
 /**
  * The table above keyed by display name, so a lookup forgives what
- * `genreDisplayName` forgives: case, stray spaces, a curly apostrophe.
+ * `genreDisplayName` forgives: case, stray spaces, a curly apostrophe. Keyed by
+ * the English name on purpose, whatever language the app is in: an icon belongs
+ * to the genre, not to the word.
  */
 const GENRE_ICONS_BY_DISPLAY_NAME: ReadonlyMap<string, GenreIconName> = new Map(
   Object.entries(GENRE_ICONS).flatMap(([genre, icon]) => {
-    const display = genreDisplayName(genre);
+    const display = genreDisplayName(genre, 'en');
     return display === null ? [] : [[display, icon] as const];
   }),
 );
 
 /** The icon for an IGDB genre name, or null for a genre the app does not name. */
 export function genreIcon(genre: string): GenreIconName | null {
-  const display = genreDisplayName(genre);
+  const display = genreDisplayName(genre, 'en');
   return display === null ? null : (GENRE_ICONS_BY_DISPLAY_NAME.get(display) ?? null);
 }

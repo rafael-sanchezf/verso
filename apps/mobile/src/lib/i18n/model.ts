@@ -9,13 +9,19 @@
  * Android lets the locale change under a running app. A device set to
  * anything the app does not speak reads English.
  *
- * Relative imports only, for the node test suite (`test/i18n-model.test.ts`).
+ * Relative imports only, for the node test suite (`test/i18n-model.test.ts`);
+ * the one package import is a type from @verso/core, erased at run time.
  */
+
+import type { Language } from '@verso/core';
 
 import { createHolder } from '../../screens/onboarding/session/holder';
 
-/** The languages the app speaks. */
-export type Language = 'en' | 'es';
+/**
+ * The languages the app speaks. Defined once, in @verso/core, whose words
+ * (genre names, platform labels, Steam's phrase) take one (wave 7).
+ */
+export type { Language };
 
 /** `system` follows the device. */
 export type LanguagePreference = 'system' | Language;

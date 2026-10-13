@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   fullDate,
+  genreIcon,
   genreLabel,
   genres,
   hours,
@@ -448,5 +449,20 @@ describe('in Spanish', () => {
   it('leaves platforms alone', () => {
     languageStore.setPreference('es');
     expect(platforms(['PC (Microsoft Windows)', 'PlayStation 5'])).toBe('PC, PS5');
+  });
+
+  it("names genres with core's Spanish table, capitalized where a line starts", () => {
+    languageStore.setPreference('es');
+    expect(genres(['Indie', 'Shooter', 'Adventure'])).toBe('shooter, juego de aventura');
+    expect(genreLabel('Platform')).toBe('Juego de plataformas');
+    expect(genreLabel('Role-playing (RPG)')).toBe('RPG');
+    expect(genreLabel('Indie')).toBeNull();
+  });
+
+  it('keeps the genre icons, which belong to the genre and not the word', () => {
+    languageStore.setPreference('es');
+    expect(genreIcon('Platform')).toBe('brick-wall');
+    expect(genreIcon('Role-playing (RPG)')).toBe('wand-sparkles');
+    expect(genreIcon('Indie')).toBeNull();
   });
 });

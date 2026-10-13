@@ -34,7 +34,7 @@ import validReply from './fixtures/reply-valid.json' with { type: 'json' };
 import invalidReply from './fixtures/reply-invalid.json' with { type: 'json' };
 import thinkingFirstReply from './fixtures/reply-thinking-first.json' with { type: 'json' };
 import refusalReply from './fixtures/reply-refusal.json' with { type: 'json' };
-import { buildUserMessage, EFFORT, labelFor, SYSTEM_PROMPT } from './prompt.ts';
+import { buildUserMessage, EFFORT, labelFor, STRETCH_ES, SYSTEM_PROMPT, systemPrompt } from './prompt.ts';
 import {
   ANTHROPIC_VERSION,
   type CandidateRow,
@@ -102,6 +102,7 @@ function request(overrides: Partial<SuggestRequest> = {}): SuggestRequest {
     region: 'US',
     includeBacklog: false,
     note: null,
+    language: 'en',
     ...overrides,
   };
 }
@@ -795,6 +796,7 @@ Deno.test('the body is validated, normalised, and strict about unknown fields', 
     region: 'GB',
     includeBacklog: false,
     note: 'something short',
+    language: 'en',
   });
 
   const refusals: [unknown, string][] = [
@@ -805,6 +807,8 @@ Deno.test('the body is validated, normalised, and strict about unknown fields', 
     [{ medium: 'game', providerIds: ['8'] }, 'providerIds'],
     [{ medium: 'game', note: 'x'.repeat(281) }, 'at most 280'],
     [{ medium: 'game', region: 'USA' }, 'region'],
+    [{ medium: 'game', language: 'fr' }, 'language must be one of en, es'],
+    [{ medium: 'game', language: 'es-419' }, 'language'],
     [[], 'JSON object'],
   ];
   for (const [body, message] of refusals) {
@@ -812,4 +816,70 @@ Deno.test('the body is validated, normalised, and strict about unknown fields', 
     assertFalse(result.ok, JSON.stringify(body));
     if (!result.ok) assertStringIncludes(result.error, message);
   }
+});
+
+// -- The person's language -----------------------------------------------------
+
+Deno.test('the language is read from the body, English when absent', () => {
+  const spanish = parseSuggestRequest({ medium: 'movie', language: 'es' });
+  assert(spanish.ok);
+  assertEquals(spanish.value.language, 'es');
+  const english = parseSuggestRequest({ medium: 'movie', language: 'en' });
+  assert(english.ok);
+  assertEquals(english.value.language, 'en');
+  const absent = parseSuggestRequest({ medium: 'movie', language: null });
+  assert(absent.ok);
+  assertEquals(absent.value.language, 'en');
+});
+
+Deno.test('English sends the system prompt unchanged; Spanish adds the one rule', async () => {
+  assertEquals(systemPrompt('en'), SYSTEM_PROMPT);
+  assertEquals(systemPrompt(), SYSTEM_PROMPT);
+  const spanish = systemPrompt('es');
+  assert(spanish.startsWith(SYSTEM_PROMPT));
+  assertStringIncludes(spanish, '8. Write every reason in Latin American Spanish');
+  assertStringIncludes(spanish, 'tú');
+  assertStringIncludes(spanish, `"${STRETCH_ES}"`);
+  assertEquals(STRETCH_ES, 'una apuesta');
+
+  const { db } = fakeDb();
+  const api = stubFetch(jsonResponse(validReply));
+  await suggest(deps(db, api.fetchImpl), request({ language: 'es' }));
+  const body = api.calls[0]!.body;
+  assertEquals(body.system, spanish);
+  const pick = body.output_config.format.schema.properties.pick1 as unknown as {
+    properties: { reason: { description: string } };
+  };
+  assertStringIncludes(pick.properties.reason.description, 'Latin American Spanish');
+  assertStringIncludes(pick.properties.reason.description, `"${STRETCH_ES}"`);
+});
+
+Deno.test("a Spanish request's fallback writes the template reasons in Spanish", async () => {
+  const { db, log } = fakeDb();
+  const api = stubFetch(jsonResponse(invalidReply));
+
+  const body = ok(await suggest(deps(db, api.fetchImpl, []), request({ language: 'es' })));
+
+  assert(body.fallback);
+  assertEquals(body.picks.map((pick) => pick.reason), [
+    'Porque pusiste Hades en “Me encantó” y comparte el género Roguelike.',
+    'Porque pusiste Outer Wilds en “Me encantó” y comparte el género Puzzle.',
+    'Porque pusiste Slay the Spire en “Me gustó” y comparte el género Card & Board Game.',
+  ]);
+  assertEquals(body.picks.map((pick) => pick.because), [['Hades'], ['Outer Wilds'], ['Slay the Spire']]);
+  assertEquals(log.suggestionRows[0]!.request.language, 'es');
+});
+
+Deno.test('the short list says the rating line in Spanish too', async () => {
+  const two = [CANDIDATES[8]!, CANDIDATES[29]!];
+  const { db } = fakeDb({ candidates: two });
+  const api = stubFetch(jsonResponse(validReply));
+
+  const body = ok(await suggest(deps(db, api.fetchImpl), request({ language: 'es' })));
+
+  assertEquals(api.calls.length, 0);
+  assertEquals(body.picks.map((pick) => pick.reason), [
+    'Porque pusiste Celeste en “Me encantó” y comparte el género Platform.',
+    'Entre los juegos mejor valorados que coinciden con tus filtros.',
+  ]);
 });

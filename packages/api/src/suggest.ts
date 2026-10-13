@@ -30,7 +30,7 @@
  *    three.
  */
 
-import type { Medium } from '@verso/core';
+import type { Language, Medium } from '@verso/core';
 
 import type { Client } from './client';
 import type { Json } from './database.types';
@@ -52,6 +52,12 @@ export interface SuggestOptions {
   region?: string | null;
   /** Let the caller's own backlog or watchlist into the pool (decision 18). */
   includeBacklog?: boolean;
+  /**
+   * The language the person reads the app in; every reason is written in it,
+   * the model's and the template's (spanish-build.md, wave 7). The function's
+   * default is English.
+   */
+  language?: Language;
 }
 
 /** One pick, with the reason the person reads. */
@@ -153,6 +159,9 @@ export function suggestRequestBody(options: SuggestOptions): Record<string, unkn
   if (options.providerIds?.length) body.providerIds = options.providerIds;
   if (options.region) body.region = options.region;
   if (options.includeBacklog !== undefined) body.includeBacklog = options.includeBacklog;
+  // English is the function's default and is sent as nothing, so an English
+  // ask still passes a function deployed before it took `language` (wave 7).
+  if (options.language && options.language !== 'en') body.language = options.language;
   return body;
 }
 
@@ -243,7 +252,7 @@ export async function plainSuggestions(
       title: row.title,
       year: (row.year as number | null) ?? null,
       coverImageId: (row.cover_image_id as string | null) ?? null,
-      ...templateReason(row, taste, options.medium),
+      ...templateReason(row, taste, options.medium, options.language ?? 'en'),
     }));
 }
 
@@ -265,13 +274,15 @@ function tasteItem(
  * restated word for word so a plain pick reads the same as a fallback one: the
  * strongest feature in `why` that one of the person's Loved or Liked items
  * shares, named with that item; else the strongest feature alone; else the
- * rating that put it there.
+ * rating that put it there. In the person's language, English by default.
  */
 export function templateReason(
   row: Pick<SuggestCandidateRow, 'why'>,
   taste: readonly SuggestTasteItem[],
   medium: Medium,
+  language: Language = 'en',
 ): { reason: string; because: string[] } {
+  const words = REASON_WORDS[language];
   const why = Array.isArray(row.why) ? row.why : [];
   const features = why
     .flatMap((entry) => {
@@ -284,36 +295,82 @@ export function templateReason(
   for (const { feature } of features) {
     const colon = feature.indexOf(':');
     if (colon < 0) continue;
-    const trait = sharedTrait(feature.slice(0, colon).trim(), feature.slice(colon + 1).trim());
+    const trait = sharedTrait(feature.slice(0, colon).trim(), feature.slice(colon + 1).trim(), words);
     if (!trait) continue;
     const item = taste.find(trait.matches);
-    if (item) {
-      return {
-        reason: `Because you put ${item.title} in ${item.tier === 'loved' ? 'Loved' : 'Liked'} and ${trait.phrase}.`,
-        because: [item.title],
-      };
-    }
+    if (item) return { reason: words.because(item.title, item.tier, trait.phrase), because: [item.title] };
   }
 
-  if (features.length > 0) return { reason: `Fits your taste for ${plainFeature(features[0]!.feature)}.`, because: [] };
-  return { reason: `Among the best-rated ${mediumNoun(medium)} that fit your filters.`, because: [] };
+  if (features.length > 0) return { reason: words.fits(features[0]!.feature), because: [] };
+  return { reason: words.best(medium), because: [] };
+}
+
+/** The template's words in one language. */
+interface ReasonWords {
+  because(title: string, tier: 'loved' | 'liked', trait: string): string;
+  sharesGenre(value: string): string;
+  alsoOn(value: string): string;
+  alsoFrom(start: number): string;
+  fits(feature: string): string;
+  best(medium: Medium): string;
+}
+
+/** `REASON_WORDS` in supabase/functions/suggest/suggest.ts, word for word. */
+const REASON_WORDS: Readonly<Record<Language, ReasonWords>> = {
+  en: {
+    because: (title, tier, trait) => `Because you put ${title} in ${tier === 'loved' ? 'Loved' : 'Liked'} and ${trait}.`,
+    sharesGenre: (value) => `this shares the ${value} genre`,
+    alsoOn: (value) => `this is also on ${value}`,
+    alsoFrom: (start) => `this is also from the ${start}s`,
+    fits: (feature) => `Fits your taste for ${plainFeature(feature)}.`,
+    best: (medium) => `Among the best-rated ${mediumNoun(medium)} that fit your filters.`,
+  },
+  es: {
+    because: (title, tier, trait) =>
+      `Porque pusiste ${title} en “${tier === 'loved' ? 'Me encantó' : 'Me gustó'}” y ${trait}.`,
+    sharesGenre: (value) => `comparte el género ${value}`,
+    alsoOn: (value) => `también está en ${value}`,
+    alsoFrom: (start) => `también es de los años ${start}`,
+    fits: (feature) => `Encaja con tu gusto por ${plainFeatureEs(feature)}.`,
+    best: (medium) =>
+      medium === 'game'
+        ? 'Entre los juegos mejor valorados que coinciden con tus filtros.'
+        : medium === 'movie'
+          ? 'Entre las películas mejor valoradas que coinciden con tus filtros.'
+          : 'Entre las series mejor valoradas que coinciden con tus filtros.',
+  },
+};
+
+/** The function's `plainFeatureEs`: "el género Roguelike", "los años 2010", a name alone. */
+function plainFeatureEs(feature: string): string {
+  const colon = feature.indexOf(':');
+  if (colon < 0) return feature.replaceAll('_', ' ');
+  const kind = feature.slice(0, colon).trim();
+  const value = feature.slice(colon + 1).trim();
+  if (kind === 'genre') return `el género ${value}`;
+  if (kind === 'decade') {
+    const match = value.match(/(\d{4})/);
+    return match ? `los años ${match[1]}` : value;
+  }
+  return value;
 }
 
 function sharedTrait(
   kind: string,
   value: string,
+  words: ReasonWords,
 ): { phrase: string; matches: (item: SuggestTasteItem) => boolean } | null {
   const same = (a: string) => a.trim().toLowerCase() === value.toLowerCase();
   switch (kind) {
     case 'genre':
-      return { phrase: `this shares the ${value} genre`, matches: (item) => item.genres.some(same) };
+      return { phrase: words.sharesGenre(value), matches: (item) => item.genres.some(same) };
     case 'platform':
-      return { phrase: `this is also on ${value}`, matches: (item) => item.platforms.some(same) };
+      return { phrase: words.alsoOn(value), matches: (item) => item.platforms.some(same) };
     case 'decade': {
       const start = Number(decadeLabel(value).slice(0, 4));
       if (!Number.isInteger(start)) return null;
       return {
-        phrase: `this is also from the ${start}s`,
+        phrase: words.alsoFrom(start),
         matches: (item) => item.year !== null && Math.floor(item.year / 10) * 10 === start,
       };
     }

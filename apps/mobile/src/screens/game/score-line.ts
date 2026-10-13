@@ -30,9 +30,10 @@
  * notices by looking at it.
  */
 
-import { steamReviewPhrase } from '@verso/core';
+import { steamReviewPhrase, steamReviewPhraseLabel } from '@verso/core';
 
 import type { TranslationKey } from '../../lib/i18n/dictionary';
+import { languageStore } from '../../lib/i18n/store';
 
 import type { ScoresBySource } from '@verso/api';
 
@@ -87,7 +88,11 @@ export function playersItem(scores: ScoresBySource): ScoreLineItem | null {
   const steam = scores.steam;
   if (steam && steam.score !== null && steam.scoreCount !== null) {
     const phrase = steamReviewPhrase(steam.score, Math.round(steam.scoreCount));
-    if (phrase !== null) return { key: 'players', value: phrase, label: 'browse.game.scores.steam' };
+    if (phrase !== null) {
+      // Steam's own wording in the app's language: `Muy positivas` (wave 7).
+      const value = steamReviewPhraseLabel(phrase, languageStore.language());
+      return { key: 'players', value, label: 'browse.game.scores.steam' };
+    }
   }
 
   const igdb = rating(scores.igdb_users?.score);

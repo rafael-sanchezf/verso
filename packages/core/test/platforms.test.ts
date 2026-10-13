@@ -3,7 +3,9 @@ import {
   BACKWARD_COMPATIBILITY,
   PLATFORM_FAMILIES,
   expandPlatforms,
+  platformFamilyLabel,
   platformPick,
+  platformPickLabel,
   withBackwardCompatible,
   type PlatformPickId,
 } from '../src/platforms';
@@ -189,5 +191,35 @@ describe('expandPlatforms', () => {
       'PlayStation 4',
       'Sega Saturn',
     ]);
+  });
+});
+
+describe('the labels in a language', () => {
+  const labels = (language: 'en' | 'es') =>
+    PLATFORM_FAMILIES.map((f) => [
+      platformFamilyLabel(f.id, language),
+      f.picks.map((p) => platformPickLabel(p.id, language)),
+    ]);
+
+  it('reads the table itself in English, and by default', () => {
+    expect(labels('en')).toEqual(PLATFORM_FAMILIES.map((f) => [f.label, f.picks.map((p) => p.label)]));
+    expect(platformFamilyLabel('mobile')).toBe('Mobile');
+    expect(platformPickLabel('xbox-older')).toBe('Older');
+  });
+
+  it('translates the words and keeps the names in Spanish', () => {
+    expect(labels('es')).toEqual([
+      ['PlayStation', ['PS5', 'PS4', 'PS3', 'Anteriores']],
+      ['Xbox', ['Series X|S', 'One', '360', 'Anteriores']],
+      ['Nintendo', ['Switch 2', 'Switch', 'Wii U', '3DS', 'Anteriores']],
+      ['PC', ['PC']],
+      ['Celular', ['iOS', 'Android']],
+    ]);
+  });
+
+  it('leaves the identity alone', () => {
+    platformPickLabel('nintendo-older', 'es');
+    expect(platformPick('nintendo-older').label).toBe('Older');
+    expect(PLATFORM_FAMILIES.find((f) => f.id === 'mobile')?.label).toBe('Mobile');
   });
 });

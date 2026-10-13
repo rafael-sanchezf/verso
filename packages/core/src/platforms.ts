@@ -24,6 +24,10 @@
  *    applied, in the table's order. What `profiles.platforms` stores and what
  *    `deck_candidates` filters on.
  *  - `platformPick(id)`: one pick by id.
+ *  - `platformFamilyLabel(id, language)` and `platformPickLabel(id, language)`:
+ *    the labels in the person's language. The labels in `PLATFORM_FAMILIES`
+ *    are the English ones; names stay names in Spanish, and only the words
+ *    change (`Older` is `Anteriores`, `Mobile` is `Celular`).
  *
  * Backward compatibility is assumed, never shown (decision 27): the chips read
  * `PS5`, not "PS5 · with PS4 games", and a player who skipped the PS4 simply
@@ -39,6 +43,8 @@
  * A platform the table does not name (Sega, the Quests, the rarer Nintendo
  * hardware IGDB lists) belongs to no pick; adding one is one line here.
  */
+
+import type { Language } from './language';
 
 export type PlatformFamilyId = 'playstation' | 'xbox' | 'nintendo' | 'pc' | 'mobile';
 
@@ -153,6 +159,43 @@ export const PLATFORM_FAMILIES: readonly PlatformFamilyGroup[] = [
     ['android', 'Android', ['Android']],
   ]),
 ];
+
+/**
+ * The labels in another language (docs/design/spanish-build.md, wave 7). Only
+ * the words: a console's name reads the same in every language, so a pick or a
+ * family missing here prints its English label, which is its name. The ids and
+ * the English labels above stay the identity the picker stores and compares.
+ */
+const FAMILY_LABELS: Readonly<Record<Exclude<Language, 'en'>, Partial<Record<PlatformFamilyId, string>>>> = {
+  // Apple's Latin American Spanish says celular, never móvil.
+  es: { mobile: 'Celular' },
+};
+
+const PICK_LABELS: Readonly<Record<Exclude<Language, 'en'>, Partial<Record<PlatformPickId, string>>>> = {
+  es: {
+    'playstation-older': 'Anteriores',
+    'xbox-older': 'Anteriores',
+    'nintendo-older': 'Anteriores',
+  },
+};
+
+/** A family's tile label in a language: `Mobile`, `Celular`; `PlayStation` in both. */
+export function platformFamilyLabel(id: PlatformFamilyId, language: Language = 'en'): string {
+  const english = familyGroup(id).label;
+  return language === 'en' ? english : (FAMILY_LABELS[language][id] ?? english);
+}
+
+/** A pick's chip label in a language: `Older`, `Anteriores`; `PS5` in both. */
+export function platformPickLabel(id: PlatformPickId, language: Language = 'en'): string {
+  const english = platformPick(id).label;
+  return language === 'en' ? english : (PICK_LABELS[language][id] ?? english);
+}
+
+function familyGroup(id: PlatformFamilyId): PlatformFamilyGroup {
+  const group = PLATFORM_FAMILIES.find((f) => f.id === id);
+  if (!group) throw new Error(`unknown platform family: ${id}`);
+  return group;
+}
 
 /** One row of the map: a console and the older libraries it plays by default. */
 export interface CompatibilityRow {

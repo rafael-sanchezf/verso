@@ -3,6 +3,8 @@ import { answer, startInsertion, type RankableItem } from '../src/ranking';
 import {
   comparisonPrompt,
   DEFAULT_BASE_PROMPT,
+  defaultBasePrompt,
+  defaultGenrePrompt,
   genreCue,
   type ComparisonPromptOptions,
 } from '../src/prompt';
@@ -132,5 +134,44 @@ describe('comparisonPrompt', () => {
       s = answer(s, 'b');
     }
     expect(comparisonPrompt(s)).toBe(DEFAULT_BASE_PROMPT);
+  });
+});
+
+describe('in Spanish', () => {
+  it('asks the base question in Spanish when nothing is shared', () => {
+    const s = against(g('gran-turismo', 'Racing'), g('doom', 'Shooter'));
+    expect(comparisonPrompt(s, { language: 'es' })).toBe('¿Cuál disfrutaste más?');
+    expect(defaultBasePrompt('es')).toBe('¿Cuál disfrutaste más?');
+    expect(defaultBasePrompt()).toBe(DEFAULT_BASE_PROMPT);
+  });
+
+  it("names the genre with core's Spanish noun, in the cue and the prompt", () => {
+    const rpg = against(g('skyrim', 'Role-playing (RPG)'), g('mass-effect', 'Role-playing (RPG)'));
+    expect(genreCue(rpg, 'es')).toBe('RPG');
+    expect(comparisonPrompt(rpg, { language: 'es' })).toBe('¿Qué RPG disfrutaste más?');
+
+    const platformer = against(g('celeste', 'Indie', 'Platform'), g('hollow-knight', 'Indie', 'Platform'));
+    expect(genreCue(platformer, 'es')).toBe('juego de plataformas');
+    expect(comparisonPrompt(platformer, { language: 'es' })).toBe('¿Qué juego de plataformas disfrutaste más?');
+  });
+
+  it('is English when no language is given', () => {
+    const s = against(g('halo', 'Shooter'), g('doom', 'Shooter'));
+    expect(genreCue(s)).toBe('shooter');
+    expect(genreCue(s, 'en')).toBe('shooter');
+    expect(comparisonPrompt(s, { language: 'en' })).toBe('Which shooter did you enjoy more?');
+    expect(defaultGenrePrompt('shooter')).toBe('Which shooter did you enjoy more?');
+    expect(defaultGenrePrompt('shooter', 'es')).toBe('¿Qué shooter disfrutaste más?');
+  });
+
+  it('still lets an overridden wording win, fed the Spanish noun', () => {
+    const shared = against(g('celeste', 'Platform'), g('hollow-knight', 'Platform'));
+    const unshared = against(g('gran-turismo', 'Racing'), g('doom', 'Shooter'));
+    const genrePrompt = (genre: string) => `¿Qué ${genre} volverías a jugar esta noche?`;
+    expect(comparisonPrompt(shared, { language: 'es', genrePrompt })).toBe(
+      '¿Qué juego de plataformas volverías a jugar esta noche?',
+    );
+    expect(comparisonPrompt(unshared, { language: 'es', basePrompt: 'Elige uno.' })).toBe('Elige uno.');
+    expect(comparisonPrompt(unshared, { language: 'es', genrePrompt })).toBe('¿Cuál disfrutaste más?');
   });
 });

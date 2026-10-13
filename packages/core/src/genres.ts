@@ -13,7 +13,18 @@
  * `ignoredGenres` in ranking.ts instead. A genre that is missing here (IGDB adds
  * one, or the medium is not games) simply falls back to the base prompt, which
  * is why lookups return null rather than inventing a name.
+ *
+ * Spanish (wave 7 of docs/design/spanish-build.md) has its own table with the
+ * same keys, written as the noun the Spanish prompt swallows whole: "¿Qué RPG
+ * disfrutaste más?", "¿Qué juego de plataformas disfrutaste más?". Spanish has
+ * no one-word "platformer", so a genre that is a modifier in Spanish carries
+ * "juego de" the way English carries "game". The words are the ones
+ * Spanish-speaking players use: RPG, shooter and MOBA stay as they are said,
+ * point-and-click is "aventura gráfica", fighting is "peleas" (Latin America;
+ * Spain says "lucha").
  */
+
+import type { Language } from './language';
 
 /** IGDB genre name to the short form used in the prompt and the cue. */
 export const GENRE_DISPLAY_NAMES: Readonly<Record<string, string>> = {
@@ -41,6 +52,38 @@ export const GENRE_DISPLAY_NAMES: Readonly<Record<string, string>> = {
   'Visual Novel': 'visual novel',
 };
 
+/** The same keys in Latin American Spanish: the noun "¿Qué {noun} disfrutaste más?" says. */
+export const GENRE_DISPLAY_NAMES_ES: Readonly<Record<string, string>> = {
+  Adventure: 'juego de aventura',
+  Arcade: 'juego arcade',
+  'Card & Board Game': 'juego de cartas',
+  Fighting: 'juego de peleas',
+  "Hack and slash/Beat 'em up": 'hack and slash',
+  MOBA: 'MOBA',
+  Music: 'juego de ritmo',
+  Pinball: 'pinball',
+  Platform: 'juego de plataformas',
+  'Point-and-click': 'aventura gráfica',
+  Puzzle: 'juego de puzles',
+  'Quiz/Trivia': 'juego de trivia',
+  Racing: 'juego de carreras',
+  'Real Time Strategy (RTS)': 'RTS',
+  'Role-playing (RPG)': 'RPG',
+  Shooter: 'shooter',
+  Simulator: 'simulador',
+  Sport: 'juego de deportes',
+  Strategy: 'juego de estrategia',
+  Tactical: 'juego táctico',
+  'Turn-based strategy (TBS)': 'juego de estrategia por turnos',
+  'Visual Novel': 'novela visual',
+};
+
+/** Each language's table. A third language is one more table and one more line. */
+const DISPLAY_NAMES: Readonly<Record<Language, Readonly<Record<string, string>>>> = {
+  en: GENRE_DISPLAY_NAMES,
+  es: GENRE_DISPLAY_NAMES_ES,
+};
+
 /**
  * Genres that never make two games "same genre" and never attract a pivot.
  *
@@ -65,17 +108,22 @@ function normalize(genre: string): string {
     .replace(/\s+/g, ' ');
 }
 
-const BY_NORMALIZED_NAME: ReadonlyMap<string, string> = new Map(
-  Object.entries(GENRE_DISPLAY_NAMES).map(([name, display]) => [normalize(name), display]),
-);
+const BY_NORMALIZED_NAME: Readonly<Record<Language, ReadonlyMap<string, string>>> = {
+  en: byNormalizedName(DISPLAY_NAMES.en),
+  es: byNormalizedName(DISPLAY_NAMES.es),
+};
+
+function byNormalizedName(table: Readonly<Record<string, string>>): ReadonlyMap<string, string> {
+  return new Map(Object.entries(table).map(([name, display]) => [normalize(name), display]));
+}
 
 /**
- * The short form for an IGDB genre name, or null when there is no good one.
- * Null is the signal to fall back to the base prompt rather than to name a
- * genre awkwardly.
+ * The short form for an IGDB genre name in a language, or null when there is
+ * no good one. Null is the signal to fall back to the base prompt rather than
+ * to name a genre awkwardly. English when no language is given.
  */
-export function genreDisplayName(genre: string): string | null {
-  return BY_NORMALIZED_NAME.get(normalize(genre)) ?? null;
+export function genreDisplayName(genre: string, language: Language = 'en'): string | null {
+  return BY_NORMALIZED_NAME[language].get(normalize(genre)) ?? null;
 }
 
 /** Whether a genre is one the ranking engine has been told to disregard. */

@@ -125,6 +125,13 @@ describe('suggestRequestBody', () => {
     expect(suggestRequestBody({ medium: 'game' })).toEqual({ medium: 'game' });
   });
 
+  it('sends the language when it is not English, so the reasons are written in it', () => {
+    expect(suggestRequestBody({ medium: 'movie', language: 'es' })).toEqual({ medium: 'movie', language: 'es' });
+    // English is the function's default: sent as nothing, which a function
+    // deployed before it took `language` still accepts.
+    expect(suggestRequestBody({ medium: 'movie', language: 'en' })).toEqual({ medium: 'movie' });
+  });
+
   it('drops blank notes and empty lists, which the function reads as no filter anyway', () => {
     expect(
       suggestRequestBody({
@@ -200,6 +207,23 @@ describe('templateReason', () => {
       reason: 'Among the best-rated movies that fit your filters.',
       because: [],
     });
+  });
+
+  it("writes the function's Spanish, word for word, when asked in Spanish", () => {
+    const why = [{ feature: 'genre:Family', weight: 0.4 }];
+    expect(templateReason({ why }, taste, 'movie', 'es')).toEqual({
+      reason: 'Porque pusiste Wonka en “Me gustó” y comparte el género Family.',
+      because: ['Wonka'],
+    });
+    expect(templateReason({ why: [{ feature: 'decade:2020', weight: 1 }] }, taste, 'game', 'es').reason).toBe(
+      'Porque pusiste Hades en “Me encantó” y también es de los años 2020.',
+    );
+    expect(templateReason({ why: [{ feature: 'director:Paul King', weight: 1 }] }, taste, 'movie', 'es').reason).toBe(
+      'Encaja con tu gusto por Paul King.',
+    );
+    expect(templateReason({ why: null }, taste, 'movie', 'es').reason).toBe(
+      'Entre las películas mejor valoradas que coinciden con tus filtros.',
+    );
   });
 });
 

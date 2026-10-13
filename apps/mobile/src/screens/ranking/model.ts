@@ -17,19 +17,23 @@ import type { CoverSourceRow, TierListRow } from '@verso/api';
 
 import { filmGenreLabel } from '../../lib/film';
 import { genreLabel, platformShortName } from '../../lib/format';
+import { languageStore } from '../../lib/i18n/store';
 
 /**
  * How a medium names a genre in a row: IGDB's short forms for games
  * (`platformer`), TMDB's labels for films (`Sci-fi`, the site's Ranking
- * phone). Null is a genre the app does not name (Indie, TV Movie).
+ * phone). Null is a genre the app does not name (Indie, TV Movie). Both in the
+ * app's language at the moment of the call (wave 7).
  */
 export function genreNamer(medium: Medium = 'game'): (genre: string) => string | null {
-  return medium === 'movie' ? filmGenreLabel : genreDisplayName;
+  return medium === 'movie'
+    ? (genre) => filmGenreLabel(genre)
+    : (genre) => genreDisplayName(genre, languageStore.language());
 }
 
 /** The same, where the word starts a line or sits on a chip: `Platformer`, `Sci-fi`. */
 export function genreChipLabel(medium: Medium = 'game'): (genre: string) => string | null {
-  return medium === 'movie' ? filmGenreLabel : genreLabel;
+  return medium === 'movie' ? (genre) => filmGenreLabel(genre) : genreLabel;
 }
 
 /** The four lists as `tierList` returns them, best tier first when iterated with `TIERS`. */

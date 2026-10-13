@@ -26,6 +26,7 @@
 
 import {
   PLATFORM_FAMILIES,
+  platformFamilyLabel,
   withBackwardCompatible,
   type PlatformFamilyGroup,
   type PlatformFamilyId,
@@ -34,6 +35,7 @@ import {
 } from '@verso/core';
 
 import { platformShortName } from '../../lib/format';
+import { languageStore } from '../../lib/i18n/store';
 
 export type PickSet = ReadonlySet<PlatformPickId>;
 
@@ -101,10 +103,12 @@ export function picksFromPlatforms(platforms: readonly string[] | null | undefin
 /**
  * A pick as the deck's meta line names it: the generation's short name (`PS5`,
  * `Xbox Series X|S`, `Switch 2`, `PC`), and the family's name for an "Older"
- * chip, whose own label means nothing out of its row.
+ * chip, whose own label means nothing out of its row. The family's name is in
+ * the app's language (`Celular` for Mobile, wave 7); the test for "Older" reads
+ * the English label, which is the pick's identity.
  */
 export function pickShortName(pick: PlatformPick): string {
-  if (pick.label === 'Older') return familyOf(pick.family).label;
+  if (pick.label === 'Older') return platformFamilyLabel(pick.family, languageStore.language());
   const first = pick.platforms[0];
   return first ? platformShortName(first) : pick.label;
 }

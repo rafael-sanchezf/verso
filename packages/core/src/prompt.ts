@@ -12,27 +12,46 @@
  * Flickchart's lesson is that changing the question underneath people
  * destabilises their list. Keeping it in one overridable place is what lets the
  * wording be decided later without touching the search.
+ *
+ * The language is a parameter too (docs/design/spanish-build.md, wave 7): the
+ * Spanish asks "¿Cuál disfrutaste más?" and "¿Qué RPG disfrutaste más?", with
+ * the genre's noun from core's Spanish table. English when none is given, and
+ * an overridden wording wins over either language's default.
  */
 
 import { genreDisplayName } from './genres';
+import type { Language } from './language';
 import type { InsertionState } from './ranking';
 
 /** Today's default wording. Decided as the default 2026-09-15; still open. */
 export const DEFAULT_BASE_PROMPT = 'Which did you enjoy more?';
 
+/** The default wording in each language, for when no genre can be named. */
+const BASE_PROMPTS: Readonly<Record<Language, string>> = {
+  en: DEFAULT_BASE_PROMPT,
+  es: '¿Cuál disfrutaste más?',
+};
+
+/** The default base wording in a language: `Which did you enjoy more?`, `¿Cuál disfrutaste más?`. */
+export function defaultBasePrompt(language: Language = 'en'): string {
+  return BASE_PROMPTS[language];
+}
+
 /** Today's default wording when the opponent is a genre peer. */
-export function defaultGenrePrompt(genre: string): string {
-  return `Which ${genre} did you enjoy more?`;
+export function defaultGenrePrompt(genre: string, language: Language = 'en'): string {
+  return language === 'es' ? `¿Qué ${genre} disfrutaste más?` : `Which ${genre} did you enjoy more?`;
 }
 
 export interface ComparisonPromptOptions {
-  /** Wording when no genre can be named. Defaults to DEFAULT_BASE_PROMPT. */
+  /** Wording when no genre can be named. Defaults to the language's base prompt. */
   basePrompt?: string;
   /**
    * Wording when the opponent is a genre peer, built from the genre's short
-   * form ("RPG", "platformer"). Defaults to defaultGenrePrompt.
+   * form ("RPG", "platformer"). Defaults to defaultGenrePrompt in the language.
    */
   genrePrompt?: (genre: string) => string;
+  /** The language the default wordings and the genre's noun are in. English when absent. */
+  language?: Language;
 }
 
 /**
@@ -41,12 +60,12 @@ export interface ComparisonPromptOptions {
  * Null covers three cases that all deserve the plain screen: there is no pivot,
  * the pivot is not a genre peer, and the shared genre has no short form worth
  * printing (IGDB's "Indie" is ignored upstream; a genre IGDB adds later simply
- * has no entry yet).
+ * has no entry yet). The short form is in the language given, English by default.
  */
-export function genreCue(state: InsertionState): string | null {
+export function genreCue(state: InsertionState, language: Language = 'en'): string | null {
   const reason = state.pivotReason;
   if (reason === null || reason.kind !== 'genre') return null;
-  return genreDisplayName(reason.genre);
+  return genreDisplayName(reason.genre, language);
 }
 
 /**
@@ -60,7 +79,8 @@ export function comparisonPrompt(
   state: InsertionState,
   options: ComparisonPromptOptions = {},
 ): string {
-  const cue = genreCue(state);
-  if (cue === null) return options.basePrompt ?? DEFAULT_BASE_PROMPT;
-  return (options.genrePrompt ?? defaultGenrePrompt)(cue);
+  const language = options.language ?? 'en';
+  const cue = genreCue(state, language);
+  if (cue === null) return options.basePrompt ?? defaultBasePrompt(language);
+  return options.genrePrompt ? options.genrePrompt(cue) : defaultGenrePrompt(cue, language);
 }

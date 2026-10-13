@@ -17,14 +17,21 @@
  */
 
 import { getMyProfile, setProfilePlatforms } from '@verso/api';
-import { PLATFORM_FAMILIES, expandPlatforms, type PlatformFamilyGroup, type PlatformPickId } from '@verso/core';
+import {
+  PLATFORM_FAMILIES,
+  expandPlatforms,
+  platformFamilyLabel,
+  platformPickLabel,
+  type PlatformFamilyGroup,
+  type PlatformPickId,
+} from '@verso/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useT } from '@/lib/i18n';
+import { useLanguage, useT } from '@/lib/i18n';
 import { invalidateProfile } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -151,12 +158,15 @@ function Family({
 }) {
   const theme = useTheme();
   const picked = isFamilyPicked(picks, family.id);
+  // The words in the app's language, the names as they are (`Older` is `Anteriores`).
+  const language = useLanguage();
+  const familyLabel = platformFamilyLabel(family.id, language);
 
   return (
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={family.label}
+        accessibilityLabel={familyLabel}
         accessibilityState={{ selected: picked }}
         onPress={onFamily}
         style={({ pressed }) => [
@@ -173,7 +183,7 @@ function Family({
           <Icon name="gamepad-2" size={24} color="text/secondary" />
         </View>
         <Text size={17} weight={600} layout={styles.fill}>
-          {family.label}
+          {familyLabel}
         </Text>
         <Icon
           name={picked ? 'check' : 'chevron-right'}
@@ -190,13 +200,13 @@ function Family({
               <Pressable
                 key={pick.id}
                 accessibilityRole="button"
-                accessibilityLabel={`${family.label} ${pick.label}`}
+                accessibilityLabel={`${familyLabel} ${platformPickLabel(pick.id, language)}`}
                 accessibilityState={{ selected: on }}
                 onPress={() => onPick(pick.id)}
                 // The chip is about 30pt tall; the slop brings it to 44.
                 hitSlop={{ top: 7, bottom: 7, left: 4, right: 4 }}
                 style={({ pressed }) => (pressed ? styles.pressed : null)}>
-                <Chip label={pick.label} variant={on ? 'played' : 'surface'} />
+                <Chip label={platformPickLabel(pick.id, language)} variant={on ? 'played' : 'surface'} />
               </Pressable>
             );
           })}

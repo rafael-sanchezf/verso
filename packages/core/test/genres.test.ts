@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_IGNORED_GENRES,
   GENRE_DISPLAY_NAMES,
+  GENRE_DISPLAY_NAMES_ES,
   genreDisplayName,
   isIgnoredGenre,
 } from '../src/genres';
@@ -97,5 +98,45 @@ describe('isIgnoredGenre', () => {
 
   it('ignores nothing when the list is empty', () => {
     expect(isIgnoredGenre('Indie', [])).toBe(false);
+  });
+});
+
+describe('genreDisplayName in Spanish', () => {
+  it('names the same genres as the English table, and only those', () => {
+    expect(Object.keys(GENRE_DISPLAY_NAMES_ES).sort()).toEqual(Object.keys(GENRE_DISPLAY_NAMES).sort());
+    for (const genre of IGDB_GENRES) {
+      expect(genreDisplayName(genre, 'es') === null).toBe(genreDisplayName(genre) === null);
+    }
+    expect(genreDisplayName('Indie', 'es')).toBeNull();
+  });
+
+  it('reads as a noun the Spanish prompt can swallow whole', () => {
+    for (const genre of IGDB_GENRES) {
+      const display = genreDisplayName(genre, 'es');
+      if (display === null) continue;
+      expect(display.trim()).toBe(display);
+      expect(display).not.toBe('');
+      expect(`¿Qué ${display} disfrutaste más?`).toMatch(/^¿Qué .+ disfrutaste más\?$/);
+    }
+  });
+
+  it("says what Spanish-speaking players say", () => {
+    expect(genreDisplayName('Role-playing (RPG)', 'es')).toBe('RPG');
+    expect(genreDisplayName('Platform', 'es')).toBe('juego de plataformas');
+    expect(genreDisplayName('Puzzle', 'es')).toBe('juego de puzles');
+    expect(genreDisplayName('Fighting', 'es')).toBe('juego de peleas');
+    expect(genreDisplayName('Point-and-click', 'es')).toBe('aventura gráfica');
+    expect(genreDisplayName('Shooter', 'es')).toBe('shooter');
+    expect(genreDisplayName('Music', 'es')).toBe('juego de ritmo');
+  });
+
+  it('forgives what the English lookup forgives', () => {
+    expect(genreDisplayName('  role-playing (rpg) ', 'es')).toBe('RPG');
+    expect(genreDisplayName('Hack and slash/Beat ’em up', 'es')).toBe('hack and slash');
+  });
+
+  it('is English when no language is given', () => {
+    expect(genreDisplayName('Platform')).toBe('platformer');
+    expect(genreDisplayName('Platform', 'en')).toBe('platformer');
   });
 });

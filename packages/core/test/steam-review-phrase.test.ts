@@ -5,6 +5,7 @@ import {
   STEAM_REVIEW_OVERWHELMING,
   STEAM_REVIEW_PHRASES,
   steamReviewPhrase,
+  steamReviewPhraseLabel,
 } from '../src/steam-review-phrase';
 
 describe('steamReviewPhrase: the review-count floor', () => {
@@ -141,5 +142,34 @@ describe('steamReviewPhrase: the phrase list', () => {
     );
 
     expect([...produced]).toEqual([...STEAM_REVIEW_PHRASES]);
+  });
+});
+
+describe('steamReviewPhraseLabel', () => {
+  it('is the phrase itself in English, and by default', () => {
+    for (const phrase of STEAM_REVIEW_PHRASES) {
+      expect(steamReviewPhraseLabel(phrase)).toBe(phrase);
+      expect(steamReviewPhraseLabel(phrase, 'en')).toBe(phrase);
+    }
+  });
+
+  it("is Steam's own Latin American Spanish, in Steam's sentence case", () => {
+    expect(STEAM_REVIEW_PHRASES.map((phrase) => steamReviewPhraseLabel(phrase, 'es'))).toEqual([
+      'Extremadamente positivas',
+      'Muy positivas',
+      'Positivas',
+      'Mayormente positivas',
+      'Variadas',
+      'Mayormente negativas',
+      'Negativas',
+      'Muy negativas',
+      'Extremadamente negativas',
+    ]);
+  });
+
+  it('labels what steamReviewPhrase computes', () => {
+    const phrase = steamReviewPhrase(85, 120);
+    expect(phrase).toBe('Very Positive');
+    expect(steamReviewPhraseLabel(phrase!, 'es')).toBe('Muy positivas');
   });
 });

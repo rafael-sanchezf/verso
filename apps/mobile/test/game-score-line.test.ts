@@ -14,6 +14,8 @@ import {
   type ScoreLineItem,
 } from '../src/screens/game/score-line';
 
+import { languageStore } from '../src/lib/i18n/store';
+
 import { english } from './english';
 
 import type { ExternalScore, ScoresBySource } from '@verso/api';
@@ -66,6 +68,20 @@ describe('playersItem', () => {
       value: 'Overwhelmingly Positive',
       label: 'Steam',
     });
+  });
+
+  it("says Steam's phrase in Steam's own Spanish when the app is in Spanish", () => {
+    languageStore.setPreference('es');
+    try {
+      expect(playersKeys({ steam: score('steam', 96.2, 1200) })).toEqual({
+        key: 'players',
+        value: 'Extremadamente positivas',
+        label: 'browse.game.scores.steam',
+      });
+      expect(playersKeys({ steam: score('steam', 55, 300) })).toMatchObject({ value: 'Variadas' });
+    } finally {
+      languageStore.setPreference('system');
+    }
   });
 
   it('falls through to IGDB when Steam has too few reviews to summarise', () => {

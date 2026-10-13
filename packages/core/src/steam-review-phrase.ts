@@ -32,6 +32,8 @@
  * thumbs-up "Very Positive".
  */
 
+import type { Language } from './language';
+
 /** Every phrase Steam can show, best to worst. */
 export const STEAM_REVIEW_PHRASES = [
   'Overwhelmingly Positive',
@@ -46,6 +48,30 @@ export const STEAM_REVIEW_PHRASES = [
 ] as const;
 
 export type SteamReviewPhrase = (typeof STEAM_REVIEW_PHRASES)[number];
+
+/**
+ * Steam's own wording for each phrase on its Latin American Spanish store
+ * (docs/design/spanish-build.md, wave 7). Steam writes these in sentence case,
+ * the reviews being feminine plural ("reseñas"), so its capitalization is kept
+ * rather than English's title case. The English phrase stays the identity:
+ * this is a label for it, never a second thing to compute.
+ */
+const STEAM_REVIEW_PHRASES_ES: Readonly<Record<SteamReviewPhrase, string>> = {
+  'Overwhelmingly Positive': 'Extremadamente positivas',
+  'Very Positive': 'Muy positivas',
+  Positive: 'Positivas',
+  'Mostly Positive': 'Mayormente positivas',
+  Mixed: 'Variadas',
+  'Mostly Negative': 'Mayormente negativas',
+  Negative: 'Negativas',
+  'Very Negative': 'Muy negativas',
+  'Overwhelmingly Negative': 'Extremadamente negativas',
+};
+
+/** A phrase as Steam shows it in a language: `Very Positive`, `Muy positivas`. */
+export function steamReviewPhraseLabel(phrase: SteamReviewPhrase, language: Language = 'en'): string {
+  return language === 'es' ? STEAM_REVIEW_PHRASES_ES[phrase] : phrase;
+}
 
 /** Fewer reviews than this and Steam shows no summary. */
 export const STEAM_REVIEW_MINIMUM = 10;

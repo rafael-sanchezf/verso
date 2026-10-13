@@ -23,7 +23,7 @@ export interface CompareCardProps {
   game: LogGame;
   /** "just finished", or "ranked #4 · 8.9". */
   subtitle: string;
-  /** `genreCue(state)`; nothing renders when it is null. */
+  /** `genreCue(state, language)`; nothing renders when it is null. */
   cue: string | null;
   onPress: () => void;
   disabled?: boolean;

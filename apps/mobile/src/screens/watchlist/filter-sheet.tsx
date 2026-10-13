@@ -19,7 +19,7 @@ import { useEffect, useMemo, useReducer, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { filmGenreLabel } from '@/lib/film';
-import { useT } from '@/lib/i18n';
+import { useLanguage, useT } from '@/lib/i18n';
 import { Button, Chip, fontFamilyFor, Icon, SegmentedControl, Sheet, Text, TextButton, useTheme } from '@/ui';
 
 import {
@@ -73,7 +73,9 @@ export function FilterSheet({
     setMoreGenres(false);
   }, [visible, applied]);
 
-  const genres = useMemo(() => genreOptions(rows), [rows]);
+  // Ties are broken by the label, which is in the app's language.
+  const language = useLanguage();
+  const genres = useMemo(() => genreOptions(rows), [rows, language]);
   const shownGenres = moreGenres ? genres : genres.slice(0, GENRES_FOLDED);
   const suggestions = useMemo(() => directorSuggestions(rows, typed), [rows, typed]);
   // A name typed and not picked from the suggestions still counts: it is the

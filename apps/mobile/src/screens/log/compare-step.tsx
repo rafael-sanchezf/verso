@@ -20,7 +20,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { filmComparisonWords } from '@/lib/film';
-import { useT } from '@/lib/i18n';
+import { useLanguage, useT } from '@/lib/i18n';
 import { Button, Icon, Text, TierChip } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
@@ -53,6 +53,7 @@ export function CompareStep({
   onClose,
 }: CompareStepProps) {
   const t = useT();
+  const language = useLanguage();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   // The top row floats over the stage, so the prompt is kept clear of it by
@@ -60,9 +61,9 @@ export function CompareStep({
   const [topRowHeight, setTopRowHeight] = useState(0);
 
   // A film's genres are TMDB's, which core's IGDB table does not name.
-  const filmWords = medium === 'movie' ? filmComparisonWords(insertion) : null;
-  const prompt = filmWords ? filmWords.prompt : comparisonPrompt(insertion);
-  const cue = filmWords ? filmWords.cue : genreCue(insertion);
+  const filmWords = medium === 'movie' ? filmComparisonWords(insertion, language) : null;
+  const prompt = filmWords ? filmWords.prompt : comparisonPrompt(insertion, { language });
+  const cue = filmWords ? filmWords.cue : genreCue(insertion, language);
   // Every answer replaces the pair; the question number is what makes React
   // mount a new one and fade it in.
   const question = insertion.records.length;

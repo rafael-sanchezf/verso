@@ -20,7 +20,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 
 import { filmComparisonWords } from '@/lib/film';
-import { useT } from '@/lib/i18n';
+import { useLanguage, useT } from '@/lib/i18n';
 import { Button, Text, TierChip, useTheme } from '@/ui';
 
 import { CompareCard } from '../../log/compare-card';
@@ -53,11 +53,12 @@ export function CompareStage({
   onPlaceRest,
 }: CompareStageProps) {
   const t = useT();
+  const language = useLanguage();
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
-  const filmWords = medium === 'movie' ? filmComparisonWords(question.insertion) : null;
-  const prompt = filmWords ? filmWords.prompt : comparisonPrompt(question.insertion);
-  const cue = filmWords ? filmWords.cue : genreCue(question.insertion);
+  const filmWords = medium === 'movie' ? filmComparisonWords(question.insertion, language) : null;
+  const prompt = filmWords ? filmWords.prompt : comparisonPrompt(question.insertion, { language });
+  const cue = filmWords ? filmWords.cue : genreCue(question.insertion, language);
 
   return (
     <ScrollView

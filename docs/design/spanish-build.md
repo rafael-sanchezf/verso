@@ -101,6 +101,13 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | Media you track (Edit profile) | Lo que sigues | Wave 6; avoids "medios", which reads as news media |
 | Top N% of rankers (Profile's tile) | Top N% / de usuarios | Wave 6; short enough for a quarter-width tile |
 | Recent (Profile's section) | Reciente | Wave 6 |
+| A game genre in the comparison prompt and the rows (RPG, platformer, puzzle game...) | RPG, juego de plataformas, juego de puzles... | Wave 7; the whole table is `GENRE_DISPLAY_NAMES_ES` in `packages/core/src/genres.ts`. A noun "¿Qué {noun} disfrutaste más?" swallows whole: RPG, shooter, MOBA and RTS as players say them; aventura gráfica for point-and-click; juego de peleas (Latin America), not lucha |
+| Which did you enjoy more? / Which {genre} did you enjoy more? | ¿Cuál disfrutaste más? / ¿Qué {genre} disfrutaste más? | Wave 7; core's `comparisonPrompt` |
+| A film genre (Sci-fi, Thriller, War...) | Ciencia ficción, Suspenso, Bélica... | Wave 7; the table is `FILM_GENRES_ES` in `apps/mobile/src/lib/film.ts`. Suspenso is Latin America's Thriller. The prompt's noun carries "película" where Spanish needs it ("película de terror") |
+| Older (the platform picker's chip) / Mobile (its family) | Anteriores / Celular | Wave 7; `platformPickLabel` and `platformFamilyLabel` in core. Console names stay names |
+| Steam's review phrase (Very Positive...) | Muy positivas, Mayormente positivas, Variadas... | Wave 7; Steam's own Latin American store wording, in Steam's sentence case (`steamReviewPhraseLabel`) |
+| a stretch (a weak fit, in a reason) | una apuesta | Wave 7; the suggest function's rule 8, the same words on every card |
+| Because you put X in Loved / Fits your taste for / Among the best-rated | Porque pusiste X en “Me encantó” / Encaja con tu gusto por / Entre los juegos mejor valorados | Wave 7; the template reason, in the function and in `packages/api` word for word |
 | Steam / Letterboxd / Game Pass / PlayStation / Xbox / Switch | unchanged | Names |
 
 ## The rules for every wave
@@ -108,7 +115,7 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 1. A screen's sentences move into the wave's module (`en/<wave>.ts`) unchanged, under the screen's key, in the order the screen shows them, and the Spanish into `es/<wave>.ts`. A wave edits those two files and its screens, never another wave's module, `en.ts` or `es.ts`. Changing an English sentence is a copy decision and is not done in a translation PR.
 2. Every component that shows a sentence calls `useT()` once at the top and uses that `t`; a module with no render (an error mapper, a dialog built in a handler, a route file's title) calls `t()` from `@/lib/i18n`.
 3. A sentence with a number or a name uses a `{variable}`, never string concatenation, so the Spanish can put the words in its own order.
-4. A word that is data stays data: a title, a platform, a person's name, a genre's display name from core (which stays English until core gets a dictionary; see Held).
+4. A word that is data stays data: a title, a platform, a person's name, a catalog's own genre name. A genre's display name from core is not data since wave 7: it is said in the app's language (`genreDisplayName(genre, language)`).
 5. The typecheck is the completeness check. A key added to `en.ts` without its Spanish line does not compile; the dictionary test catches a `{variable}` that differs between languages.
 6. Spanish runs 20 to 30 percent longer. A wave's PR says which rows, chips and buttons it checked on the simulator in Spanish at the largest default text size, and files a card for any that truncate rather than shortening the Spanish.
 
@@ -126,10 +133,13 @@ Each wave is one PR. Rafa asked on 2026-10-13 to run waves 2 to 6 at once rather
 | 6 | Profile, Activity, Edit profile, Steam and Letterboxd imports, the export and import copy | Wave 2 |
 | 7 | Core's words: genre display names and the suggest reason (`packages/core`), which need a dictionary of their own since core has no React and no device | Wave 4 |
 
+**Wave 7, as built (VER-211, 2026-10-13).** Core gained `Language` (the one definition; the app's `lib/i18n/model.ts` re-exports it), and every word core says takes one and defaults to English: `genreDisplayName(genre, language)` over a Spanish table, `comparisonPrompt(state, { language })` and `genreCue(state, language)` (the overrides still win), `platformFamilyLabel` and `platformPickLabel` beside the English `PLATFORM_FAMILIES`, which stay the identity, and `steamReviewPhraseLabel`. The app's film helper (`lib/film.ts`) has a Spanish table read through `languageStore`, as `format.ts` does; `format.genres` and `genreLabel` follow the language, the genre icons stay keyed by the English name. The callers pass the language: the compare step and stage through `useLanguage()`, the pure modules (Ranking's namer, the score line, the platform picks) through the store. The ask sends `language` to the `suggest` function, which accepts `en` or `es` (English when absent, anything else refused), adds one rule to the system prompt for Spanish (Latin American, `tú`, "una apuesta" for "a stretch"), and writes its template reasons in Spanish too, as does `plainSuggestions` on the device. English is sent as nothing, so an English ask still passes a function deployed before this wave; a Spanish ask needs the function redeployed (`supabase functions deploy suggest`, which nothing runs on merge).
+
 ## Held, on purpose
 
 - **Supabase's emails** (confirmation, reset) are English templates in the hosted project's Auth settings. Spanish ones are a hosted-project change Rafa runs, filed as a card once wave 1 merges.
-- **The reason line and the ask's answer** come from a model. Their language follows the person's once the prompt carries it (wave 7).
+- **The reason line and the ask's answer** now follow the person's language (wave 7): the model writes in it, and the template reasons (the fallback, the short list, "Not now") are written in it. What stays English inside a Spanish reason is data: a title, and a genre or platform named from the catalog (`comparte el género Roguelike`). Spanish reasons need the redeployed function.
+- **The catalog's genre words inside a reason** are IGDB's and TMDB's English names, as above; translating them is the catalog's question, not the reason's.
 - **The catalog's text** (a film's overview, a game's summary) is IGDB's and TMDB's English. TMDB serves Spanish overviews on request; whether to mirror them is a catalog-size question (VER-173) before it is a translation one.
 - **The site** (rankverso.com) is a separate build in the private repo, filed as its own card.
 - **A third language** adds one `xx.ts` file, one entry in `LANGUAGES`, one table in `format.ts` and one line in `app.json`. Nothing else knows how many there are.

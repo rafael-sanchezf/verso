@@ -5,7 +5,7 @@
  */
 
 import type { InsertionState } from '@verso/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   filmComparisonWords,
@@ -17,6 +17,7 @@ import {
   filmSearchLine,
   tmdbScoreText,
 } from '../src/lib/film';
+import { languageStore } from '../src/lib/i18n/store';
 import { whereToWatch as watchChips } from '../src/screens/movie/where-to-watch';
 import { cardWidth, columnsAfterPinch, columnsStorageKey, parseColumns } from '../src/screens/watchlist/zoom';
 
@@ -80,6 +81,50 @@ describe('filmComparisonWords', () => {
     expect(filmComparisonWords(state({ kind: 'midpoint' }))).toEqual({ prompt: 'Which did you enjoy more?', cue: null });
     expect(filmComparisonWords(state({ kind: 'genre', genre: 'TV Movie' })).cue).toBeNull();
     expect(filmComparisonWords(state(null)).cue).toBeNull();
+  });
+});
+
+describe('in Spanish', () => {
+  beforeEach(() => languageStore.setPreference('es'));
+  afterEach(() => languageStore.setPreference('system'));
+
+  it("names TMDB's genres in Latin America's words", () => {
+    expect(filmGenreLabel('Science Fiction')).toBe('Ciencia ficción');
+    expect(filmGenreLabel('Thriller')).toBe('Suspenso');
+    expect(filmGenreLabel('War')).toBe('Bélica');
+    expect(filmGenreLabel('Family')).toBe('Familiar');
+    expect(filmGenreLabel('TV Movie')).toBeNull();
+    expect(filmGenreLabels(['TV Movie', 'Science Fiction', 'Drama', 'Science Fiction'])).toEqual([
+      'Ciencia ficción',
+      'Drama',
+    ]);
+  });
+
+  it('can still be asked for a language other than the one the app is in', () => {
+    expect(filmGenreLabel('Science Fiction', 'en')).toBe('Sci-fi');
+  });
+
+  it('writes the lines with the Spanish genre and the same runtime symbols', () => {
+    expect(filmRuntime(155)).toBe('2 h 35');
+    expect(filmRuntime(45)).toBe('45 min');
+    expect(filmMeta(2021, ['Science Fiction', 'Adventure'])).toBe('2021 · Ciencia ficción');
+    expect(filmMeta(null, ['Horror'])).toBe('Terror');
+    expect(filmSearchLine(2021, ['Thriller'], null)).toBe('2021 · Suspenso');
+    expect(filmSearchLine(2021, ['Thriller'], 'Denis Villeneuve')).toBe('2021 · Denis Villeneuve');
+    expect(filmFactsLine(2021, 155, 'PG-13')).toBe('2021 · 2 h 35 · PG-13');
+  });
+
+  it('asks the comparison in Spanish, the cue and the prompt agreeing', () => {
+    const state = (pivotReason: InsertionState['pivotReason']) => ({ pivotReason }) as InsertionState;
+    expect(filmComparisonWords(state({ kind: 'genre', genre: 'Science Fiction' }))).toEqual({
+      prompt: '¿Qué película de ciencia ficción disfrutaste más?',
+      cue: 'Ciencia ficción',
+    });
+    expect(filmComparisonWords(state({ kind: 'genre', genre: 'Comedy' })).prompt).toBe('¿Qué comedia disfrutaste más?');
+    expect(filmComparisonWords(state({ kind: 'midpoint' }))).toEqual({ prompt: '¿Cuál disfrutaste más?', cue: null });
+    expect(filmComparisonWords(state({ kind: 'genre', genre: 'Drama' }), 'en').prompt).toBe(
+      'Which drama did you enjoy more?',
+    );
   });
 });
 

@@ -1,3 +1,4 @@
+export * from './language';
 export * from './model';
 export * from './genres';
 export * from './ranking';

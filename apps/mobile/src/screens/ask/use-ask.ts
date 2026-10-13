@@ -24,6 +24,7 @@ import { getMyProfile, plainSuggestions, suggest, type Profile, type SuggestOpti
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
+import { languageStore } from '@/lib/i18n/store';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 
@@ -77,6 +78,9 @@ function requestFor(medium: AskMedium, text: string, profile: Profile | null): S
     // The person's own backlog or watchlist is the likeliest right answer
     // (decision 18), and `suggestion_candidates` leaves it out by default.
     includeBacklog: true,
+    // The reasons, the model's and the template's, in the language the app is
+    // in when the question is asked (spanish-build.md, wave 7).
+    language: languageStore.language(),
   };
 }
 

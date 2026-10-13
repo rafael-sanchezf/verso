@@ -98,6 +98,14 @@ export type Medium = 'game' | 'movie' | 'tv';
 export type Tier = 'loved' | 'liked' | 'fine' | 'disliked';
 export const MEDIA: readonly Medium[] = ['game', 'movie', 'tv'];
 
+/**
+ * The language the person reads the app in, and so the reasons
+ * (docs/design/spanish-build.md, wave 7). The same two as `Language` in
+ * packages/core, which this bundle cannot import. English when the app sends none.
+ */
+export type Language = 'en' | 'es';
+export const LANGUAGES: readonly Language[] = ['en', 'es'];
+
 /** The validated body. Arrays that were absent or empty are null, which is "no filter" to SQL. */
 export interface SuggestRequest {
   medium: Medium;
@@ -110,6 +118,8 @@ export interface SuggestRequest {
   includeBacklog: boolean;
   /** Free text, the user's own words. Context for the model, never a filter. */
   note: string | null;
+  /** The language every reason is written in, the model's and the template's. */
+  language: Language;
 }
 
 export interface WhyFeature {
@@ -355,7 +365,7 @@ export async function suggest(deps: SuggestDeps, request: SuggestRequest): Promi
 
   // 4. Too few to choose from: show them, say why from `why`, skip the model.
   if (labeled.length < 3) {
-    const choices = labeled.map((candidate) => templateChoice(candidate, taste, request.medium));
+    const choices = labeled.map((candidate) => templateChoice(candidate, taste, request.medium, request.language));
     return {
       status: 200,
       body: await record(deps, request, labeled, {
@@ -396,7 +406,7 @@ export async function suggest(deps: SuggestDeps, request: SuggestRequest): Promi
       usage: attempt.usage,
       fallback: true,
       fallbackReason: attempt.reason,
-      choices: labeled.slice(0, 3).map((candidate) => templateChoice(candidate, taste, request.medium)),
+      choices: labeled.slice(0, 3).map((candidate) => templateChoice(candidate, taste, request.medium, request.language)),
     }),
   };
 }
@@ -686,8 +696,72 @@ export function capText(text: string, max: number): string {
 
 // -- Template reasons ----------------------------------------------------------
 
-function templateChoice(candidate: LabeledCandidate, taste: TasteContext, medium: Medium): Choice {
-  return { candidate, ...templateReason(candidate.row, taste, medium) };
+function templateChoice(
+  candidate: LabeledCandidate,
+  taste: TasteContext,
+  medium: Medium,
+  language: Language,
+): Choice {
+  return { candidate, ...templateReason(candidate.row, taste, medium, language) };
+}
+
+/** The template's words in one language. */
+interface ReasonWords {
+  because(title: string, tier: 'loved' | 'liked', trait: string): string;
+  sharesGenre(value: string): string;
+  alsoOn(value: string): string;
+  alsoFrom(start: number): string;
+  fits(feature: string): string;
+  best(medium: Medium): string;
+}
+
+/**
+ * English, and Latin American Spanish with `tú` (wave 7). The tiers read as
+ * the app names them (Loved, "Me encantó"); a feature's value (a genre, a
+ * platform) is the catalog's own word and is not translated. Restated word for
+ * word in packages/api/src/suggest.ts, so a plain pick reads like this one.
+ */
+const REASON_WORDS: Readonly<Record<Language, ReasonWords>> = {
+  en: {
+    because: (title, tier, trait) => `Because you put ${title} in ${tier === 'loved' ? 'Loved' : 'Liked'} and ${trait}.`,
+    sharesGenre: (value) => `this shares the ${value} genre`,
+    alsoOn: (value) => `this is also on ${value}`,
+    alsoFrom: (start) => `this is also from the ${start}s`,
+    fits: (feature) => `Fits your taste for ${plainFeature(feature)}.`,
+    best: (medium) => `Among the best-rated ${mediumNoun(medium)} that fit your filters.`,
+  },
+  es: {
+    because: (title, tier, trait) =>
+      `Porque pusiste ${title} en “${tier === 'loved' ? 'Me encantó' : 'Me gustó'}” y ${trait}.`,
+    sharesGenre: (value) => `comparte el género ${value}`,
+    alsoOn: (value) => `también está en ${value}`,
+    alsoFrom: (start) => `también es de los años ${start}`,
+    fits: (feature) => `Encaja con tu gusto por ${plainFeatureEs(feature)}.`,
+    best: (medium) =>
+      medium === 'game'
+        ? 'Entre los juegos mejor valorados que coinciden con tus filtros.'
+        : medium === 'movie'
+          ? 'Entre las películas mejor valoradas que coinciden con tus filtros.'
+          : 'Entre las series mejor valoradas que coinciden con tus filtros.',
+  },
+};
+
+/**
+ * `genre:Roguelike` -> "el género Roguelike", `decade:2010` -> "los años 2010";
+ * a developer, a director or a platform is its name alone ("Paul King"), which
+ * spares Spanish a gendered "el director" for a director who may not be one.
+ */
+export function plainFeatureEs(feature: string): string {
+  const colon = feature.indexOf(':');
+  if (colon < 0) return feature.replaceAll('_', ' ');
+  const kind = feature.slice(0, colon).trim();
+  const value = feature.slice(colon + 1).trim();
+  if (kind === 'genre') return `el género ${value}`;
+  if (kind === 'decade') {
+    const match = value.match(/(\d{4})/);
+    return match ? `los años ${match[1]}` : value;
+  }
+  return value;
 }
 
 /**
@@ -697,13 +771,15 @@ function templateChoice(candidate: LabeledCandidate, taste: TasteContext, medium
  * shares the Roguelike genre."). Features `tier_list` cannot match on (a
  * developer, a director) fall through to the next; with no match the strongest
  * feature is named alone, and with no features at all the reason says it is
- * the rating that put it there.
+ * the rating that put it there. In the request's language, English by default.
  */
 export function templateReason(
   row: CandidateRow,
   taste: TasteContext,
   medium: Medium,
+  language: Language = 'en',
 ): { reason: string; because: string[] } {
+  const words = REASON_WORDS[language];
   const features = (row.why ?? [])
     .filter((entry) => typeof entry?.feature === 'string' && Number(entry.weight) > 0)
     .sort((a, b) => Number(b.weight) - Number(a.weight));
@@ -713,38 +789,36 @@ export function templateReason(
     if (colon < 0) continue;
     const kind = entry.feature.slice(0, colon).trim();
     const value = entry.feature.slice(colon + 1).trim();
-    const trait = sharedTrait(kind, value);
+    const trait = sharedTrait(kind, value, words);
     if (!trait) continue;
     const item = taste.top.find((candidate) => trait.matches(candidate));
     if (item) {
-      return {
-        reason: `Because you put ${item.title} in ${item.tier === 'loved' ? 'Loved' : 'Liked'} and ${trait.phrase}.`,
-        because: [item.title],
-      };
+      return { reason: words.because(item.title, item.tier, trait.phrase), because: [item.title] };
     }
   }
 
   if (features.length > 0) {
-    return { reason: `Fits your taste for ${plainFeature(features[0]!.feature)}.`, because: [] };
+    return { reason: words.fits(features[0]!.feature), because: [] };
   }
-  return { reason: `Among the best-rated ${mediumNoun(medium)} that fit your filters.`, because: [] };
+  return { reason: words.best(medium), because: [] };
 }
 
 function sharedTrait(
   kind: string,
   value: string,
+  words: ReasonWords,
 ): { phrase: string; matches: (item: TasteItem) => boolean } | null {
   const same = (a: string) => a.trim().toLowerCase() === value.toLowerCase();
   switch (kind) {
     case 'genre':
-      return { phrase: `this shares the ${value} genre`, matches: (item) => item.genres.some(same) };
+      return { phrase: words.sharesGenre(value), matches: (item) => item.genres.some(same) };
     case 'platform':
-      return { phrase: `this is also on ${value}`, matches: (item) => item.platforms.some(same) };
+      return { phrase: words.alsoOn(value), matches: (item) => item.platforms.some(same) };
     case 'decade': {
       const start = Number(decadeLabel(value).slice(0, 4));
       if (!Number.isInteger(start)) return null;
       return {
-        phrase: `this is also from the ${start}s`,
+        phrase: words.alsoFrom(start),
         matches: (item) => item.year !== null && Math.floor(item.year / 10) * 10 === start,
       };
     }
@@ -838,6 +912,7 @@ const REQUEST_KEYS = new Set([
   'region',
   'includeBacklog',
   'note',
+  'language',
 ]);
 
 class InvalidRequest extends Error {}
@@ -897,6 +972,11 @@ function readRequest(body: unknown): SuggestRequest {
     note = trimmed === '' ? null : trimmed;
   }
 
+  const language = body.language ?? 'en';
+  if (typeof language !== 'string' || !(LANGUAGES as readonly string[]).includes(language)) {
+    refuse('language must be one of en, es');
+  }
+
   return {
     medium: medium as Medium,
     genres: stringList(body.genres, 'genres'),
@@ -907,6 +987,7 @@ function readRequest(body: unknown): SuggestRequest {
     region: region.toUpperCase(),
     includeBacklog,
     note,
+    language: language as Language,
   };
 }
 

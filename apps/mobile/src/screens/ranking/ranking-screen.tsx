@@ -23,7 +23,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useT } from '@/lib/i18n';
+import { useLanguage, useT } from '@/lib/i18n';
 import { RankingBanner } from '@/screens/onboarding/session/ranking-banner';
 import { useActiveMedium } from '@/state/medium';
 import { EmptyState, MediumChip, ScreenHeader, useTheme } from '@/ui';
@@ -82,7 +82,9 @@ export function RankingScreen() {
 
   // The sheets list what the whole ranking contains, not what the current filter
   // has left, or choosing one filter would empty the other's sheet.
-  const genres = useMemo(() => genreOptions(items, medium), [items, medium]);
+  // Sorted by the label the sheet prints, which is in the app's language.
+  const language = useLanguage();
+  const genres = useMemo(() => genreOptions(items, medium), [items, medium, language]);
   const platforms = useMemo(() => platformOptions(items), [items]);
 
   const filtered = isFiltered(filters);
