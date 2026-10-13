@@ -445,7 +445,7 @@ Check after the merge: `curl -s https://rankverso.com | grep -c noindex` prints 
 
 Unblocks: reading the onboarding funnel (signed up, first session, ten ranked, first pick, day-7 return), overall and by week of sign-up. `20261012120000_funnel_report.sql` adds `funnel_report` and `funnel_report_by_cohort`, which only the service role and the database owner may call; `pnpm funnel` connects as the owner with the database connection string and only reads. [specs/onboarding.md](../design/specs/onboarding.md), "Events", says what each number means.
 
-- [ ] Push the migration, then check the types match what the PR committed from the local stack (the diff should be empty):
+- [x] Push the migration, then check the types match what the PR committed from the local stack (the diff should be empty). Done 2026-10-13, together with `20261012130000_letterboxd_import.sql` and the movies build's `20261013100000_movie_screens.sql` and `20261014100000_profile_reads.sql`; the only types diff was the file header and the CLI's version block, so the committed file stands:
 
   ```bash
   supabase db push
