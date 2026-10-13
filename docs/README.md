@@ -2,6 +2,8 @@
 
 The index of `docs/`, one line per document, with its date. Decided designs are under `design/`, the research they came from under `research/`, the screen specs under `design/specs/`, and how the repo is run under `process/`. The roadmap is [../ROADMAP.md](../ROADMAP.md), the data-flow map is [../ARCHITECTURE.md](../ARCHITECTURE.md). Anything personal or venture-side lives in `private/`, which is not part of the public mirror ([process/public-mirror.md](process/public-mirror.md)).
 
+New here? The [README's Start here](../README.md#start-here) gives a reading order for the product and one for the engineering; this page is the full list.
+
 ## Design
 
 - [design/ranking-algorithm.md](design/ranking-algorithm.md) (2026-09-07, batch session added 2026-10-06): the ranking options with a worked example, and the chosen design, Option A.

@@ -12,6 +12,26 @@ In an age of AI, the most valuable resource is human time. An AI can read an ent
 
 *The app's web build at phone size, with a demo library on a local catalog.*
 
+## Start here
+
+Two ways through this repo, by what you came for. Every direction below started as a research report with sources, became a brief with options and a default, was drawn in Figma and reacted to, and was recorded as a dated decision; the documents are those records.
+
+**The product, about ten minutes.**
+
+1. [ROADMAP.md, End state and Principles](ROADMAP.md#end-state): what Verso is for, and the rules every decision is judged against.
+2. [docs/design/ranking-algorithm.md](docs/design/ranking-algorithm.md): the options for turning a few "this one or that one?" answers into a ranked list, with a worked example, and the one chosen.
+3. [docs/design/onboarding-guidelines.md](docs/design/onboarding-guidelines.md): how a stranger reaches ten ranked items and one convincing pick in one sitting, and what was borrowed and refused from other apps.
+4. [docs/design/movies-brief.md](docs/design/movies-brief.md): the same loop designed from a second medium outward, which is the test of the media-agnostic core.
+5. [ROADMAP.md, Decisions](ROADMAP.md#decisions): every decision, dated, with the reasoning and the reversals.
+
+**The engineering, about twenty minutes.**
+
+1. [ARCHITECTURE.md](ARCHITECTURE.md): the pieces, how data flows, and why.
+2. [packages/core/src/ranking.ts](packages/core/src/ranking.ts): the ranking engine as a pure state machine, and [its tests](packages/core/test/ranking.test.ts).
+3. [supabase/migrations](supabase/migrations) and [supabase/tests/rls.test.sql](supabase/tests/rls.test.sql): the schema, Row Level Security on every table, and the pgTAP suite that proves it with two users.
+4. [supabase/functions/suggest/index.ts](supabase/functions/suggest/index.ts): the recommender's Edge Function, from the meter to the model call.
+5. [docs/process/reviewing-prs.md](docs/process/reviewing-prs.md): how a change gets in.
+
 ## The repo
 
 A pnpm monorepo, TypeScript throughout. [ARCHITECTURE.md](ARCHITECTURE.md) is the map of how data flows and why.
@@ -28,7 +48,19 @@ supabase/         migrations, pgTAP suites, four Deno Edge Functions, local conf
 docs/             design, specs, research, process; docs/README.md is the index
 ```
 
-## Decisions
+## Product decisions
+
+Each links to the document that records it; the dated list is in [ROADMAP.md](ROADMAP.md#decisions).
+
+- **The recommender is the product, and ranking is its sensor.** The head-to-head answer, given after you finish something, is a satisfaction signal no other tracker collects. The tracker, the backlog and the social layer are free and exist to feed the engine. [ROADMAP.md, Principles](ROADMAP.md#principles).
+- **Four tiers, then a few comparisons, never star ratings.** A rating asks for a number nobody gives consistently; "which was better?" is answerable, and the result is a list that explains itself as "between X and Y". "Too close" and "can't compare" exist for when the question is unfair. [docs/design/ranking-algorithm.md](docs/design/ranking-algorithm.md).
+- **Each medium is its own product, on one loop.** Games and movies share the ranking loop, and everything around it is designed from the medium's own use outward: movies get a watchlist, a calendar of releases and a diary; games get a backlog, playtime and where to play. [docs/design/ui-principles.md](docs/design/ui-principles.md), [docs/design/movies-brief.md](docs/design/movies-brief.md).
+- **The first session is the trial.** Onboarding is judged by one test: a stranger reaches ten ranked items and one convincing pick before leaving. So it is a questionnaire of which media to track, then a deck of popular titles tiered in bulk and ranked in one session. [docs/design/onboarding-guidelines.md](docs/design/onboarding-guidelines.md), [docs/design/onboarding-brief.md](docs/design/onboarding-brief.md).
+- **Ownership is out.** Verso tracks what you played and what you are thinking of playing, not what you own; the collector features were cut once they started spreading through every screen. [ROADMAP.md, decision 26](ROADMAP.md#decisions).
+- **The model explains and never scores.** SQL picks the candidates from your own list; a language model chooses among them and writes the reason in your terms. Neighbor predictions wait until a harness shows them beating that baseline, and a permission step precedes the first pick. [docs/design/recommendation-engine.md](docs/design/recommendation-engine.md).
+- **Never sold, free or paid.** No sale or cross-context sharing of personal data on any tier; any data product is aggregate and de-identified. [ROADMAP.md, Principles](ROADMAP.md#principles).
+
+## Engineering decisions
 
 Each choice links to the document that explains it; the dated record of every decision is in [ROADMAP.md](ROADMAP.md#decisions).
 
