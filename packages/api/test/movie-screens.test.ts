@@ -55,7 +55,18 @@ describe.skipIf(!live)('the movie screens against a local stack', () => {
         genres: [HORROR],
         releaseDate: '2010-01-01',
         scores: outside,
+        // over the 50 votes a film needs to be offered outside the watchlist
+        metadata: { vote_count: 500 },
       })),
+      // a horror film with a perfect average from four votes (VER-202)
+      {
+        key: 'few',
+        medium: 'movie',
+        genres: [HORROR],
+        releaseDate: '2010-01-01',
+        scores: [{ source: 'tmdb', score: 100, scoreCount: 4 }],
+        metadata: { vote_count: 4 },
+      },
       { key: 'watch', medium: 'movie', genres: [COMEDY], releaseDate: '2015-01-01' },
       { key: 'seen', medium: 'movie', genres: [COMEDY], releaseDate: '2016-01-01' },
       { key: 'game', title: `Screens Game ${stamp}` },
@@ -202,9 +213,10 @@ describe.skipIf(!live)('the movie screens against a local stack', () => {
       onMyServices: [providerA],
     });
     expect(rows[1]!.candidates.length).toBeLessThanOrEqual(12);
-    const ranked = new Set(['r1', 'r2', 'r3', 'r4', 'watch', 'seen'].map(id));
+    // nothing Alice tracks or ranked, and not the four-vote film
+    const neverOffered = new Set(['r1', 'r2', 'r3', 'r4', 'watch', 'seen', 'few'].map(id));
     for (const row of rows.slice(1)) {
-      for (const candidate of row.candidates) expect(ranked.has(candidate.mediaItemId)).toBe(false);
+      for (const candidate of row.candidates) expect(neverOffered.has(candidate.mediaItemId)).toBe(false);
     }
   });
 

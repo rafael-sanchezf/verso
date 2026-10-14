@@ -63,6 +63,7 @@ export { TABS, TabBar } from './tab-bar';
 export {
   FONT_FAMILIES,
   FONT_WEIGHTS,
+  ElevatedScope,
   ThemeScope,
   fontFamilyFor,
   themeFor,

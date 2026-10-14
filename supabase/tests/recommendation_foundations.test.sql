@@ -79,6 +79,14 @@ insert into public.media_items (id, medium, title, year, cover_image_id) values
   ('00000000-0000-0000-0000-000000000204', 'movie', 'Sicario', 2015, '/sicario.jpg'),
   ('00000000-0000-0000-0000-000000000301', 'tv', 'Severance', 2022, '/severance.jpg');
 
+-- The films have the TMDB votes a candidate film needs (50, VER-202), and Deep
+-- Cut has fewer IGDB ratings than any filler, so it is last in audience order.
+update public.media_items set metadata = '{"vote_count": 10000}'
+where id in ('00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000202',
+             '00000000-0000-0000-0000-000000000203', '00000000-0000-0000-0000-000000000204');
+update public.media_items set metadata = '{"total_rating_count": 10}'
+where id = '00000000-0000-0000-0000-000000000120';
+
 insert into public.game_details (media_item_id, igdb_id, genres, platforms, developer, time_to_beat_normally_seconds) values
   ('00000000-0000-0000-0000-000000000101', -990101, '{"Roguelike Test","Action Test"}', '{"Test PC","Test Switch"}', 'Supergiant Test', 79200),
   ('00000000-0000-0000-0000-000000000102', -990102, '{"Roguelike Test","Platform Test"}', '{"Test PC","Test Switch"}', 'Motion Twin Test', 72000),
@@ -95,13 +103,14 @@ insert into public.game_details (media_item_id, igdb_id, genres, platforms, deve
   ('00000000-0000-0000-0000-000000000113', -990113, '{"Shooter Test"}', '{"Test PS"}', 'Bungie Test', 72000),
   ('00000000-0000-0000-0000-000000000114', -990114, '{"Card Test","Roguelike Test"}', '{"Test PC","Test Switch"}', 'LocalThunk Test', null),
   -- The one game that would beat 500 others on content but trails all of them
-  -- on prior: the 500 cap is what keeps it out.
+  -- on audience: the 400 cap is what keeps it out.
   ('00000000-0000-0000-0000-000000000120', -990120, '{"Filler Test"}', '{"Test Switch"}', 'Deep Cut Test', 36000);
 
--- 500 fillers with a prior of 5.0 (metacritic 50) and no feature A's profile
--- knows, so each scores A's mean on content.
-insert into public.media_items (id, medium, title, year)
-select ('00000000-0000-0000-0001-' || lpad(i::text, 12, '0'))::uuid, 'game', 'Filler ' || i, 2005
+-- 500 fillers with a prior of 5.0 (metacritic 50), 100 IGDB ratings or more,
+-- and no feature A's profile knows, so each scores A's mean on content.
+insert into public.media_items (id, medium, title, year, metadata)
+select ('00000000-0000-0000-0001-' || lpad(i::text, 12, '0'))::uuid, 'game', 'Filler ' || i, 2005,
+  jsonb_build_object('total_rating_count', 100 + i)
 from generate_series(1, 500) as i;
 
 insert into public.game_details (media_item_id, igdb_id, genres, platforms)
@@ -846,14 +855,15 @@ select ok(
 
 -- 73
 -- Deep Cut is on the Switch, which A's loved games are on, so its content
--- beats the 500 fillers' and it would lead if it were scored. Its prior (4.9)
--- is below all of theirs (5.0), so it is 501st by prior and never scored.
+-- beats the 500 fillers' and it would lead if it were scored. Its 10 IGDB
+-- ratings are fewer than any filler's (101 and up), so it is 501st by
+-- audience, past the 400 the pool keeps, and never scored (VER-199).
 select ok(
   not exists (select 1 from public.suggestion_candidates('game', p_genres => '{"Filler Test"}', p_limit => 50) c
                where c.media_item_id = '00000000-0000-0000-0000-000000000120')
   and (select c.media_item_id from public.suggestion_candidates('game', p_genres => '{"Filler Test"}', p_platforms => '{"Test Switch"}') c
         limit 1) = '00000000-0000-0000-0000-000000000120',
-  'only the 500 best by prior are scored: Deep Cut is cut, and comes back when a filter shrinks the pool'
+  'only the 400 most rated are scored: Deep Cut is cut, and comes back when a filter shrinks the pool'
 );
 
 -- 74

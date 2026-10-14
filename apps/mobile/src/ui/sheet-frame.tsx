@@ -15,6 +15,12 @@
  * `scroll` is off for a sheet whose detent is `fitToContents` (the hours
  * sheet): a `flex: 1` scroll view inside a sheet that sizes itself to its
  * content has no height to fill and collapses.
+ *
+ * The fill is `bg/sheet` with `Sheet`'s dark-mode top hairline (VER-200): a
+ * canvas-black form sheet over the dimmed black screen had no edge. The top
+ * corners take the radius the root layout gives the native sheet, so the
+ * hairline follows the sheet's own curve, and the content sits in
+ * `ElevatedScope` so its `bg/surface` fields step up with the sheet.
  */
 
 import type { ReactNode } from 'react';
@@ -24,8 +30,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useT } from '@/lib/i18n';
 
 import { TextButton } from './button';
+import { sheetEdge } from './sheet';
 import { Text } from './text';
-import { useTheme } from './theme';
+import { ElevatedScope, useTheme } from './theme';
 
 export interface SheetFrameProps {
   title: string;
@@ -73,36 +80,44 @@ export function SheetFrame({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[
         scroll ? styles.fill : undefined,
-        { backgroundColor: theme.colors['bg/canvas'] },
+        {
+          backgroundColor: theme.colors['bg/sheet'],
+          // The root layout's sheetCornerRadius.
+          borderTopLeftRadius: theme.radius.xl,
+          borderTopRightRadius: theme.radius.xl,
+        },
+        sheetEdge(theme),
       ]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: theme.space[4],
-            // Room for the native grabber the root layout turns on.
-            paddingTop: theme.space[4],
-            paddingBottom: theme.space[3],
-          },
-        ]}>
-        <View style={styles.side}>
-          <TextButton label={t('common.cancel')} size={17} weight={400} onPress={onCancel} />
+      <ElevatedScope>
+        <View
+          style={[
+            styles.header,
+            {
+              paddingHorizontal: theme.space[4],
+              // Room for the native grabber the root layout turns on.
+              paddingTop: theme.space[4],
+              paddingBottom: theme.space[3],
+            },
+          ]}>
+          <View style={styles.side}>
+            <TextButton label={t('common.cancel')} size={17} weight={400} onPress={onCancel} />
+          </View>
+          <Text size={17} weight={600}>
+            {title}
+          </Text>
+          <View style={[styles.side, styles.right]}>
+            <TextButton label={saveLabel ?? t('common.save')} size={17} weight={600} disabled={saveDisabled} onPress={onSave} />
+          </View>
         </View>
-        <Text size={17} weight={600}>
-          {title}
-        </Text>
-        <View style={[styles.side, styles.right]}>
-          <TextButton label={saveLabel ?? t('common.save')} size={17} weight={600} disabled={saveDisabled} onPress={onSave} />
-        </View>
-      </View>
 
-      {scroll ? (
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom }}>
-          {body}
-        </ScrollView>
-      ) : (
-        <View style={{ paddingBottom: insets.bottom }}>{body}</View>
-      )}
+        {scroll ? (
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom }}>
+            {body}
+          </ScrollView>
+        ) : (
+          <View style={{ paddingBottom: insets.bottom }}>{body}</View>
+        )}
+      </ElevatedScope>
     </KeyboardAvoidingView>
   );
 }

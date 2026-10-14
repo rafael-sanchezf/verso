@@ -15,6 +15,7 @@
   --color-bg-canvas: #FFFFFF;
   --color-bg-surface: #F2F2F7;
   --color-bg-placeholder: #E5E5EA;
+  --color-bg-sheet: #FFFFFF;
   --color-text-primary: #000000;
   --color-text-secondary: #6E6E73;
   --color-text-destructive: #BB0A10;
@@ -88,6 +89,7 @@
     --color-bg-canvas: #000000;
     --color-bg-surface: #1C1C1E;
     --color-bg-placeholder: #2C2C2E;
+    --color-bg-sheet: #1C1C1E;
     --color-text-primary: #FFFFFF;
     --color-text-secondary: #98989F;
     --color-text-destructive: #FF453A;
@@ -114,6 +116,7 @@
   --color-bg-canvas: #000000;
   --color-bg-surface: #1C1C1E;
   --color-bg-placeholder: #2C2C2E;
+  --color-bg-sheet: #1C1C1E;
   --color-text-primary: #FFFFFF;
   --color-text-secondary: #98989F;
   --color-text-destructive: #FF453A;

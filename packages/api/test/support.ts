@@ -103,6 +103,13 @@ export interface SeedGame {
   scores?: { source: string; score: number | null; scoreCount?: number | null }[];
   /** Goes into `external_ids.steam`, the way the mirror writes it. Omitted means not on Steam. */
   steamAppId?: number;
+  /**
+   * Goes into `media_items.metadata`, where the mirrors write IGDB's
+   * `total_rating_count` and TMDB's `vote_count`. Omitted means `{}`. A film
+   * needs 50 votes to be a recommendation outside the person's own list
+   * (VER-202), so a suite reading Home's rows or the ask seeds them here.
+   */
+  metadata?: { total_rating_count?: number; vote_count?: number };
 }
 
 export interface SeededGame {
@@ -150,6 +157,7 @@ export async function seedGames(games: SeedGame[]): Promise<Record<string, Seede
       release_date: game.releaseDate === undefined ? '2020-01-01' : game.releaseDate,
       external_ids:
         game.steamAppId === undefined ? { igdb: igdbId } : { igdb: igdbId, steam: game.steamAppId },
+      metadata: game.metadata ?? {},
     };
   });
 

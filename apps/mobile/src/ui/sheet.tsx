@@ -9,15 +9,21 @@
  *
  * It draws only the surface. What goes in it, and when it is open, is the
  * caller's.
+ *
+ * The surface is `bg/sheet`, not the canvas (VER-200): in dark mode a canvas
+ * sheet is the same black as the dimmed screen behind it and has no edge, so
+ * there it is the ramp's next step up, #1C1C1E, with a hairline
+ * `border/separator` along its top edge. The content sits in `ElevatedScope`,
+ * so the `bg/surface` fields and buttons inside step up with it.
  */
 
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
 
-import { useTheme } from './theme';
+import { ElevatedScope, useTheme, type Theme } from './theme';
 
 /**
  * The dim behind a sheet or a dialog: 35% black, as the frames draw it, enough
@@ -26,6 +32,17 @@ import { useTheme } from './theme';
  * is the same in light and dark. `Dialog` uses it too.
  */
 export const DIM_COLOR = 'rgba(0, 0, 0, 0.35)';
+
+/**
+ * The top edge of a sheet in dark mode: a hairline `border/separator`, which
+ * follows the top corners' curve. In light the white sheet against the dimmed
+ * screen is edge enough, as the frames draw it, so there is none. `SheetFrame`
+ * and `Dialog`'s bottom card draw the same edge.
+ */
+export function sheetEdge(theme: Theme): ViewStyle | null {
+  if (theme.scheme !== 'dark') return null;
+  return { borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.colors['border/separator'] };
+}
 
 export interface SheetProps {
   visible: boolean;
@@ -52,7 +69,7 @@ export function Sheet({ visible, onDismiss, children, dismissOnBackdropPress = t
           style={[
             styles.sheet,
             {
-              backgroundColor: theme.colors['bg/canvas'],
+              backgroundColor: theme.colors['bg/sheet'],
               borderTopLeftRadius: theme.radius.xl,
               borderTopRightRadius: theme.radius.xl,
               paddingTop: theme.space[3],
@@ -60,9 +77,10 @@ export function Sheet({ visible, onDismiss, children, dismissOnBackdropPress = t
               // The home indicator sits over the last row otherwise.
               paddingBottom: insets.bottom + theme.space[2],
             },
+            sheetEdge(theme),
           ]}>
           <View style={[styles.grabber, { backgroundColor: theme.colors['border/separator'] }]} />
-          {children}
+          <ElevatedScope>{children}</ElevatedScope>
         </View>
       </View>
     </Modal>

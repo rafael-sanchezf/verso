@@ -23,9 +23,13 @@
  *   case that button is what Enter presses. A destructive action is never the
  *   default (`defaultButtonIndex`).
  *
- * Colors are `bg/canvas` over a 35% black dim, the same as `Sheet`; there is no
- * elevated background token yet. The bottom-anchored card has no grabber,
- * because nothing about it can be dragged.
+ * Colors are `Sheet`'s: `bg/sheet` over a 35% black dim (VER-200), so in dark
+ * mode the card is #1C1C1E rather than the canvas black that vanished into the
+ * dimmed screen, and its content sits in `ElevatedScope` so the secondary
+ * buttons and a `select` list's highlight step up with it. The bottom-anchored
+ * card also takes `Sheet`'s dark top hairline; the centered card stands clear
+ * of every edge and its fill is edge enough. The bottom-anchored card has no
+ * grabber, because nothing about it can be dragged.
  */
 
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
@@ -48,9 +52,9 @@ import { Button } from './button';
 import { useRestoreFocus, wrapTab } from './focus';
 import { NO_OUTLINE } from './interaction';
 import { MenuList, type MenuItem } from './menu';
-import { DIM_COLOR } from './sheet';
+import { DIM_COLOR, sheetEdge } from './sheet';
 import { Text } from './text';
-import { useTheme } from './theme';
+import { ElevatedScope, useTheme } from './theme';
 
 /** A centered dialog never runs wider than a line of its message can be read. */
 const WIDE_MAX_WIDTH = 440;
@@ -184,7 +188,7 @@ function DialogBody({
         tabIndex={-1}
         style={[
           {
-            backgroundColor: theme.colors['bg/canvas'],
+            backgroundColor: theme.colors['bg/sheet'],
             gap: theme.space[5],
           },
           wide
@@ -203,48 +207,51 @@ function DialogBody({
                 // The home indicator sits over the last button otherwise.
                 paddingBottom: insets.bottom + theme.space[4],
               },
+          !wide && sheetEdge(theme),
           // The card holds the focus only to route Enter; it is not a control
           // and draws no ring.
           Platform.OS === 'web' && NO_OUTLINE,
         ]}>
-        {title || message ? (
-          <View style={{ gap: theme.space[2] }}>
-            {title ? (
-              <Text style="headline" accessibilityRole="header">
-                {title}
-              </Text>
-            ) : null}
-            {message ? (
-              <Text style="subheadline" color="text/secondary">
-                {message}
-              </Text>
-            ) : null}
-          </View>
-        ) : null}
+        <ElevatedScope>
+          {title || message ? (
+            <View style={{ gap: theme.space[2] }}>
+              {title ? (
+                <Text style="headline" accessibilityRole="header">
+                  {title}
+                </Text>
+              ) : null}
+              {message ? (
+                <Text style="subheadline" color="text/secondary">
+                  {message}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
 
-        {children}
+          {children}
 
-        {buttons.length > 0 ? (
-          <View
-            style={[
-              wide && buttons.length <= 3 ? styles.row : styles.column,
-              { gap: theme.space[2] },
-            ]}>
-            {order.map((index) => {
-              const button = buttons[index]!;
-              return (
-                <Button
-                  key={index}
-                  label={button.text}
-                  variant={buttonVariant(buttons, index)}
-                  size={wide ? 'small' : 'compact'}
-                  fullWidth={!wide}
-                  onPress={() => onPress(button)}
-                />
-              );
-            })}
-          </View>
-        ) : null}
+          {buttons.length > 0 ? (
+            <View
+              style={[
+                wide && buttons.length <= 3 ? styles.row : styles.column,
+                { gap: theme.space[2] },
+              ]}>
+              {order.map((index) => {
+                const button = buttons[index]!;
+                return (
+                  <Button
+                    key={index}
+                    label={button.text}
+                    variant={buttonVariant(buttons, index)}
+                    size={wide ? 'small' : 'compact'}
+                    fullWidth={!wide}
+                    onPress={() => onPress(button)}
+                  />
+                );
+              })}
+            </View>
+          ) : null}
+        </ElevatedScope>
       </View>
     </View>
   );

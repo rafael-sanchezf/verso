@@ -8,14 +8,17 @@
  *
  * Light and dark follow the device, and `useTheme` is `useColorScheme` plus a
  * lookup — so a primitive can read the theme wherever it is mounted, inside a
- * form sheet or a navigation header, without anything having to wrap it. The
- * one provider, `ThemeScope`, exists for the preview gallery, which draws both
- * schemes on one screen; nothing in the app itself uses it.
+ * form sheet or a navigation header, without anything having to wrap it. Two
+ * providers adjust it: `ThemeScope`, for the preview gallery, which draws both
+ * schemes on one screen, and `ElevatedScope`, which the sheets and the dialog
+ * put around their content so the surfaces inside them step up with them.
  */
 
 import { COLOR_TOKENS, FONT_STYLES, darkTheme, lightTheme, type ColorScheme, type Theme } from '@verso/tokens';
 import { createContext, use, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
+
+import { elevatedTheme } from './elevated-theme';
 
 export type { ColorScheme, ColorToken, FontStyle, RadiusToken, SpaceToken, Theme } from '@verso/tokens';
 
@@ -50,9 +53,37 @@ export function ThemeScope({ scheme, children }: { scheme: ColorScheme; children
  */
 export function useTheme(): Theme {
   const forced = use(ForcedTheme);
+  const elevated = use(Elevated);
   const device = themeFor(useColorScheme() === 'dark' ? 'dark' : 'light');
-  return forced ?? device;
+  const theme = forced ?? device;
+  return elevated ? elevatedTheme(theme) : theme;
 }
+
+/**
+ * Whether the subtree sits on a sheet or a dialog rather than on the canvas.
+ *
+ * In dark mode a sheet is `bg/sheet`, #1C1C1E, one step up the neutral ramp
+ * from the black canvas (VER-200), and that is also `bg/surface`'s dark value.
+ * Left alone, every `bg/surface` fill inside a sheet (a text field, a
+ * secondary button, a chip, a segmented control's track) would be the sheet's
+ * own color and vanish. iOS answers this with its elevated backgrounds: on a
+ * sheet each background moves one step up. This is the same rule on the
+ * tokens' ramp, and only the two steps the sheets' contents use move:
+ *
+ *   bg/canvas   #000000 -> #1C1C1E (bg/sheet), what a "match the background"
+ *               fill such as a segmented control's selected segment means here
+ *   bg/surface  #1C1C1E -> #2C2C2E (bg/placeholder), the next step up again
+ *
+ * Light is untouched: `bg/sheet` is the canvas there, so nothing collides.
+ */
+const Elevated = createContext(false);
+
+/** Put around what a sheet or a dialog draws, inside its `bg/sheet` fill. */
+export function ElevatedScope({ children }: { children: ReactNode }) {
+  return <Elevated value>{children}</Elevated>;
+}
+
+export { elevatedTheme };
 
 /**
  * Inter, as four separate faces.

@@ -13,6 +13,7 @@ export type ColorToken =
   | 'bg/canvas'
   | 'bg/surface'
   | 'bg/placeholder'
+  | 'bg/sheet'
   | 'text/primary'
   | 'text/secondary'
   | 'text/destructive'
@@ -70,6 +71,7 @@ const lightColors: Record<ColorToken, string> = {
   'bg/canvas': '#FFFFFF', // Screen background.
   'bg/surface': '#F2F2F7', // Cards, sheets, chips.
   'bg/placeholder': '#E5E5EA', // Cover placeholders and skeletons.
+  'bg/sheet': '#FFFFFF', // Sheets and dialogs over the dim: an elevated surface. Light is the canvas, #FFFFFF. Dark is #1C1C1E, the ramp's next step above the #000000 canvas (bg/surface's dark value), because a canvas-black sheet over a dimmed black screen has no edge; in dark the sheet also draws a hairline border/separator at its top edge. Added 2026-10-13 (VER-200).
   'text/primary': '#000000', // Primary text and active icons.
   'text/secondary': '#6E6E73', // Secondary text and inactive icons.
   'text/destructive': '#BB0A10', // Destructive and error text: Sign out, Delete account, field errors, destructive menu items. Light #BB0A10 (6.6:1 on white). Dark #FF453A, iOS's dark-mode red (6.2:1 on black, 5.0:1 on #1C1C1E). Not a verdict: tier/disliked is the verdict. Added 2026-10-08.
@@ -94,6 +96,7 @@ const darkColors: Record<ColorToken, string> = {
   'bg/canvas': '#000000', // Screen background.
   'bg/surface': '#1C1C1E', // Cards, sheets, chips.
   'bg/placeholder': '#2C2C2E', // Cover placeholders and skeletons.
+  'bg/sheet': '#1C1C1E', // Sheets and dialogs over the dim: an elevated surface. Light is the canvas, #FFFFFF. Dark is #1C1C1E, the ramp's next step above the #000000 canvas (bg/surface's dark value), because a canvas-black sheet over a dimmed black screen has no edge; in dark the sheet also draws a hairline border/separator at its top edge. Added 2026-10-13 (VER-200).
   'text/primary': '#FFFFFF', // Primary text and active icons.
   'text/secondary': '#98989F', // Secondary text and inactive icons.
   'text/destructive': '#FF453A', // Destructive and error text: Sign out, Delete account, field errors, destructive menu items. Light #BB0A10 (6.6:1 on white). Dark #FF453A, iOS's dark-mode red (6.2:1 on black, 5.0:1 on #1C1C1E). Not a verdict: tier/disliked is the verdict. Added 2026-10-08.
@@ -161,6 +164,7 @@ export const COLOR_TOKENS = [
   'bg/canvas',
   'bg/surface',
   'bg/placeholder',
+  'bg/sheet',
   'text/primary',
   'text/secondary',
   'text/destructive',
@@ -200,6 +204,7 @@ export const CSS_VARIABLES: Record<ColorToken, string> = {
   'bg/canvas': '--color-bg-canvas',
   'bg/surface': '--color-bg-surface',
   'bg/placeholder': '--color-bg-placeholder',
+  'bg/sheet': '--color-bg-sheet',
   'text/primary': '--color-text-primary',
   'text/secondary': '--color-text-secondary',
   'text/destructive': '--color-text-destructive',
