@@ -302,6 +302,29 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 
 **Open.** Series window of two against genre's one, and no minimum peer count (question 14). Whether to also store the franchise for the game page's "Part of" line, kept out of the pivot. Whether `collections` (plural, IGDB's newer field) is the one to read where a game sits in more than one.
 
+## 13. "Rank this", not "I finished this"
+
+**What Rafa described** (2026-10-13). Every reference to finishing a game becomes a reference to ranking it. Multiplayer games have no ending; a bad game gets dropped and ranked, not finished; and "finished" is arbitrary anyway (main story, side quests, 100%). A ranked game is not necessarily a finished one, so the app should never say finished when it means ranked.
+
+**Where it sits.** Not scheduled; a copy and model pass on the games loop. Games only: a film watched is a fact, so "I watched this" stays (rule 18's per-medium labels).
+
+**What exists.** Finishing is the door into ranking today, in copy and in data:
+- The game page's primary button is "I finished this" ([specs/game-page.md](design/specs/game-page.md), `primaryAction` in `screens/game/status.ts`); the add-to sheet offers "I finished this · Rank it now"; the Playing tile's long press on Home is "Mark as finished"; the compare card's subtitle is "just finished"; Spanish mirrors each ("Lo terminé", "Marcar como terminado", "recién terminado").
+- The tap calls `markFinished`: status `played`, `finished_at` today, and `finished_from: 'playing'` when it came from the Playing tile; then the log flow opens. A played-and-unranked game is the one path that opens the log flow without a finish.
+- Profile's Activity has a `finished` event kind ("Finished X · 9.4") read off `finished_from`, folded with the placement of the same day.
+- The data already separates the two: `user_entries.status` (backlog, playing, played, dropped) and `finished_at` are apart from `ranking_entries`, and "played but not ranked" is a valid state. Nothing in the engine knows about finishing.
+
+**Sketch.**
+1. **Copy.** "Rank this" on the game page and the add-to sheet ("Rank this · Place it in your list"), "Rank this" on the Playing tile's long press, "ranking now" on the compare card; the Spanish wave's "Clasifícalo" already exists for the body line. The status line keeps "Played" and "Dropped"; "Finished {date}" shows only when a finished date was set on purpose.
+2. **Ranking never sets a finished date.** The primary button opens the log flow directly. A game with no entry becomes `played` with `finished_at` null (the fact that you played it, nothing more); a Playing or Dropped game keeps its status, so a multiplayer game stays on Home after it is ranked and a dropped game ranks as dropped. The played-and-unranked path and the new one become the same path.
+3. **Finishing stays, as an optional fact.** The Finished date in the Details sheet and the Change menu's Played are where someone says they finished it; nothing infers it. The Playing tile's long press offers "Rank this" and "Done playing" as two lines, since leaving Playing is still a thing a person wants to do in one gesture. Inferred; flagged as question 15.
+4. **Activity.** The "Finished X" event fires only from an explicit finish; a ranking from Playing shows as "Ranked X · 9.4", the kind that exists.
+5. **Docs.** Rule 18's per-medium table and the "several ways to say I finished this" line in [design/ui-principles.md](design/ui-principles.md), the game page and log flow specs, and the ranking doc's framing of "the moment you finish" are reworded when this lands, dated.
+
+**Cost.** Small: strings in two languages, the primary action and the add-to sheet's write, the Home long press, one `markFinished` call site, the Activity read's condition, the spec lines. No migration. No Figma: the frames keep their layout, and the comparison card and the sheet only change words. About one agent PR.
+
+**Open.** Whether the Playing tile's long press keeps a way out of Playing beside "Rank this" (question 15). Whether an unranked game with no entry becomes `played` or stays entry-less until the placement is confirmed.
+
 ## Questions for Rafa, with the defaults
 
 1. Bulk entry before the three-friends test and TestFlight? Default yes; it is V1's first item either way.
@@ -318,3 +341,4 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 12. The Steam link offered inside the deck for PC players now, its screens coded from conventions (decision 16)? Default yes. Not addressed 2026-09-28; the default stands.
 13. Past ten (2026-09-28): the app says the taste profile is unlocked and offers to stop or keep going once, then never asks again, with a way out on every card? Default yes; inferred from "it should let you go past ten, maybe after a couple of games".
 14. Same-series pivots (2026-10-13): ahead of the genre preference, within two positions of the midpoint instead of one, with no minimum peer count, and spin-offs kept apart by using IGDB's series rather than its franchise? Default yes.
+15. "Rank this" (2026-10-13): ranking never writes a finished date or changes a Playing or Dropped status, a game with no entry becomes Played with no date, and the Playing tile's long press offers "Rank this" and "Done playing" as two lines? Default yes; movies keep "I watched this".
