@@ -21,7 +21,7 @@ import { isLiveMedium, trackedMedia } from '@/state/medium';
 import { Cover, EmptyState, EmptyStateCard, ErrorLine, Icon, Skeleton, Text } from '@/ui';
 import { useTheme } from '@/ui/theme';
 
-import { useActivityMonth, useMediumStats, useProfileIdentity } from './data';
+import { useActivityMonth, useMediumStats, useProfileIdentity, useRefetchProfileOnFocus } from './data';
 import {
   dayLabel,
   mediumOf,
@@ -46,6 +46,7 @@ export function ActivityScreen() {
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ medium?: string }>();
+  useRefetchProfileOnFocus();
   const identity = useProfileIdentity();
   const media = identity.data?.media;
   // The same media Profile shows: tracked and holding an entry.

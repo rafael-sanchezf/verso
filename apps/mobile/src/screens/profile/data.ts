@@ -6,7 +6,14 @@
  *
  * Query keys come from `src/lib/query-keys.ts`, never spelled inline
  * (README.md, "Data"). Every one is under `['profile']` except the ranked
- * lists, so an entry or ranking write refetches the whole page.
+ * lists, so an entry or ranking write refetches the whole page
+ * (`invalidateProfile` in src/lib/invalidate.ts).
+ *
+ * `refetchOnMount: 'always'` on the page's reads is the safety net (VER-201):
+ * a write that some day forgets its invalidation still leaves Profile,
+ * Activity and Edit profile right the next time one of them mounts, rather
+ * than for as long as the cache's thirty seconds of freshness last. The
+ * onboarding deck's count (`useProfileStats`) keeps the default.
  */
 
 import {
@@ -18,7 +25,11 @@ import {
   recentActivity,
   type ProfileStats,
 } from '@verso/api';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useRef } from 'react';
+
+import { refetchStaleProfile } from '@/lib/invalidate';
 
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -26,8 +37,32 @@ import type { LiveMedium } from '@/state/medium';
 
 export { useRanking } from '@/screens/ranking/use-ranking';
 
+/** The page's reads refetch every time a screen showing them mounts. */
+const ON_MOUNT = { refetchOnMount: 'always' } as const;
+
+/**
+ * Refetch the stale Profile reads when the screen regains focus (VER-201): the
+ * Profile tab stays mounted, so `ON_MOUNT` never fires on a switch back to it.
+ * The first focus is the mount, whose fetch `ON_MOUNT` already makes, so it is
+ * skipped rather than fetched twice. Called by Profile, Activity and Edit
+ * profile.
+ */
+export function useRefetchProfileOnFocus(): void {
+  const queryClient = useQueryClient();
+  const mounted = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!mounted.current) {
+        mounted.current = true;
+        return;
+      }
+      void refetchStaleProfile(queryClient);
+    }, [queryClient]),
+  );
+}
+
 export function useProfileIdentity() {
-  return useQuery({ queryKey: queryKeys.profileMe(), queryFn: () => getMyProfile(supabase) });
+  return useQuery({ queryKey: queryKeys.profileMe(), queryFn: () => getMyProfile(supabase), ...ON_MOUNT });
 }
 
 /** One medium's `profileStats` (games by default): the onboarding deck's count. */
@@ -48,6 +83,7 @@ export function useMediumStats(media: readonly LiveMedium[]): {
     queries: media.map((medium) => ({
       queryKey: queryKeys.profileStatsFor(medium),
       queryFn: () => profileStats(supabase, { medium }),
+      ...ON_MOUNT,
     })),
   });
   const stats: Partial<Record<LiveMedium, ProfileStats>> = {};
@@ -66,6 +102,7 @@ export function useRankerPercentile(medium: LiveMedium | undefined) {
   return useQuery({
     queryKey: queryKeys.profilePercentile(medium ?? 'all'),
     queryFn: () => rankerPercentile(supabase, medium ? { medium } : {}),
+    ...ON_MOUNT,
   });
 }
 
@@ -73,6 +110,7 @@ export function useProfileHours(medium: LiveMedium | undefined) {
   return useQuery({
     queryKey: queryKeys.profileHours(medium ?? 'all'),
     queryFn: () => profileHours(supabase, medium ? { medium } : {}),
+    ...ON_MOUNT,
   });
 }
 
@@ -83,6 +121,7 @@ export function useRecentActivity(medium: LiveMedium | undefined, limit = RECENT
   return useQuery({
     queryKey: queryKeys.profileActivity(medium ?? 'all', limit),
     queryFn: () => recentActivity(supabase, medium ? { limit, medium } : { limit }),
+    ...ON_MOUNT,
   });
 }
 
@@ -90,5 +129,6 @@ export function useActivityMonth(year: number, month: number, medium: LiveMedium
   return useQuery({
     queryKey: queryKeys.profileActivityMonth(year, month, medium ?? 'all'),
     queryFn: () => activityMonth(supabase, medium ? { year, month, medium } : { year, month }),
+    ...ON_MOUNT,
   });
 }

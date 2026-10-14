@@ -30,7 +30,8 @@ import Animated, { FadeInLeft } from 'react-native-reanimated';
 
 import { alert, select } from '@/lib/dialog';
 import { useT } from '@/lib/i18n';
-import { invalidateProfile } from '@/lib/invalidate';
+import { invalidateProfileSettings } from '@/lib/invalidate';
+import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import {
   addableMedia,
@@ -57,8 +58,11 @@ export function MediaSwitcher() {
 
   const add = useMutation({
     mutationFn: (next: LiveMedium) => setProfileMedia(supabase, [...trackedMedia(media), next]),
-    onSuccess: (_profile, next) => {
-      invalidateProfile(queryClient);
+    onSuccess: (stored, next) => {
+      // The stored profile in at once, as the onboarding's media step does, so
+      // the switcher and Profile draw the new medium before the refetch lands.
+      queryClient.setQueryData(queryKeys.profileMe(), stored);
+      invalidateProfileSettings(queryClient);
       setMedium(next);
     },
     onError: () => alert(t('shell.mediaSwitcher.couldNotAdd'), t('shell.mediaSwitcher.checkConnection')),

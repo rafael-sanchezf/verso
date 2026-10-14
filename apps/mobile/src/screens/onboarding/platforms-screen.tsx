@@ -32,7 +32,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useLanguage, useT } from '@/lib/i18n';
-import { invalidateProfile } from '@/lib/invalidate';
+import { invalidateProfileSettings } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { Button, Chip, ErrorLine, Icon, Skeleton, Text, TextButton, useTheme } from '@/ui';
@@ -70,7 +70,7 @@ export function PlatformsScreen() {
     onSuccess: (stored) => {
       queryClient.setQueryData(queryKeys.profileMe(), stored);
       // The profile, and the deck's pages, which are filtered by these platforms.
-      invalidateProfile(queryClient);
+      invalidateProfileSettings(queryClient);
       if (editing) router.back();
       else router.push('/onboarding/seeds');
     },

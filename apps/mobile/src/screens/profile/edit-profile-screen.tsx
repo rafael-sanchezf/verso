@@ -20,14 +20,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alert } from '@/lib/dialog';
 import { useT } from '@/lib/i18n';
-import { invalidateProfile } from '@/lib/invalidate';
+import { invalidateProfile, invalidateProfileSettings } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { LIVE_MEDIA } from '@/state/medium';
 import { ErrorLine, Icon, Skeleton, Text, textStyles } from '@/ui';
 import { fontFamilyFor, useTheme } from '@/ui/theme';
 
 import { ProfileAvatar } from './avatar';
-import { useProfileIdentity } from './data';
+import { useProfileIdentity, useRefetchProfileOnFocus } from './data';
 import { editFormFrom, editPatch, initialsFor, MEDIUM_KEYS, toggleMedium, type EditForm } from './model';
 import { pickAndUploadAvatar } from './photo';
 import { Separator } from './settings-row';
@@ -37,6 +37,7 @@ export function EditProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
+  useRefetchProfileOnFocus();
   const identity = useProfileIdentity();
   const profile = identity.data ?? null;
 
@@ -67,7 +68,8 @@ export function EditProfileScreen() {
     setUsernameError(null);
     try {
       await updateMyProfile(supabase, patch);
-      invalidateProfile(queryClient);
+      // The patch can change the tracked media, which decide Profile's sections.
+      invalidateProfileSettings(queryClient);
       router.back();
     } catch (cause) {
       // The kind, not the message: @verso/api words its refusal in English.

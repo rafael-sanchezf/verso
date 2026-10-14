@@ -42,6 +42,7 @@ import {
   useProfileIdentity,
   useRankerPercentile,
   useRecentActivity,
+  useRefetchProfileOnFocus,
 } from './data';
 import { subtitleFor } from './identity';
 import {
@@ -68,6 +69,7 @@ export function ProfileScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  useRefetchProfileOnFocus();
   const identity = useProfileIdentity();
   const profile = identity.data ?? null;
   const tracked = trackedMedia(profile?.media);

@@ -13,12 +13,13 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query';
-import { invalidateOnboarding, invalidateProfile } from '@verso/api';
+import { invalidateOnboarding } from '@verso/api';
+import type { Medium } from '@verso/core';
 
 import { queryKeys } from './query-keys';
 
 /**
- * The onboarding's two helpers, from `@verso/api` (onboarding-keys.ts, PR #73),
+ * The onboarding's helper, from `@verso/api` (onboarding-keys.ts, PR #73),
  * re-exported so every screen keeps importing invalidation from here.
  *
  * `invalidateOnboarding`: the deck's pages, the played-not-ranked drain and a
@@ -27,11 +28,12 @@ import { queryKeys } from './query-keys';
  * out of the deck and the drain; call it directly only after a write neither
  * covers.
  *
- * `invalidateProfile`: after `setProfilePlatforms` or `setProfileMedia`, the
- * caller's profile (`['profile', 'me']`, by the `['profile']` prefix) and the
- * deck, whose pages are filtered by the platforms.
+ * `@verso/api` also has an `invalidateProfile`, the profile prefix and the
+ * deck; the app's own pair below replaced it (VER-201): `invalidateProfile`
+ * for the Profile's reads, by medium when the write knows it, and
+ * `invalidateProfileSettings` for the profile writes that also move the deck.
  */
-export { invalidateOnboarding, invalidateProfile };
+export { invalidateOnboarding };
 
 /**
  * Refetch what was invalidated even when nothing is currently observing it.
@@ -54,19 +56,110 @@ export { invalidateOnboarding, invalidateProfile };
 const REFETCH_EVERYTHING = { refetchType: 'all' } as const;
 
 /**
+ * Every medium, checked against `Medium` itself: a fourth medium added to the
+ * core type fails to compile here until it is listed, so a profile key naming
+ * it is never mistaken for one that names no medium.
+ */
+const MEDIA: Record<Medium, true> = { game: true, movie: true, tv: true };
+
+function isMedium(value: unknown): value is Medium {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(MEDIA, value);
+}
+
+/**
+ * The medium a Profile key belongs to, or null when it is about every medium:
+ * `['profile', 'me']`, `['profile', 'recent']` and every key read for `'all'`.
+ *
+ * Games' stats keep the bare `['profile', 'stats']` (query-keys.ts,
+ * `profileStatsFor`), so that one key is games' though it names no medium.
+ * Every other per-medium key carries its medium as one of its parts.
+ */
+export function profileKeyMedium(key: readonly unknown[]): Medium | null {
+  if (key[0] !== 'profile') return null;
+  if (key.length === 2 && key[1] === 'stats') return 'game';
+  return key.slice(1).find(isMedium) ?? null;
+}
+
+/**
+ * Whether a write to `medium` (or to no one medium, when it is left out) has
+ * to refetch this key: every key under `['profile']`, less the ones that
+ * belong to another medium. So a film's write refetches the film counts, the
+ * film and `'all'` views of the percentile, the hours, Recent and the Activity
+ * month, the identity and the recent list, and leaves the games' counts alone.
+ */
+export function isStaleAfterProfileWrite(key: readonly unknown[], medium?: Medium): boolean {
+  if (key[0] !== 'profile') return false;
+  if (medium === undefined) return true;
+  const owner = profileKeyMedium(key);
+  return owner === null || owner === medium;
+}
+
+/**
+ * After a write that changes what Profile or Activity shows (VER-201): every
+ * Profile read for `medium` and for `'all'`, plus the identity and the recent
+ * list, refetched now whether or not the page is mounted (`REFETCH_EVERYTHING`
+ * above says why). Without a medium, every key under `['profile']`.
+ *
+ * A predicate rather than a list of keys, so a Profile read added later under
+ * `['profile']` is covered without touching this. `invalidateEntry` and
+ * `invalidateRanking` call it, so every entry, diary and ranking write reaches
+ * it; call it directly after a write neither covers.
+ */
+export function invalidateProfile(queryClient: QueryClient, medium?: Medium): void {
+  void queryClient.invalidateQueries({
+    predicate: (query) => isStaleAfterProfileWrite(query.queryKey, medium),
+    ...REFETCH_EVERYTHING,
+  });
+}
+
+/**
+ * When Profile, Activity or Edit profile comes back into focus (VER-201): the
+ * Profile reads on screen that are stale, invalidated or past the cache's
+ * thirty seconds, refetched; fresh ones are left alone.
+ *
+ * This is the fix for what Rafa saw. The Profile tab mounts once and stays
+ * mounted, so `refetchOnMount` never fires on a switch back to it, and a write
+ * whose refetch did not reach the tab (under react-native-screens' freeze, a
+ * blurred tab's observers can miss it) left the page wrong until a reload.
+ * `useRefetchProfileOnFocus` (screens/profile/data.ts) calls this on every
+ * focus after the first, which the mount's own fetch covers.
+ */
+export function refetchStaleProfile(queryClient: QueryClient): Promise<void> {
+  return queryClient.refetchQueries({
+    predicate: (query) => query.queryKey[0] === 'profile' && query.isStale(),
+    type: 'active',
+  });
+}
+
+/**
+ * After a write to the profile row itself: `setProfileMedia` (the onboarding's
+ * media step, the switcher's "add a medium"), `setProfilePlatforms`, and Edit
+ * profile's save. Every Profile read, since the tracked media decide which
+ * sections the page draws, and the deck, whose pages are filtered by the
+ * platforms. What `@verso/api`'s `invalidateProfile` did, kept for these.
+ */
+export function invalidateProfileSettings(queryClient: QueryClient): void {
+  invalidateProfile(queryClient);
+  void queryClient.invalidateQueries({ queryKey: ['deck'], ...REFETCH_EVERYTHING });
+}
+
+/**
  * After anything in `entries.ts`: status, finished, played-on platforms, hours,
- * dates, notes, remove.
+ * dates, notes, remove. And the diary's writes in `diary.ts`.
  *
  * The lists a game can enter or leave, the game's own page, and the profile
- * counts that are built from those lists.
+ * counts that are built from those lists. `medium`, when the caller knows it,
+ * narrows only the Profile's refetch to that medium and `'all'`
+ * (`invalidateProfile`); every other key is cleared as before.
  */
-export function invalidateEntry(queryClient: QueryClient, id: string): void {
+export function invalidateEntry(queryClient: QueryClient, id: string, medium?: Medium): void {
   void queryClient.invalidateQueries({ queryKey: queryKeys.playing(), ...REFETCH_EVERYTHING });
   void queryClient.invalidateQueries({ queryKey: queryKeys.backlog(), ...REFETCH_EVERYTHING });
   void queryClient.invalidateQueries({ queryKey: queryKeys.upcoming(), ...REFETCH_EVERYTHING });
   void queryClient.invalidateQueries({ queryKey: queryKeys.game(id), ...REFETCH_EVERYTHING });
-  // `['profile']` covers stats, recent, and me in one prefix match.
-  void queryClient.invalidateQueries({ queryKey: ['profile'], ...REFETCH_EVERYTHING });
+  // Stats, recent, me, the percentile, the hours and Activity: every key under
+  // `['profile']`, or that medium's and `'all'`'s when the medium is known.
+  invalidateProfile(queryClient, medium);
   // Prefix match: every `['tracked', ids]`. Adding or removing an entry is
   // exactly what flips Search's check, and the key carries a list of ids
   // rather than this one, so there is nothing more specific to invalidate.
@@ -110,7 +203,7 @@ export function invalidateAllEntries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: queryKeys.upcoming(), ...REFETCH_EVERYTHING });
   // Prefix matches, because the ids are not known here.
   void queryClient.invalidateQueries({ queryKey: ['game'], ...REFETCH_EVERYTHING });
-  void queryClient.invalidateQueries({ queryKey: ['profile'], ...REFETCH_EVERYTHING });
+  invalidateProfile(queryClient);
   void queryClient.invalidateQueries({ queryKey: ['tracked'], ...REFETCH_EVERYTHING });
   invalidateOnboarding(queryClient);
   void queryClient.invalidateQueries({ queryKey: ['movies'], ...REFETCH_EVERYTHING });
@@ -140,10 +233,11 @@ export function invalidateSteam(queryClient: QueryClient, { entriesChanged = fal
  * of Playing and changes the counts, plus the ranked list itself and the
  * per-tier lists the log flow reads. The onboarding's reads come with
  * `invalidateEntry`: a ranked game leaves the drain, and the guesses and the
- * deck's boost read the ranked list.
+ * deck's boost read the ranked list. `medium` narrows the Profile's refetch
+ * as in `invalidateEntry`.
  */
-export function invalidateRanking(queryClient: QueryClient, id: string): void {
-  invalidateEntry(queryClient, id);
+export function invalidateRanking(queryClient: QueryClient, id: string, medium?: Medium): void {
+  invalidateEntry(queryClient, id, medium);
   // Prefix match: every medium's `['ranking', medium]`.
   void queryClient.invalidateQueries({ queryKey: ['ranking'], ...REFETCH_EVERYTHING });
   // Prefix match: every `['tier', tier]`.

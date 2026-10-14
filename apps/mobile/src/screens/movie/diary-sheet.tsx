@@ -42,13 +42,13 @@ export function DiarySheet({
 
   const edit = useMutation({
     mutationFn: ({ id, watchedOn }: { id: string; watchedOn: string }) => editWatch(supabase, id, { watchedOn }),
-    onSuccess: () => invalidateEntry(queryClient, mediaItemId),
+    onSuccess: () => invalidateEntry(queryClient, mediaItemId, 'movie'),
     onError: () => alert(t('browse.movie.diary.couldNotChangeDay'), t('browse.tryAgain')),
   });
 
   const remove = useMutation({
     mutationFn: (id: string) => removeWatch(supabase, id),
-    onSuccess: () => invalidateEntry(queryClient, mediaItemId),
+    onSuccess: () => invalidateEntry(queryClient, mediaItemId, 'movie'),
     onError: () => alert(t('browse.movie.diary.couldNotRemove'), t('browse.tryAgain')),
   });
 

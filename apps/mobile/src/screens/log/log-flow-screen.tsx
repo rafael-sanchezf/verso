@@ -129,7 +129,7 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
   const save = useMutation({
     mutationFn: (args: FinishInsertionArgs) => finishInsertion(supabase, args),
     onSuccess: () => {
-      invalidateRanking(queryClient, id);
+      invalidateRanking(queryClient, id, medium);
       // The funnel's `ten_ranked` (onboarding.md, "Events"): a first ranking
       // adds one to the count; a re-rank adds none.
       logTenRankedIfReached(queryClient, game.data?.ranking ? 0 : 1, medium);

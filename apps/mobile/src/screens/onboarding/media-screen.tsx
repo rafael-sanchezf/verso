@@ -25,7 +25,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
-import { invalidateProfile } from '@/lib/invalidate';
+import { invalidateProfileSettings } from '@/lib/invalidate';
 import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
@@ -66,7 +66,7 @@ export function MediaScreen() {
       // The gate reads this key: writing the answer in at once is what lets
       // the tabs register without waiting for a refetch.
       queryClient.setQueryData(queryKeys.profileMe(), stored);
-      invalidateProfile(queryClient);
+      invalidateProfileSettings(queryClient);
       // A lost event is a lost data point, never a reason to stop the user.
       void logAppEvent('first_session').catch(() => undefined);
       if (afterMedia(new Set(media)) === 'platforms') router.push('/onboarding/platforms');
