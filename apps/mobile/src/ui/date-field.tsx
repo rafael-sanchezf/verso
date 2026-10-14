@@ -17,7 +17,7 @@
  * guess (rule 9).
  */
 
-import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { fullDate } from '@/lib/format';
@@ -37,8 +37,11 @@ export function DateField({ label, value, onChange, max, min, clearable = false 
   const maximumDate = localDateOf(max) ?? undefined;
   const minimumDate = localDateOf(min) ?? undefined;
 
-  const pick = (_event: DateTimePickerEvent, picked?: Date) => {
-    if (picked) onChange(dateOnly(picked));
+  // `onValueChange` rather than the deprecated `onChange` (datetimepicker 9.1):
+  // it fires only for a pick, never for a dismiss, so the date it carries is
+  // always the one chosen. A dismiss needs nothing here; the value stays.
+  const pick = (_event: unknown, picked: Date) => {
+    onChange(dateOnly(picked));
   };
 
   return (
@@ -57,7 +60,7 @@ export function DateField({ label, value, onChange, max, min, clearable = false 
               maximumDate={maximumDate}
               minimumDate={minimumDate}
               accessibilityLabel={label}
-              onChange={pick}
+              onValueChange={pick}
             />
           ) : (
             <TextButton
@@ -69,10 +72,9 @@ export function DateField({ label, value, onChange, max, min, clearable = false 
                   mode: 'date',
                   maximumDate,
                   minimumDate,
-                  // `dismissed` arrives with the old date; only `set` is a pick.
-                  onChange: (event, picked) => {
-                    if (event.type === 'set') pick(event, picked);
-                  },
+                  // Only a pick calls this; a dismiss goes to `onDismiss`,
+                  // which there is no need for.
+                  onValueChange: pick,
                 })
               }
             />

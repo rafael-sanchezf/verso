@@ -26,7 +26,7 @@
  */
 
 import { logPlaytime, markFinished, setNotes, setStartedAt, todayLocal } from '@verso/api';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
@@ -113,9 +113,9 @@ function DateField({
             // Nobody started or finished a game tomorrow.
             maximumDate={new Date()}
             accessibilityLabel={label}
-            onChange={(_event: DateTimePickerEvent, picked?: Date) => {
-              if (picked) onChange(picked);
-            }}
+            // Not the deprecated `onChange` (datetimepicker 9.1): this fires
+            // only for a pick, with the date picked.
+            onValueChange={(_event, picked) => onChange(picked)}
           />
           {onClear ? (
             <TextButton label={t('browse.game.detailsSheet.clear')} size={14} color="text/secondary" onPress={onClear} />

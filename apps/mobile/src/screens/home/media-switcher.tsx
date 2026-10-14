@@ -21,9 +21,10 @@
  * the chosen media), and where the untracked ones used to sit is one "add a
  * medium" control, which offers the live media the profile does not track and
  * adds the one picked. TV and books are held (decision 23) and never offered.
+ * The pick switches at once and writes behind it (`add-medium.ts`, VER-203).
  */
 
-import { setProfileMedia } from '@verso/api';
+import { setProfileMedia, type Profile } from '@verso/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
@@ -33,16 +34,10 @@ import { useT } from '@/lib/i18n';
 import { invalidateProfileSettings } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
-import {
-  addableMedia,
-  MEDIUM_WORDS,
-  otherMedia,
-  trackedMedia,
-  useActiveMedium,
-  useMyProfile,
-  type LiveMedium,
-} from '@/state/medium';
+import { addableMedia, MEDIUM_WORDS, otherMedia, useActiveMedium, useMyProfile } from '@/state/medium';
 import { Icon, Text, useTheme } from '@/ui';
+
+import { addMediumHandlers } from './add-medium';
 
 export function MediaSwitcher() {
   const t = useT();
@@ -56,17 +51,20 @@ export function MediaSwitcher() {
   // Only once the profile has answered: before it, every medium looks untracked.
   const addable = profile.isSuccess ? addableMedia(media) : [];
 
-  const add = useMutation({
-    mutationFn: (next: LiveMedium) => setProfileMedia(supabase, [...trackedMedia(media), next]),
-    onSuccess: (stored, next) => {
-      // The stored profile in at once, as the onboarding's media step does, so
-      // the switcher and Profile draw the new medium before the refetch lands.
-      queryClient.setQueryData(queryKeys.profileMe(), stored);
-      invalidateProfileSettings(queryClient);
-      setMedium(next);
-    },
-    onError: () => alert(t('shell.mediaSwitcher.couldNotAdd'), t('shell.mediaSwitcher.checkConnection')),
-  });
+  // The choice shows the moment it is made and the write follows (add-medium.ts
+  // says why: waiting on the write and a refetch read as a tap that missed).
+  const add = useMutation(
+    addMediumHandlers({
+      readProfile: () => queryClient.getQueryData<Profile>(queryKeys.profileMe()),
+      writeProfile: (next) => queryClient.setQueryData(queryKeys.profileMe(), next),
+      cancelProfileReads: () => queryClient.cancelQueries({ queryKey: queryKeys.profileMe() }),
+      currentMedium: () => medium,
+      setMedium,
+      save: (next) => setProfileMedia(supabase, next),
+      invalidate: () => invalidateProfileSettings(queryClient),
+      reportFailure: () => alert(t('shell.mediaSwitcher.couldNotAdd'), t('shell.mediaSwitcher.checkConnection')),
+    }),
+  );
 
   const offerToAdd = () =>
     select({
