@@ -279,6 +279,29 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 
 **Open.** Which reading of "share with an AI". Whether Profile also shows one combined top list across media. Whether it waits for V1 or rides the beta's Profile work.
 
+## 12. Same-series comparisons first
+
+**What Rafa described** (2026-10-13). The ranking already prefers a pivot from the same genre. It should push harder for a pivot from the same series: mainline Pokémon against mainline Pokémon, Zelda against Zelda, Pikmin, Horizon, Hollow Knight. Spin-offs are separate series, so New Super Mario Bros. is not compared with Paper Mario on this rule. These are comparisons people have already made in their heads, so they feel natural where "Hades or Elden Ring" feels fuzzy.
+
+**Where it sits.** Not scheduled. Inferred: a beta polish item on the engine, since it changes which question is asked and nothing about where a game lands; rule 1 of [design/ranking-algorithm.md](design/ranking-algorithm.md) (one global list, genre only steers the question) holds unchanged.
+
+**What exists.**
+- The pivot rule is one function, `choosePivot` in [packages/core/src/ranking.ts](../packages/core/src/ranking.ts): with three or more genre peers in the tier, it prefers a same-genre game within one position of the midpoint, else the midpoint. `PivotReason` (`genre` or `midpoint`) rides on every comparison event, and the comparison screen reads it for the "both are roguelikes" cue.
+- Games carry no series today. The IGDB mirror ([packages/catalog/src/igdb.ts](../packages/catalog/src/igdb.ts)) requests `parent_game` and `version_parent` for editions, not `collection` or `franchise`. IGDB has both, and the difference is the spin-off line Rafa drew: `franchise` is the umbrella (Mario, Pokémon, Zelda), `collection` is the series within it (Super Mario, Paper Mario, Mario Kart; the mainline Pokémon games apart from Mystery Dungeon). The series is the right unit; the franchise would put Hyrule Warriors beside Breath of the Wild. To be checked against the live data for Zelda, Pokémon and Horizon when the mirror change is made.
+- Movies already have it: `movie_details.collection_tmdb_id` and `collection_name` hold TMDB's "belongs to collection" (The Lord of the Rings Collection), stored since the film schema and read by nothing yet.
+- The bulk-entry deck's "one card per series, which ones?" (entry 1, point 7) wants the same field.
+
+**Sketch.**
+1. **Mirror.** Add `collection.name` and its id to the game fields; a `series` text column and `series_id` on `game_details`; one backfill walk of the catalog. The series line becomes "Part of The Legend of Zelda" on the game page for free.
+2. **Engine.** `RankableItem` gains `series: string | null`. `choosePivot` gets a first pass ahead of the genre pass: a same-series game within `seriesWindow` of the midpoint wins, with no minimum peer count, since one series peer is already the natural question. A wider window than genre's (two positions against one) is the "push even more"; the worst case is still binary search plus a question or two. `PivotReason` gains `series`, so the log records it and the screen can say "Both are Zelda games" (Spanish included; the cue strings sit beside the genre ones).
+3. **Escape hatch, unchanged.** "Can't compare" swaps the pivot as today; a declined series pivot falls back to genre, then midpoint.
+4. **Movies.** The same preference from `collection_name`, no mirror work.
+5. **Scoring stays put.** Series only steers the question; the comparison is stored as the same event and counts the same.
+
+**Cost.** Small: one mirror and migration PR with the backfill, one core PR with tests (the window, the no-threshold rule, the fallback order, the reason), and the cue strings in both languages. No Figma: the cue is a text change on a drawn screen.
+
+**Open.** Series window of two against genre's one, and no minimum peer count (question 14). Whether to also store the franchise for the game page's "Part of" line, kept out of the pivot. Whether `collections` (plural, IGDB's newer field) is the one to read where a game sits in more than one.
+
 ## Questions for Rafa, with the defaults
 
 1. Bulk entry before the three-friends test and TestFlight? Default yes; it is V1's first item either way.
@@ -294,3 +317,4 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 11. Ten ranked games as the session's goal, shown as progress, no cap? Default yes. **Yes, 2026-09-28**, with "never a cap" said twice.
 12. The Steam link offered inside the deck for PC players now, its screens coded from conventions (decision 16)? Default yes. Not addressed 2026-09-28; the default stands.
 13. Past ten (2026-09-28): the app says the taste profile is unlocked and offers to stop or keep going once, then never asks again, with a way out on every card? Default yes; inferred from "it should let you go past ten, maybe after a couple of games".
+14. Same-series pivots (2026-10-13): ahead of the genre preference, within two positions of the midpoint instead of one, with no minimum peer count, and spin-offs kept apart by using IGDB's series rather than its franchise? Default yes.
