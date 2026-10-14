@@ -3,6 +3,7 @@ import { Readable } from 'node:stream';
 import { createInterface } from 'node:readline';
 import { RateLimiter, requestTimeout, systemClock, type Clock } from './rate-limit';
 import { retryAfterMs } from './wikidata';
+import { movieDetailPath, TMDB_API_BASE, TMDB_LANGUAGE, tvDetailPath } from './tmdb-paths.ts';
 import type {
   TmdbChangesPage,
   TmdbExportLine,
@@ -13,11 +14,13 @@ import type {
   TmdbTvDetail,
 } from './tmdb-types';
 
-/** The environment variable holding the v4 read access token. */
-export const TMDB_TOKEN_ENV = 'TMDB_API_READ_ACCESS_TOKEN';
-
-const API_BASE = 'https://api.themoviedb.org';
+const API_BASE = TMDB_API_BASE;
 const EXPORT_BASE = 'https://files.tmdb.org/p/exports';
+
+// The request constants live in tmdb-paths.ts so the search-miss Edge Function
+// asks for a film exactly as this client does; re-exported for the callers
+// that have always imported them from here.
+export { MOVIE_APPEND, TMDB_LANGUAGE, TMDB_TOKEN_ENV, TV_APPEND } from './tmdb-paths.ts';
 
 /**
  * Starts a second, and requests in flight at once.
@@ -52,28 +55,6 @@ export const TMDB_MIN_REQUESTS_PER_SECOND = 1;
  * discovering it one refusal at a time.
  */
 export const TMDB_HALVE_PACE_AFTER = 2;
-
-/** The one language the mirror stores. */
-export const TMDB_LANGUAGE = 'en-US';
-
-/**
- * Every sub-resource a film's one request brings back.
- *
- * `append_to_response` takes up to 20 of these, so the whole of a title is one
- * round trip rather than five (research 2.1). `release_dates` is the only
- * place the per-region dates and certifications live, and `watch/providers` is
- * the JustWatch relay.
- */
-export const MOVIE_APPEND = 'credits,external_ids,release_dates,watch/providers';
-
-/**
- * The same for a series.
- *
- * `aggregate_credits` rather than `credits` because a show's `credits` is the
- * latest season's cast, while the aggregate is ordered by episodes across the
- * whole run, which is what "top cast" means for a series.
- */
-export const TV_APPEND = 'aggregate_credits,external_ids,content_ratings,watch/providers';
 
 /** Ids per page of `/3/movie/changes` and `/3/tv/changes`. TMDB's own figure. */
 export const CHANGES_PAGE_SIZE = 100;
@@ -301,18 +282,12 @@ export class TmdbClient {
 
   /** One film, with every sub-resource the mirror reads. Null when TMDB 404s. */
   async movie(id: number): Promise<TmdbMovieDetail | null> {
-    return this.request<TmdbMovieDetail>(
-      `/3/movie/${id}?language=${TMDB_LANGUAGE}&append_to_response=${encodeURIComponent(MOVIE_APPEND)}`,
-      true,
-    );
+    return this.request<TmdbMovieDetail>(movieDetailPath(id), true);
   }
 
   /** One series, likewise. */
   async tv(id: number): Promise<TmdbTvDetail | null> {
-    return this.request<TmdbTvDetail>(
-      `/3/tv/${id}?language=${TMDB_LANGUAGE}&append_to_response=${encodeURIComponent(TV_APPEND)}`,
-      true,
-    );
+    return this.request<TmdbTvDetail>(tvDetailPath(id), true);
   }
 
   /**

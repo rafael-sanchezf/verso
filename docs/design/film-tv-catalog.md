@@ -32,7 +32,7 @@ TMDB holds over a million films and a couple of hundred thousand series. The mir
 
 **Never deleted.** A row that stops matching either rule stays; a user may have ranked it, and `media_items` rows cascade into rankings and comparisons. When TMDB answers 404 for an id we hold, the run stamps `metadata.tmdb_missing_at` and leaves the row alone; the staleness pass skips rows carrying that stamp for 90 days and then tries once more.
 
-**Not mirrored in this pass**, each a later job: episodes (one request per season; fetched on demand when a user starts a show, since the pointer and "up to date" need them and the catalog does not); people beyond the names and profile paths in `top_cast`; collection membership beyond the id and name; images beyond `poster_path`, `backdrop_path`, and provider logos; keywords, videos, recommendations; awards and the Wikidata P444 scores (a Wikidata pass keyed by `external_ids.wikidata`, the film analog of `wikidata-ids`); the on-demand fetch for search misses (an Edge Function that writes into the mirror; keep the mapping module free of Node imports so Deno can share it).
+**Not mirrored in this pass**, each a later job: episodes (one request per season; fetched on demand when a user starts a show, since the pointer and "up to date" need them and the catalog does not); people beyond the names and profile paths in `top_cast`; collection membership beyond the id and name; images beyond `poster_path`, `backdrop_path`, and provider logos; keywords, videos, recommendations; awards and the Wikidata P444 scores (a Wikidata pass keyed by `external_ids.wikidata`, the film analog of `wikidata-ids`); the on-demand fetch for search misses (built 2026-10-13, VER-158; see "Search misses" below).
 
 ## Requests
 
@@ -231,4 +231,15 @@ Not in this pass, listed so nobody rebuilds the mirror for them:
 - Done the same day (migration `20260916230000_per_medium_backlog_and_rpcs.sql`, PR #52): `p_medium` on `search_games` and `popular_games`, with films and series ordered by `metadata->>'vote_count'` over the partial index `media_items_film_vote_count`, the way `media_items_game_rating_count` serves games; and the backlog numbered per medium through a derived `user_entries.medium`.
 - `MoviePage` and `ShowPage` read models in `packages/api/src/views.ts` beside `gamePage`, embedding the details, seasons, certifications for the user's region, and current availability.
 - The user's region and streaming services as a settings row (brief, decision 3), and the "On my services" join.
-- Episodes on demand, the awards and P444 passes, the search-miss Edge Function, `tmdb-availability`.
+- Episodes on demand, the awards and P444 passes, `tmdb-availability`.
+
+## Search misses
+
+Built 2026-10-13 (VER-158). A film under the popularity line is not in the catalog, so a search for it finds nothing. Search's empty state for films offers one button, "Search TMDB for “{query}”", which calls the Edge Function `supabase/functions/tmdb-lookup` and runs the search again (and opens the film's page when the search still does not list it).
+
+- **The match.** `GET /3/search/movie?query&include_adult=false&language=en-US&page=1`, adult results and `video` records dropped as the mirror drops them, posterless results dropped because the keep rule would refuse them, then the first result whose title or original title is the query (case, accents and punctuation folded), else TMDB's first. A caller that knows the id passes `tmdbId` and skips the search.
+- **The film.** The nightly run's own request (`movieDetailPath` in `packages/catalog/src/tmdb-paths.ts`), keep rule (`keepMovie`), mapping (`mapMovie`) and statements (`writeMovieBatch` in `tmdb-write.ts`), imported from `packages/catalog` by relative path rather than copied, for the US region the nightly run stores. Those three modules are Node-free and spell their relative imports with `.ts` so Deno can follow them. One transaction per film, behind an advisory lock on the TMDB id so two people missing on the same film at once cannot write it twice.
+- **The connection.** The mirror's tables are written only by the service side and the write needs its transaction and `||` merges, so the function writes through the platform's `SUPABASE_DB_URL` with `pg`, the driver the nightly run uses. The caller's JWT is checked as `suggest` checks it, and the meter runs as the caller.
+- **The meter.** Five lookups per person per minute (`TMDB_LOOKUP_PER_MINUTE`), counted from the caller's own `events` rows of kind `tmdb_lookup`, which the function writes before it asks TMDB. No new table: `events` is owner insert and read, never updated or deleted, and already indexed on `(user_id, kind, created_at)`.
+- **Series** are not looked up yet: TV is held (decision 23), and the function takes no medium.
+

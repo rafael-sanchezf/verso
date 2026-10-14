@@ -123,6 +123,12 @@ export const browse = {
     noGames: 'No games match “{query}”',
     noFilms: 'No films match “{query}”',
     noResultsBody: 'Check the spelling or try a shorter title.',
+    // A film search that found nothing can ask TMDB (VER-158, screens/search/tmdb-lookup.ts).
+    searchTmdb: 'Search TMDB for “{query}”',
+    searchingTmdb: 'Searching TMDB…',
+    notOnTmdb: 'TMDB has nothing by that name either.',
+    tmdbLimited: 'That’s a lot of lookups. Try again in a minute.',
+    tmdbError: "Couldn't reach TMDB just now.",
     couldNotAdd: "Couldn't add it",
     couldNotMarkPlaying: "Couldn't mark it playing",
     addMany: {

@@ -550,3 +550,59 @@ export async function movieHomeRows(client: Client, options: MovieHomeRowsOption
     })),
   }));
 }
+
+// -- The search miss -------------------------------------------------------------
+
+/** What a TMDB lookup came back with. */
+export type MovieLookupResult =
+  /** The film is in the catalog now; a search finds it, and this is its id. */
+  | { status: 'found'; mediaItemId: string }
+  /** TMDB has no match, or none the mirror would carry (adult, no poster). */
+  | { status: 'not_found' }
+  /** The caller's lookups for the minute are spent; `limit` a minute, `used` so far. */
+  | { status: 'limited'; limit: number | null; used: number | null };
+
+/**
+ * A film search that found nothing, asked of TMDB through the `tmdb-lookup`
+ * function (supabase/functions/tmdb-lookup): the best match is fetched and
+ * written into the mirror exactly as the nightly `tmdb-sync` writes a film,
+ * so running the search again finds it. VER-158.
+ *
+ * The app still never calls TMDB itself; the function holds the token. Signed
+ * in only, and metered per person by the function (five a minute by default);
+ * a spent meter is an answer (`limited`), not a throw. Any other failure, a
+ * TMDB outage included, throws the `FunctionsHttpError`.
+ */
+export async function lookupMovie(client: Client, query: string): Promise<MovieLookupResult> {
+  const { data, error } = await client.functions.invoke<{ mediaItemId: string | null }>('tmdb-lookup', {
+    body: { query: query.trim() },
+  });
+
+  if (error) {
+    const limited = await lookupLimited(error);
+    if (limited) return limited;
+    throw error;
+  }
+  const mediaItemId = data?.mediaItemId;
+  return typeof mediaItemId === 'string' && mediaItemId !== ''
+    ? { status: 'found', mediaItemId }
+    : { status: 'not_found' };
+}
+
+/** A 429 from the function: supabase-js hands any non-2xx back with the Response as `context`. */
+async function lookupLimited(error: unknown): Promise<MovieLookupResult | null> {
+  const context = (error as { context?: unknown } | null)?.context;
+  if (!context || typeof context !== 'object' || (context as { status?: unknown }).status !== 429) {
+    return null;
+  }
+  let limit: number | null = null;
+  let used: number | null = null;
+  try {
+    const body = (await (context as Response).json()) as { limit?: unknown; used?: unknown };
+    limit = typeof body.limit === 'number' ? body.limit : null;
+    used = typeof body.used === 'number' ? body.used : null;
+  } catch {
+    // An unreadable body is still a 429.
+  }
+  return { status: 'limited', limit, used };
+}

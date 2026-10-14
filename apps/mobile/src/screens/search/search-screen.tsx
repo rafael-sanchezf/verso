@@ -25,10 +25,15 @@
  * (`markFinished`) and adds it to the ADDED list under the results; "Rank {n}
  * games", pinned at the bottom, opens the session over them with no tiers
  * yet. `add-many.ts` has the rules; the list ends with the visit.
+ *
+ * A film search that finds nothing offers "Search TMDB for “{query}”": the
+ * `tmdb-lookup` function writes TMDB's best match into the catalog and the
+ * search runs again (VER-158; `tmdb-lookup.ts` has the rules).
  */
 
 import {
   coverCandidates,
+  lookupMovie,
   markFinished,
   popularGames,
   searchGames,
@@ -71,6 +76,7 @@ import { isSelectedTab, parseSearchIntent, playingIntentControl, type SearchInte
 import { GameRowSkeletons } from './placeholders';
 import { RECENT_SHOWN } from './recent';
 import { SearchField } from './search-field';
+import { lookupPhase, noFilmsCopy, openFound, type LookupPhase, type LookupState } from './tmdb-lookup';
 import { filmPopularSubtitle, filmResultSubtitle, popularSubtitle, searchSubtitle } from './subtitle';
 import { useRecentSearches } from './use-recent-searches';
 import { useStartPlaying } from './use-start-playing';
@@ -143,6 +149,12 @@ export function SearchScreen() {
 
   const startPlaying = useStartPlaying();
 
+  // The search-miss lookup, for films (tmdb-lookup.ts). The ref is the field
+  // as it is when the lookup answers, which may not be the query it asked.
+  const [lookup, setLookup] = useState<LookupState | null>(null);
+  const currentQuery = useRef(trimmed);
+  currentQuery.current = trimmed;
+
   const results = useQuery({
     queryKey: queryKeys.search(debounced, medium),
     queryFn: () => searchGames(supabase, debounced, { limit: RESULT_LIMIT, medium }),
@@ -183,6 +195,30 @@ export function SearchScreen() {
       else router.push({ pathname: '/game/[id]', params: { id, from: 'Search' } });
     },
     [film, remember, router, trimmed],
+  );
+
+  const searchTmdb = useCallback(
+    async (asked: string) => {
+      setLookup({ query: asked, phase: 'pending' });
+      try {
+        const outcome = await lookupMovie(supabase, asked);
+        if (outcome.status !== 'found') {
+          setLookup({ query: asked, phase: outcome.status });
+          return;
+        }
+        // The film is in the catalog now: the same query again, from the server.
+        const fresh = await queryClient.fetchQuery({
+          queryKey: queryKeys.search(asked, 'movie'),
+          queryFn: () => searchGames(supabase, asked, { limit: RESULT_LIMIT, medium: 'movie' }),
+          staleTime: 0,
+        });
+        setLookup(null);
+        if (openFound(outcome.mediaItemId, fresh, asked, currentQuery.current)) openGame(outcome.mediaItemId);
+      } catch {
+        setLookup({ query: asked, phase: 'error' });
+      }
+    },
+    [openGame, queryClient],
   );
 
   const openAdd = useCallback(
@@ -299,7 +335,12 @@ export function SearchScreen() {
       />
 
       {searching && !loading && !results.isError && hits.length === 0 ? (
-        <NoResults query={trimmed} film={film} />
+        <NoResults
+          query={trimmed}
+          film={film}
+          lookup={lookupPhase(lookup, trimmed)}
+          onSearchTmdb={() => void searchTmdb(trimmed)}
+        />
       ) : (
         <ScrollView
           style={styles.fill}
@@ -610,17 +651,35 @@ function IntentHint({ text }: { text: string }) {
  *
  * Bare and centred with 120pt below it, which is the placement specs/shell.md
  * gives an `EmptyState` that stands in for a whole list rather than for one
- * block. No action: the only useful next move is in the field the user is
- * already looking at.
+ * block. For games, no action: the only useful next move is in the field the
+ * user is already looking at. For films, one: the catalog holds only the
+ * films above TMDB's popularity line, so a miss may be a film TMDB has, and
+ * "Search TMDB for “{query}”" fetches it (tmdb-lookup.ts).
  */
-function NoResults({ query, film }: { query: string; film: boolean }) {
+function NoResults({
+  query,
+  film,
+  lookup,
+  onSearchTmdb,
+}: {
+  query: string;
+  film: boolean;
+  lookup: LookupPhase;
+  onSearchTmdb: () => void;
+}) {
   const t = useT();
+  const copy = noFilmsCopy(lookup, query);
   return (
     <View style={[styles.fill, styles.centre, { paddingBottom: 120 }]}>
       <EmptyState
         icon="search"
         title={t(film ? 'browse.search.noFilms' : 'browse.search.noGames', { query })}
-        body={t('browse.search.noResultsBody')}
+        body={t(film ? copy.body : 'browse.search.noResultsBody')}
+        action={
+          film && copy.action
+            ? { label: sayWords(t, copy.action), onPress: copy.busy ? () => {} : onSearchTmdb }
+            : undefined
+        }
       />
     </View>
   );

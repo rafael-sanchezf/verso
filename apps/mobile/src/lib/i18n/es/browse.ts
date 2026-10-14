@@ -112,6 +112,11 @@ export const browse: Dictionary['browse'] = {
     noGames: 'Ningún juego coincide con “{query}”',
     noFilms: 'Ninguna película coincide con “{query}”',
     noResultsBody: 'Revisa la ortografía o prueba con un título más corto.',
+    searchTmdb: 'Buscar “{query}” en TMDB',
+    searchingTmdb: 'Buscando en TMDB…',
+    notOnTmdb: 'TMDB tampoco tiene nada con ese nombre.',
+    tmdbLimited: 'Son muchas búsquedas seguidas. Inténtalo de nuevo en un minuto.',
+    tmdbError: 'No se pudo consultar TMDB en este momento.',
     couldNotAdd: 'No se pudo agregar',
     couldNotMarkPlaying: 'No se pudo marcar como Jugando',
     addMany: {

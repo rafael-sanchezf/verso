@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    // tmdb-map.ts and tmdb-write.ts are also imported by a Deno Edge Function
+    // (supabase/functions/tmdb-lookup), and Deno only follows a relative
+    // import that names its file, `.ts` included.
+    "allowImportingTsExtensions": true
   },
   "include": ["src", "test"]
 }

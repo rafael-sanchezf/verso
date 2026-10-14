@@ -180,6 +180,7 @@ jobs:
       - run: deno test supabase/functions/steam-link
       - run: deno test supabase/functions/steam-import
       - run: deno test supabase/functions/suggest
+      - run: deno test supabase/functions/tmdb-lookup
 
   # Runs the pgTAP suite in supabase/tests and the packages/api tests against a
   # fresh local stack. Migrations in supabase/migrations apply during

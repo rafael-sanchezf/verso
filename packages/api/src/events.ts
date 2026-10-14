@@ -13,6 +13,9 @@
  *                   read from these rows rather than logged
  *   day_7_return    reserved, in case the return is ever logged on the device
  *   first_pick      the finder's first pick, when the finder lands
+ *   tmdb_lookup     not logged by the app: the tmdb-lookup function writes one
+ *                   as the caller per film search sent to TMDB, and counts
+ *                   them for its per-minute meter (supabase/functions/tmdb-lookup)
  *
  * The table is owner insert and read only and never updated or deleted, and
  * the insert grant is `kind` and `payload` alone: the user, the id and the

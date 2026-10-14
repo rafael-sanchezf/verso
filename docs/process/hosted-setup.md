@@ -462,6 +462,25 @@ Unblocks: reading the onboarding funnel (signed up, first session, ten ranked, f
 
   `--since` is the first day of sign-ups to count (a UTC midnight); use the day the friends' build went out, so your own and the test accounts stay out. `--until` (exclusive) closes the window, for example `--since 2026-12-01 --until 2027-01-01` for the December cohort alone. Without either flag every account is counted. It prints two tables: the steps with their share of sign-ups, and one row per week of sign-up. The newest week's day-7 count reads low until that week is seven days old. The same numbers in the SQL editor: `select * from public.funnel_report('2026-10-13');` and `select * from public.funnel_report_by_cohort('2026-10-13');`.
 
+## 13. The search-miss lookup (about 5 minutes, after VER-158 merges)
+
+Unblocks: "Search TMDB for “…”" on Search's empty state for films. A film under the mirror's popularity line is fetched from TMDB and written into the catalog the way the nightly sync writes one (`supabase/functions/tmdb-lookup`). No migration. Until both steps are done the button answers "Couldn't reach TMDB just now."
+
+- [ ] Give the function the TMDB token, read straight from `.env` so it never passes through the clipboard or chat:
+
+  ```bash
+  supabase secrets set TMDB_API_READ_ACCESS_TOKEN=$(grep '^TMDB_API_READ_ACCESS_TOKEN=' .env | cut -d= -f2-)
+  ```
+
+- [ ] Deploy. JWT verification stays on, the default; the function also refuses the anon key. It writes the catalog through the platform's own `SUPABASE_DB_URL`, which every function already has.
+
+  ```bash
+  supabase functions deploy tmdb-lookup
+  ```
+
+- [ ] Optional, only to change the meter: `supabase secrets set TMDB_LOOKUP_PER_MINUTE=5` (lookups per person per minute, default 5; `0` turns the button's lookups off without a deploy).
+- [ ] Verify on the phone: search films for something obscure that shows "No films match", tap the button, and the film appears (or its page opens).
+
 ## Reporting back
 
 One message listing the boxes ticked is enough; Claude records the dates in the roadmap and runs its own checks from the outside (the Steam link redirect, the RPCs, the workflow logs). If a step fails, paste the error text with any key blanked out.

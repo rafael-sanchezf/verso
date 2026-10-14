@@ -36,8 +36,8 @@ import type {
   TvSeasonRow,
   WatchAvailabilityRow,
   WatchProviderRow,
-} from './tmdb-types';
-import { WATCH_OFFER_TYPES } from './tmdb-types';
+} from './tmdb-types.ts';
+import { WATCH_OFFER_TYPES } from './tmdb-types.ts';
 
 /**
  * The popularity a film needs before the mirror will fetch it at all.
