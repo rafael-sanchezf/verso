@@ -36,6 +36,7 @@ Rafa, 2026-10-06: "be intentional about segmenting the new user experience versu
 11. **No answer ever starts a trial or a subscription.** The trial is its own screen, price and renewal date and cancellation above the button (2026-10-06, from the Hims & Hers record).
 12. **Answers never leave the app.** No third-party analytics, no ad pixels, nothing from the questionnaire in a URL or an event name (2026-10-06, same source; the "never sold" principle made concrete).
 13. **Say where a pick comes from, never "for you".** The questionnaire and the paywall name the source of every pick; "personalized" is what the output is, not what the copy says (2026-10-06, same source).
+14. **Never name the minimum.** The seeds ask for films you love, not "three films": a stated number reads as a cap, and the aim is for the person to rank as many as they will. The floor lives in the button, which turns green at three, not in the copy (Rafa, 2026-10-14, on the movies onboarding frames).
 
 ## What we borrowed, and from whom
 
