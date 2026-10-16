@@ -253,6 +253,8 @@ Later, the same session runs from the two permanent doors (Ranking's empty state
 
 **Decided 2026-09-30:** the engine is the product (decision 21 in [ROADMAP.md](../ROADMAP.md#decisions)) and the beta ships the finder from the user's own list (decision 24).
 
+**Thinking, 2026-10-15 (Rafa).** Cold start without a crowd: every insertion writes the engine's guess for the item before the person places it, so each ranking is a prediction-against-outcome pair from one user alone, a calibration view over them is the first real number on the engine, and the content weight in the blend is measured per person. Written in full in [design/recommendation-engine.md](design/recommendation-engine.md#every-insertion-is-a-prediction-rafa-2026-10-15); the prediction is never read during insertion, so it tests the engine instead of confirming it.
+
 ## 10. Monetization frame
 
 Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21 in [ROADMAP.md](../ROADMAP.md#decisions)). The frame itself lives in `docs/private/feature-ideas-monetization.md`, which never leaves the working repo. What it fixes for the code: meter the AI suggestions from their first day (`suggestion_requests`), keep Search's results a list of typed rows a labeled slot could join, keep any data product aggregate and de-identified, and start the IGDB and TMDB license conversations before charging anyone.

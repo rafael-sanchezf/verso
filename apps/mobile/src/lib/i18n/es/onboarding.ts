@@ -68,7 +68,7 @@ export const onboarding: Dictionary['onboarding'] = {
   slider: {
     tiers: {
       disliked: 'No me gustó',
-      fine: 'Está bien',
+      fine: 'Normal',
       liked: 'Me gustó',
       loved: 'Me encantó',
     },

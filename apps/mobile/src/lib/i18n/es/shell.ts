@@ -31,7 +31,7 @@ export const shell: Dictionary['shell'] = {
   tiers: {
     loved: 'Me encantó',
     liked: 'Me gustó',
-    fine: 'Está bien',
+    fine: 'Normal',
     disliked: 'No me gustó',
   },
   filterChip: {

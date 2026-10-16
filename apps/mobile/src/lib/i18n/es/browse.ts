@@ -337,13 +337,13 @@ export const browse: Dictionary['browse'] = {
     tiers: {
       loved: 'Me encantó',
       liked: 'Me gustó',
-      fine: 'Está bien',
+      fine: 'Normal',
       disliked: 'No me gustó',
     },
     tierInSentence: {
       loved: 'Me encantó',
       liked: 'Me gustó',
-      fine: 'Está bien',
+      fine: 'Normal',
       disliked: 'No me gustó',
     },
     compare: {

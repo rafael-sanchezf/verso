@@ -1,6 +1,6 @@
 # The public mirror
 
-Written 2026-10-08. This repository is private and is where the work happens. A second repository, `rafael-sanchezf/verso`, is public and is a snapshot of the parts of this one that are meant to be read: the code, the design docs, the research, the roadmap. It is refreshed by a GitHub Actions workflow on every push to `main`, and nothing reaches it without passing a gate. The public repo is for reading, not running: nothing deploys from it, and its history starts at the first sync.
+Written 2026-10-08. This repository is private and is where the work happens. A second repository, `rafael-sanchezf/verso`, is public and is a snapshot of the parts of this one that are meant to be read: the code, the design docs, the research, the roadmap. It is refreshed by a GitHub Actions workflow once a day (on every push to `main` until 2026-10-14, decision 40), and nothing reaches it without passing a gate. The public repo is for reading, not running: nothing deploys from it, and its history starts at the first sync.
 
 ## What syncs
 
@@ -10,7 +10,7 @@ Every decision is a path, never a line inside a file; that is what keeps the syn
 - **`[allow]`**: `apps/`, `packages/`, `supabase/`, `docs/`, the root Markdown files (`README.md`, `ARCHITECTURE.md`, `AGENTS.md`, `CLAUDE.md`, `ROADMAP.md`), the workspace files the public CI needs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `.npmrc`, `.gitignore`, `.env.example`, `vercel.json`), and exactly one workflow, `ci.yml`. A path that matches nothing stays private.
 - **`[terms]`**: the words and identifiers that must not appear anywhere in the export.
 
-[`scripts/publish/export.sh`](../../scripts/publish/export.sh) builds the tree from `HEAD` (never from the working copy), applies the rules, then runs the gate: the term list as a whole-word, case-insensitive grep over every text file, and gitleaks over the tree. [`.github/workflows/public-sync.yml`](../../.github/workflows/public-sync.yml) runs it on every push to `main` and on manual dispatch, and on a clean gate pushes the tree to the public repo's `main` as one commit, `Sync from <short sha>`, authored as the no-reply identity. The commit message never carries the private commit's subject. The push uses the repository secret `PUBLIC_SYNC_TOKEN`, a fine-grained token scoped to the public repo only, contents read and write; the workflow's own token stays read-only.
+[`scripts/publish/export.sh`](../../scripts/publish/export.sh) builds the tree from `HEAD` (never from the working copy), applies the rules, then runs the gate: the term list as a whole-word, case-insensitive grep over every text file, and gitleaks over the tree. [`.github/workflows/public-sync.yml`](../../.github/workflows/public-sync.yml) runs it daily at 15:00 UTC and on manual dispatch, and on a clean gate pushes the tree to the public repo's `main` as one commit, `Sync from <short sha>`, authored as the no-reply identity. The commit message never carries the private commit's subject. The push uses the repository secret `PUBLIC_SYNC_TOKEN`, a fine-grained token scoped to the public repo only, contents read and write; the workflow's own token stays read-only.
 
 The sync never edits prose. If a line has to change to be public, it changes here, in the private repo, and the next push carries it.
 

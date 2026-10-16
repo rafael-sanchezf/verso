@@ -54,7 +54,7 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | Backlog | Pendientes | Verso |
 | Playing / Played / Finished / Dropped | Jugando / Jugado / Terminado / Abandonado | Verso |
 | Watched / Rewatch | Vista / Volver a ver | Verso |
-| Loved / Liked / Fine / Didn't like (the tiers) | Me encantó / Me gustó / Está bien / No me gustó | Verso |
+| Loved / Liked / Fine / Didn't like (the tiers) | Me encantó / Me gustó / Normal / No me gustó | Verso; 'Normal' for Fine since 2026-10-15 (Rafa, VER-209 item 2): an answer to "¿Qué tal X?" that fits a juego and a película alike, where Buenísima / Buena / Mala would agree with películas only |
 | Too close / Can't compare | Muy parejos / No puedo comparar | Verso; the two escape hatches |
 | Picks / Recommendations | Recomendaciones | Brand rule 2: a surface that shows recommendations is labelled as recommendations |
 | Ask (the sheet) | Preguntar | Verso |

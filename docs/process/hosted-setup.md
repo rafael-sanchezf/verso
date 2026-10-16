@@ -219,7 +219,7 @@ Unblocks: the "playing now" number on Steam game pages and the trend history it 
 
 ## 4. TMDB, the film and TV catalog (10 minutes, then a half-hour sync)
 
-Unblocks: the whole movie and TV catalog on the hosted project. Until the token exists the nightly workflow runs, prints one line, and exits green.
+Unblocks: the whole movie and TV catalog on the hosted project. Until the token exists the weekly workflow runs, prints one line, and exits green.
 
 - [ ] Follow steps 1 to 5 of [docs/design/tmdb-setup.md](../design/tmdb-setup.md): a free account, Settings, API, Request an API Key, type **Developer**, the form answers as written there. Copy the **API Read Access Token** (the long one), not the v3 key.
 - [ ] Add it to `.env` as `TMDB_API_READ_ACCESS_TOKEN=`, then run the curl test in that document; `Fight Club 1999-10-15 139 min` and four appended keys means the token works.
@@ -233,7 +233,7 @@ Unblocks: the whole movie and TV catalog on the hosted project. Until the token 
 
   A projection, not a measurement (VER-163, 2026-10-12): the first cloud run wrote about 100 films a minute because each title cost eight to ten database round trips, up to about 5,000 per 500-title batch; writes are now at most 12 round trips per batch, so the TMDB fetch at 20 a second sets the pace again and the whole pull should take roughly 35 minutes, well inside the workflow's two-hour timeout.
 
-- [ ] Nothing more: the nightly run is scheduled at 14:00 UTC and takes over from here. It mirrors movies only (2026-10-12): TV is held until its ranking unit is decided, and the free tier's 500 MB would not hold the series. When TV is scheduled, drop the default in `tmdb-sync.yml` and raise its popularity threshold first.
+- [ ] Nothing more: the weekly run is scheduled Mondays at 14:00 UTC (daily until 2026-10-14, decision 40) and takes over from here. It mirrors movies only (2026-10-12): TV is held until its ranking unit is decided, and the free tier's 500 MB would not hold the series. When TV is scheduled, drop the default in `tmdb-sync.yml` and raise its popularity threshold first.
 
 ## 5. Optional keys (5 minutes each, any time)
 
@@ -244,7 +244,7 @@ Both jobs skip cleanly and exit green without their key, so these are never urge
 
 ## 6. After search smarter (#62) merges: push, then one full sync (5 minutes, then a few minutes)
 
-The mirror on `main` writes IGDB's alternative names to a new `media_aliases` table, so the nightly catalog sync (09:00 UTC) fails until the migration is on the hosted project. Merge #62 only when you can do this right after:
+The mirror on `main` writes IGDB's alternative names to a new `media_aliases` table, so the weekly catalog sync (Mondays 09:00 UTC) fails until the migration is on the hosted project. Merge #62 only when you can do this right after:
 
 - [x] `supabase db push` from the repo root, then `pnpm db:types` and commit the regenerated file if it changed. Pushed 2026-10-08.
 - [x] One full sync to fill the aliases (the nightly run only touches recently updated games): Actions, **Catalog sync**, Run workflow with `since` set to `1970-01-01T00:00:00Z`; or from the laptop, `pnpm catalog:sync:full`. The initialisms ("GTA V", "BOTW") are written by the migration itself. Done 2026-10-08 from the laptop: 69,461 games, 56,683 alias rows.

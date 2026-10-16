@@ -38,12 +38,12 @@ Every script in the workspace, with what it does. The root scripts forward to th
 | `pnpm mobile prebuild` | `expo prebuild --clean`, when the native projects need regenerating |
 | `pnpm site:dev`, `pnpm site:build` | The marketing site with Next's dev server on port 3000, or the static export to `apps/site/out` |
 | `pnpm --filter @verso/site logo` | Build the site, then render its favicons, touch icon and share image from the mark |
-| `pnpm catalog:sync`, `pnpm catalog:sync:full` | The IGDB mirror: the nightly delta (games updated in the last 26 hours, or `-- --since <iso>`), or the full pull |
+| `pnpm catalog:sync`, `pnpm catalog:sync:full` | The IGDB mirror: the delta (games updated in the last 26 hours by default; the weekly workflow passes `-- --since <iso>` for eight days), or the full pull |
 | `pnpm catalog:steam-scores` | Steam review scores and ids for games with a Steam app id |
-| `pnpm catalog:wikidata-ids`, `pnpm catalog:opencritic-ids` | The nightly Wikidata pass that fills cross-linking ids (OpenCritic, Steam, Wikipedia) keyed by the IGDB id; the second name is an alias |
+| `pnpm catalog:wikidata-ids`, `pnpm catalog:opencritic-ids` | The weekly Wikidata pass that fills cross-linking ids (OpenCritic, Steam, Wikipedia) keyed by the IGDB id; the second name is an alias |
 | `pnpm catalog:opencritic-scores` | OpenCritic critic scores for games with an OpenCritic id; skips when `OPENCRITIC_RAPIDAPI_KEY` is unset |
 | `pnpm catalog:availability` | Subscription availability from Game Pass, GeForce NOW and IsThereAnyDeal |
-| `pnpm catalog:tmdb-sync`, `pnpm catalog:tmdb-sync:full` | The TMDB mirror for films and series: the nightly delta, or the full pull |
+| `pnpm catalog:tmdb-sync`, `pnpm catalog:tmdb-sync:full` | The TMDB mirror for films and series: the delta (26 hours by default; the weekly workflow passes `-- --since 194`), or the full pull |
 | `pnpm tokens:build`, `pnpm tokens:check` | Build the app's theme from `packages/tokens/tokens.json`, or fail if the committed theme is out of step with it (CI runs the check) |
 | `pnpm typecheck` | `tsc --noEmit` in every package; the app generates its typed routes first |
 | `pnpm test` | The vitest suites in every package; the `packages/api` suites run live when `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` point at a stack, and skip otherwise |
