@@ -43,24 +43,78 @@ export const onboarding = {
     couldNotSave: "Couldn't save your platforms. Check your connection and try again.",
     skipForNow: 'Skip for now',
   },
-  seeds: {
+  /**
+   * Movies only (movies-build.md, PR 6): where you watch, after the media
+   * question, the analog of Platforms.
+   */
+  services: {
     /** Also the browser tab's title. */
-    title: 'Three games you love',
-    subtitle: 'They go straight into your ranking and tune what we ask about next.',
-    /** Search's field, passed in: the same words as Search's own default. */
-    searchPlaceholder: 'Search games',
-    couldNotSearch: "Couldn't search just now.",
-    noMatch: 'No games match “{query}”.',
-    yourThree: 'YOUR THREE',
-    remove: 'Remove {title}',
-    slots: {
-      first: 'Add a first',
-      second: 'Add a second',
-      third: 'Add a third',
+    title: 'Where do you watch?',
+    kicker: "Let's set up movies",
+    subtitle: 'Tap every service you pay for.',
+    change: 'Change',
+    /** The region picker's title, and Change's VoiceOver label. */
+    changeRegion: 'Change region',
+    /** The last tile, which opens the region's full list. */
+    more: 'More',
+    theaters: 'Theaters',
+    theatersLine: 'Openings go on your calendar.',
+    none: 'No services listed for this region yet.',
+    couldNotLoad: "Couldn't load the services.",
+    couldNotSave: "Couldn't save your services. Check your connection and try again.",
+    skipForNow: 'Skip for now',
+    /** The regions the picker offers, by ISO code. */
+    regions: {
+      US: 'United States',
+      CA: 'Canada',
+      MX: 'Mexico',
+      GB: 'United Kingdom',
+      ES: 'Spain',
+      AR: 'Argentina',
+      BR: 'Brazil',
+      CL: 'Chile',
+      CO: 'Colombia',
+      PE: 'Peru',
+      FR: 'France',
+      DE: 'Germany',
+      IT: 'Italy',
+      AU: 'Australia',
+      IN: 'India',
+      JP: 'Japan',
     },
+  },
+  /**
+   * Games you love, films you love: the shared Seeds screen. No count in any
+   * of it (Rafa's letters, 2026-10-14, VER-228): three is the floor the
+   * button waits for, never a number the copy states.
+   */
+  seeds: {
+    subtitle: 'They go straight into your ranking and tune what we ask about next.',
+    couldNotSearch: "Couldn't search just now.",
+    remove: 'Remove {title}',
     couldNotSave: "Couldn't save these. Check your connection and try again.",
-    rankThese: 'Rank these',
-    footnote: 'Their genres tune the deck; you can always add more later.',
+    rank: 'Rank',
+    game: {
+      /** Also the browser tab's title. */
+      title: 'Games you love',
+      /** Search's field, passed in: the same words as Search's own default. */
+      searchPlaceholder: 'Search games',
+      noMatch: 'No games match “{query}”.',
+      yourPicks: 'YOUR FAVORITES',
+      /** The empty slot under the picks: with none yet, then with some. */
+      first: 'Add a game',
+      another: 'Add another',
+      footnote: 'Their genres tune the deck; you can always add more later.',
+    },
+    movie: {
+      title: 'Films you love',
+      searchPlaceholder: 'Search films',
+      noMatch: 'No films match “{query}”.',
+      yourPicks: 'YOUR FAVORITES',
+      first: 'Add a film',
+      another: 'Add another',
+      footnote: 'Their genres and directors tune the next page. You can add more later.',
+    },
   },
   deck: {
     /** The browser tab's title. */
@@ -78,9 +132,18 @@ export const onboarding = {
     couldNotLoad: "Couldn't load these games.",
     showMore: 'Show {count} more',
     couldNotSave: "Couldn't save some of these. Check your connection and try again.",
-    /** The button with nothing marked, when it is disabled. */
-    rankThese: 'Rank these',
-    rankTheseCount: 'Rank these {count}',
+    /** The button with nothing marked, when it is disabled (VER-228: never "Rank these"). */
+    rank: 'Rank',
+    rankCount: 'Rank {count}',
+    /** The film deck (movies-build.md, PR 6). */
+    documentTitleFilms: 'Rank popular films',
+    popularFilms: 'Popular films · slide how it was',
+    emptyFilms: "That's every popular film we have for now.",
+    couldNotLoadFilms: "Couldn't load these films.",
+    /** Over the seen check's column on the axis. */
+    seen: 'Seen',
+    /** The seen check's VoiceOver label. */
+    seenLabel: 'Seen {title}',
   },
   slider: {
     /** After the track, and over each stop on the axis, worst first. */
@@ -157,6 +220,16 @@ export const onboarding = {
     notNow: 'Not now',
     /** The title over the games the import found. */
     fromSteam: 'From Steam',
+  },
+  /** The Letterboxd door, at the end of the movies onboarding (movies-build.md, PR 6). */
+  letterboxd: {
+    /** Also the browser tab's title. */
+    title: 'Use Letterboxd?',
+    body: 'Import your diary and every film you logged comes in as watched, with its dates. Rank them whenever you like.',
+    weRead: 'We read: your films, watch dates and rewatches, from the file you export. We show you how.',
+    undo: 'Imported films are watched, never ranked. Delete the import any time in Settings.',
+    import: 'Import from Letterboxd',
+    notNow: 'Not now',
   },
   /** Ranking's banner over the games played and not ranked yet. */
   rankingBanner: {

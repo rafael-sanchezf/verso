@@ -269,6 +269,8 @@ export default function RootLayout() {
               <Stack.Screen name="ask-preview" />
               {/* The joint Profile's screens on fixtures (screens/profile); Activity and Edit turn the header on. */}
               <Stack.Screen name="preview-profile" options={{ headerShown: false }} />
+              {/* The movies onboarding's four screens on fixtures (screens/onboarding, movies-build.md PR 6). */}
+              <Stack.Screen name="preview-onboarding" options={{ headerShown: false }} />
             </Stack.Protected>
           </Stack>
 

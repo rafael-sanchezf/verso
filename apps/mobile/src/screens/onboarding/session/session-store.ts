@@ -21,7 +21,9 @@
  * - `onDone` is where the review goes after its writes: `steam-or-tabs` for a
  *   new user's stack (Link Steam when the profile has PC and no link, else the
  *   tabs), `back` for a door a returning user came through (the drain,
- *   add-many, the returning deck), `deck` for the seeds.
+ *   add-many, the returning deck), `deck` for the seeds, `letterboxd` for the
+ *   film deck of a new user's or a newly added medium's path (the Letterboxd
+ *   door, movies-build.md, PR 6).
  *
  * A module-level holder, not the router's params and not a store library.
  */
@@ -49,7 +51,7 @@ export interface SessionRequest {
    */
   medium?: Medium;
   items: SessionItem[];
-  onDone: 'steam-or-tabs' | 'back' | 'deck';
+  onDone: 'steam-or-tabs' | 'letterboxd' | 'back' | 'deck';
 }
 
 const holder = createHolder<SessionRequest | null>(null);

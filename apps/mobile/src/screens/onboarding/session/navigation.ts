@@ -2,9 +2,12 @@
  * Where the session and the review go next, decided without a router.
  *
  * - After Done (specs/batch-session.md, "The review"; onboarding.md, "Link
- *   Steam"): a new user's stack goes to Link Steam when the profile has PC and
- *   Steam is not linked, else to the tabs; a returning user goes back to where
- *   the door was; the seeds go on to the deck page (their review is skipped).
+ *   Steam"): a new user's games path goes to Link Steam when the profile has
+ *   PC and Steam is not linked, else to the end of the path (`tabs`: Home, or
+ *   the next medium's first step, flow.ts); the movies path goes to the
+ *   Letterboxd door (movies-build.md, PR 6, item 5); a returning user goes
+ *   back to where the door was; the seeds go on to the deck page (their
+ *   review is skipped).
  * - "Rank more": back to the deck page, or to Search's add-many for a session
  *   that came from there. The drain has no deck behind it, so it opens the
  *   returning user's deck page, the other door on Ranking.
@@ -24,8 +27,10 @@ export const PC_PLATFORM = 'PC (Microsoft Windows)';
 export type DoneTarget =
   /** Link Steam, for a new PC player with no link. */
   | 'steam'
-  /** Home: the end of the new user's stack. */
+  /** The end of this medium's path: Home, or the next medium's first step (flow.ts). */
   | 'tabs'
+  /** The Letterboxd door, at the end of the movies path. */
+  | 'letterboxd'
   /** Out of the onboarding stack, back to the tab whose door opened it. */
   | 'leave'
   /** The deck page, after the seeds. */
@@ -44,6 +49,8 @@ export function doneTarget(onDone: SessionRequest['onDone'], facts: DoneFacts): 
       return 'deck';
     case 'back':
       return 'leave';
+    case 'letterboxd':
+      return 'letterboxd';
     case 'steam-or-tabs': {
       // A read that failed sends the user home rather than to a screen whose
       // premise nobody checked; Settings → Steam is always there.

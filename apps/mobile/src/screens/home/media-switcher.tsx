@@ -21,7 +21,11 @@
  * the chosen media), and where the untracked ones used to sit is one "add a
  * medium" control, which offers the live media the profile does not track and
  * adds the one picked. TV and books are held (decision 23) and never offered.
- * The pick switches at once and writes behind it (`add-medium.ts`, VER-203).
+ * The pick switches at once and writes behind it (`add-medium.ts`, VER-203),
+ * and opens that medium's onboarding over Home (VER-198; movies-build.md,
+ * PR 6, item 1): Services, Films you love, the film deck and the Letterboxd
+ * door for movies, the platforms onward for games. Its last step comes back
+ * to this Home in the added medium; skipping every step leaves the flag alone.
  */
 
 import { setProfileMedia, type Profile } from '@verso/api';
@@ -34,6 +38,7 @@ import { useT } from '@/lib/i18n';
 import { invalidateProfileSettings } from '@/lib/invalidate';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
+import { useStartAddedMedia } from '@/screens/onboarding/use-flow';
 import { addableMedia, MEDIUM_WORDS, otherMedia, useActiveMedium, useMyProfile } from '@/state/medium';
 import { Icon, Text, useTheme } from '@/ui';
 
@@ -46,6 +51,7 @@ export function MediaSwitcher() {
   const { medium, setMedium } = useActiveMedium();
   const profile = useMyProfile();
   const media = profile.data?.media;
+  const startOnboarding = useStartAddedMedia();
 
   const others = otherMedia(medium, media);
   // Only once the profile has answered: before it, every medium looks untracked.
@@ -72,7 +78,10 @@ export function MediaSwitcher() {
       message: t('shell.mediaSwitcher.addMessage'),
       choices: addable.map((next) => ({
         label: t(MEDIUM_WORDS[next].plural),
-        onPress: () => add.mutate(next),
+        onPress: () => {
+          add.mutate(next);
+          startOnboarding([next]);
+        },
       })),
     });
 

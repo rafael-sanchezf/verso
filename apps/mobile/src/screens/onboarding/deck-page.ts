@@ -1,10 +1,16 @@
 /**
  * The deck page's rules: which rows show, the count in the header, the meta
- * lines, where "Done for now" goes, and what "Rank these" hands the session
+ * lines, where "Done for now" goes, and what "Rank" hands the session
  * (specs/onboarding.md, "The deck page").
  *
- * Marks are local state until "Rank these": a map from a row's id to the tier
- * its slider stopped on. An untouched row is not played and is never written.
+ * Marks are local state until "Rank": a map from a row's id to the tier its
+ * slider stopped on. An untouched row is not played and is never written.
+ *
+ * The film deck (movies-build.md, PR 6, item 4) adds the seen check: a film
+ * row is poster, title, meta and the check, and its slider appears only once
+ * the check is on (Rafa's letters, 2026-10-14); unchecking takes the tier
+ * away with it. A checked film with no tier is logged seen and not ranked
+ * (rule 35); it does not count toward ten ranked.
  *
  * No React and no `react-native` import (`test/onboarding-deck-page.test.ts`).
  */
@@ -90,11 +96,12 @@ export function progressFraction(count: number): number {
   return Math.min(1, Math.max(0, count) / DECK_GOAL);
 }
 
-/** "Rank these {n}"; at zero the button is disabled and reads "Rank these". */
+/**
+ * "Rank {n}"; at zero the button is disabled and reads "Rank". Never "Rank
+ * these" (Rafa, 2026-10-14, VER-228), on the games deck and the film deck.
+ */
 export function rankButtonLabel(marked: number): Sentence {
-  return marked > 0
-    ? { key: 'onboarding.deck.rankTheseCount', vars: { count: marked } }
-    : { key: 'onboarding.deck.rankThese' };
+  return marked > 0 ? { key: 'onboarding.deck.rankCount', vars: { count: marked } } : { key: 'onboarding.deck.rank' };
 }
 
 /**
@@ -163,11 +170,59 @@ export function markedRows(
 }
 
 /**
- * Where the header's `x` goes: with marks, into the session (the same writes
- * as "Rank these"); without, to the tabs for a new user and back for a
+ * Where the header's `x` goes. With anything to write (a mark, or a film
+ * checked as seen), the same writes as "Rank", which go on into the session
+ * when something has a tier. With nothing, onward for a new user (the end of
+ * the games path, or the Letterboxd door on the movies path) and back for a
  * returning one.
  */
-export function doneForNow(marked: number, returning: boolean): 'session' | 'tabs' | 'back' {
-  if (marked > 0) return 'session';
-  return returning ? 'back' : 'tabs';
+export function doneForNow(pending: number, returning: boolean): 'write' | 'onward' | 'back' {
+  if (pending > 0) return 'write';
+  return returning ? 'back' : 'onward';
+}
+
+/** The film deck's checks: the films marked seen, by id. */
+export type DeckSeen = ReadonlySet<string>;
+
+/**
+ * A tap on a film's seen check. On adds it; off takes it away with its tier,
+ * so the slider and its mark go together (the slider shows only while the
+ * check is on).
+ */
+export function toggleSeen(
+  seen: DeckSeen,
+  marks: DeckMarks,
+  mediaItemId: string,
+): { seen: Set<string>; marks: Map<string, Tier> } {
+  const nextSeen = new Set(seen);
+  const nextMarks = new Map(marks);
+  if (nextSeen.has(mediaItemId)) {
+    nextSeen.delete(mediaItemId);
+    nextMarks.delete(mediaItemId);
+  } else {
+    nextSeen.add(mediaItemId);
+  }
+  return { seen: nextSeen, marks: nextMarks };
+}
+
+/** Whether a row draws its slider: every game row; a film row once checked as seen. */
+export function showsSlider(film: boolean, seen: DeckSeen, mediaItemId: string): boolean {
+  return !film || seen.has(mediaItemId);
+}
+
+/** The film rows checked as seen, in the page's order: what `logSeen` writes. */
+export function seenRows(rows: readonly DeckCandidateRow[], seen: DeckSeen): DeckCandidateRow[] {
+  return rows.filter((row) => seen.has(row.mediaItemId));
+}
+
+/** How many rows the `x` would write: the marks, plus the films checked with no tier. */
+export function pendingCount(marks: DeckMarks, seen: DeckSeen): number {
+  let count = marks.size;
+  for (const id of seen) if (!marks.has(id)) count += 1;
+  return count;
+}
+
+/** The film deck's meta line: popular films, by TMDB's vote count, never by service. */
+export function filmDeckMetaLine(): Sentence {
+  return { key: 'onboarding.deck.popularFilms' };
 }

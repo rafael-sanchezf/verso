@@ -18,6 +18,11 @@ import {
   progressFraction,
   progressLabel,
   rankButtonLabel,
+  filmDeckMetaLine,
+  pendingCount,
+  seenRows,
+  showsSlider,
+  toggleSeen,
 } from '../src/screens/onboarding/deck-page';
 
 /** The sentence a screen would show, in English. */
@@ -74,10 +79,11 @@ describe('the marks and the count', () => {
     expect(progressFraction(-1)).toBe(0);
   });
 
-  it('labels the button with the marked count, and plainly at zero', () => {
-    expect(say(rankButtonLabel(0))).toBe('Rank these');
-    expect(say(rankButtonLabel(1))).toBe('Rank these 1');
-    expect(say(rankButtonLabel(7))).toBe('Rank these 7');
+  it('labels the button "Rank N", never "Rank these N" (VER-228), and plainly at zero', () => {
+    expect(say(rankButtonLabel(0))).toBe('Rank');
+    expect(say(rankButtonLabel(1))).toBe('Rank 1');
+    expect(say(rankButtonLabel(6))).toBe('Rank 6');
+    expect(translate('es', rankButtonLabel(6).key, rankButtonLabel(6).vars)).toBe('Clasificar 6');
   });
 });
 
@@ -180,12 +186,63 @@ describe('the played-on pre-fill', () => {
 
 describe('"Done for now"', () => {
   it('goes to the session with marks', () => {
-    expect(doneForNow(2, false)).toBe('session');
-    expect(doneForNow(2, true)).toBe('session');
+    expect(doneForNow(2, false)).toBe('write');
+    expect(doneForNow(2, true)).toBe('write');
   });
 
-  it('goes to the tabs for a new user and back for a returning one', () => {
-    expect(doneForNow(0, false)).toBe('tabs');
+  it('goes onward for a new user and back for a returning one', () => {
+    expect(doneForNow(0, false)).toBe('onward');
     expect(doneForNow(0, true)).toBe('back');
+  });
+});
+
+describe('the film deck', () => {
+  const NO_SEEN = new Set<string>();
+
+  it('shows no slider on a film row until it is checked as seen (Rafa, 2026-10-14)', () => {
+    expect(showsSlider(true, NO_SEEN, 'a')).toBe(false);
+    const { seen } = toggleSeen(NO_SEEN, NO_MARKS, 'a');
+    expect(showsSlider(true, seen, 'a')).toBe(true);
+    expect(showsSlider(true, seen, 'b')).toBe(false);
+  });
+
+  it('shows the slider on every games row, as before', () => {
+    expect(showsSlider(false, NO_SEEN, 'a')).toBe(true);
+  });
+
+  it('takes the tier away with the check, so the slider never hides a mark', () => {
+    const checked = toggleSeen(NO_SEEN, NO_MARKS, 'a');
+    const marks = markRow(checked.marks, 'a', 'loved');
+    const unchecked = toggleSeen(checked.seen, marks, 'a');
+    expect(unchecked.seen.has('a')).toBe(false);
+    expect(unchecked.marks.has('a')).toBe(false);
+    expect(showsSlider(true, unchecked.seen, 'a')).toBe(false);
+  });
+
+  it('never mutates what it was given', () => {
+    const seen = new Set(['a']);
+    const marks = markRow(NO_MARKS, 'a', 'liked');
+    toggleSeen(seen, marks, 'a');
+    expect([...seen]).toEqual(['a']);
+    expect(marks.get('a')).toBe('liked');
+  });
+
+  it('counts the tiers on the button and the checks with no tier only for the x', () => {
+    let state = toggleSeen(NO_SEEN, NO_MARKS, 'a');
+    state = toggleSeen(state.seen, state.marks, 'b');
+    const marks = markRow(state.marks, 'a', 'loved');
+    expect(rankButtonLabel(marks.size).vars).toEqual({ count: 1 });
+    expect(pendingCount(marks, state.seen)).toBe(2);
+    expect(pendingCount(NO_MARKS, NO_SEEN)).toBe(0);
+    expect(doneForNow(pendingCount(NO_MARKS, state.seen), false)).toBe('write');
+  });
+
+  it('writes the checked films in the page order', () => {
+    const rows = page(1, 4);
+    expect(seenRows(rows, new Set(['g3', 'g1'])).map((r) => r.mediaItemId)).toEqual(['g1', 'g3']);
+  });
+
+  it('says where the films come from, by popularity and never by service', () => {
+    expect(say(filmDeckMetaLine())).toBe('Popular films · slide how it was');
   });
 });

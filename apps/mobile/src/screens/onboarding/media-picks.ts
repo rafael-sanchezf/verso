@@ -12,6 +12,7 @@
 
 import type { Medium } from '@verso/core';
 
+import { firstStep, flowMedia, type FirstStep } from './flow';
 import type { TranslationKey } from './sentence';
 
 /** The media a user can pick now. */
@@ -75,9 +76,11 @@ export function mediaToStore(picked: ReadonlySet<LiveMedium>): LiveMedium[] {
 }
 
 /**
- * Where Continue goes: the platforms step when games is picked; the tabs for a
- * movies-only user, until the movies onboarding lands (onboarding.md).
+ * Where Continue goes: the first step of the first medium's path, games
+ * before movies (flow.ts): Platforms when games is picked, Services for a
+ * movies-only user (movies-build.md, PR 6, item 1). Someone who picked both
+ * runs the movies path when the games path ends.
  */
-export function afterMedia(picked: ReadonlySet<LiveMedium>): 'platforms' | 'tabs' {
-  return picked.has('game') ? 'platforms' : 'tabs';
+export function afterMedia(picked: ReadonlySet<LiveMedium>): FirstStep {
+  return firstStep(flowMedia(picked)[0] ?? 'game');
 }

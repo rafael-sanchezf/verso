@@ -9,6 +9,10 @@
  * you track (decision 25's "add a medium" door; TV and Books "Coming"), and
  * Public profile, off by default, a flag nothing reads until the public page
  * ships (the build's default 6).
+ *
+ * A medium checked here that the profile did not track runs that medium's
+ * onboarding once the save lands (VER-198; movies-build.md, PR 6, item 1),
+ * in place of this screen, and its last step lands on that medium's Home.
  */
 
 import { updateMyProfile, UsernameError } from '@verso/api';
@@ -22,6 +26,8 @@ import { alert } from '@/lib/dialog';
 import { useT } from '@/lib/i18n';
 import { invalidateProfile, invalidateProfileSettings } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
+import { addedMedia } from '@/screens/onboarding/flow';
+import { useStartAddedMedia } from '@/screens/onboarding/use-flow';
 import { LIVE_MEDIA } from '@/state/medium';
 import { ErrorLine, Icon, Skeleton, Text, textStyles } from '@/ui';
 import { fontFamilyFor, useTheme } from '@/ui/theme';
@@ -37,6 +43,7 @@ export function EditProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const startOnboarding = useStartAddedMedia();
   useRefetchProfileOnFocus();
   const identity = useProfileIdentity();
   const profile = identity.data ?? null;
@@ -70,7 +77,9 @@ export function EditProfileScreen() {
       await updateMyProfile(supabase, patch);
       // The patch can change the tracked media, which decide Profile's sections.
       invalidateProfileSettings(queryClient);
-      router.back();
+      const added = addedMedia(profile.media, form.media);
+      if (added.length > 0) startOnboarding(added, { replace: true });
+      else router.back();
     } catch (cause) {
       // The kind, not the message: @verso/api words its refusal in English.
       if (cause instanceof UsernameError) {

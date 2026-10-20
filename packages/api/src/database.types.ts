@@ -1216,6 +1216,24 @@ export type Database = {
           },
         ]
       }
+      prediction_calibration: {
+        Row: {
+          confidence: string | null
+          list_size_band: string | null
+          list_size_min: number | null
+          mae_content: number | null
+          mae_predicted: number | null
+          mae_prior: number | null
+          mae_user_mean: number | null
+          medium: Database["public"]["Enums"]["medium"] | null
+          model_version: string | null
+          n: number | null
+          source: string | null
+          tier_hit_rate: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       ranking_percentiles: {
         Row: {
           media_item_id: string | null
@@ -1434,6 +1452,23 @@ export type Database = {
           p_tier: Database["public"]["Enums"]["tier"]
         }
         Returns: number
+      }
+      insertion_predictions: {
+        Args: {
+          p_items: string[]
+          p_medium: Database["public"]["Enums"]["medium"]
+        }
+        Returns: {
+          confidence: string
+          content_score: number
+          list_size: number
+          mean_baseline: number
+          media_item_id: string
+          predicted_score: number
+          predicted_tier: Database["public"]["Enums"]["tier"]
+          prior_from: string
+          prior_score: number
+        }[]
       }
       match_letterboxd_films: {
         Args: { p_films: Json }

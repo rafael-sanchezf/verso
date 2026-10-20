@@ -109,6 +109,11 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | a stretch (a weak fit, in a reason) | una apuesta | Wave 7; the suggest function's rule 8, the same words on every card |
 | Because you put X in Loved / Fits your taste for / Among the best-rated | Porque pusiste X en “Me encantó” / Encaja con tu gusto por / Entre los juegos mejor valorados | Wave 7; the template reason, in the function and in `packages/api` word for word |
 | Steam / Letterboxd / Game Pass / PlayStation / Xbox / Switch | unchanged | Names |
+| Your favorites (the seeds' section) / Add another | Tus favoritos (games) / Tus favoritas (films) / Agrega otro / Agrega otra | Movies onboarding (VER-179); agrees with juegos or películas, so one key per medium |
+| Theaters (the services chip) / Region / Change | Cines / Región / Cambiar | Movies onboarding (VER-179); Cines as in "En cines" |
+| Seen (the film deck's check) | Vista | Movies onboarding (VER-179); the Watched word, agreeing with película |
+| Rank (the seeds' and the deck's button) / Rank 6 | Clasificar / Clasificar 6 | VER-228: never "Rank these" / "Clasificar estos" |
+| A streaming service's name (Netflix, HBO Max, Prime Video...) | unchanged | Names; the Services tile prints the service's short name |
 
 ## The rules for every wave
 

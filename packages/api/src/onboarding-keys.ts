@@ -44,10 +44,14 @@ export const onboardingQueryKeys = {
    * `deckCandidates(client, platforms, limit, offset)`: one page. Under
    * `['deck']`, so one prefix clears every page. The platforms are sorted so
    * the profile's order does not split the cache; null and empty are the same
-   * deck and the same key.
+   * deck and the same key. The film deck (`medium: 'movie'`, which ignores
+   * the platforms) carries the medium at the end, so it never answers from a
+   * games page; the games key keeps its shape.
    */
-  deck: (platforms: readonly string[] | null, offset = 0, limit = 10) =>
-    ['deck', canonical(platforms ?? []), limit, offset] as const,
+  deck: (platforms: readonly string[] | null, offset = 0, limit = 10, medium: Medium = 'game') =>
+    medium === 'game'
+      ? (['deck', canonical(platforms ?? []), limit, offset] as const)
+      : (['deck', canonical(platforms ?? []), limit, offset, medium] as const),
   /** `playedNotRanked(client, medium)`: the drain, and the banner's count. */
   playedNotRanked: (medium: Medium) => ['played-not-ranked', medium] as const,
   /**

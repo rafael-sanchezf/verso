@@ -81,6 +81,12 @@ import SlidersHorizontal from 'lucide-react-native/icons/sliders-horizontal';
 import ChevronLeft from 'lucide-react-native/icons/chevron-left';
 import UserPlus from 'lucide-react-native/icons/user-plus';
 
+// The movies onboarding (movies-build.md, PR 6): Services' region line, the
+// Letterboxd door's two lines.
+import FileText from 'lucide-react-native/icons/file-text';
+import Globe from 'lucide-react-native/icons/globe';
+import Undo2 from 'lucide-react-native/icons/undo-2';
+
 import { useTheme, type ColorToken } from './theme';
 
 /** The set the frames use, in the order shell.md lists them. */
@@ -154,6 +160,11 @@ const ICONS = {
   // The joint Profile: Find friends, and the Activity month's chevrons.
   'user-plus': UserPlus,
   'chevron-left': ChevronLeft,
+
+  // The movies onboarding: the region line on Services, what the Letterboxd door reads and how it is undone.
+  globe: Globe,
+  'file-text': FileText,
+  'undo-2': Undo2,
 } as const;
 
 export type IconName = keyof typeof ICONS;

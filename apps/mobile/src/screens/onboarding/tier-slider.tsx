@@ -291,9 +291,11 @@ function StopDot({
 
 /**
  * The four words over the stops, above the deck's list. Decorative: each
- * slider's own value already says its word to a screen reader.
+ * slider's own value already says its word to a screen reader. `trailing` is
+ * a word over the word column, right-aligned: the film deck's "Seen", over
+ * the seen check at the end of each row's title line.
  */
-export function TierAxis() {
+export function TierAxis({ trailing }: { trailing?: string } = {}) {
   const t = useT();
   const [width, setWidth] = useState(0);
 
@@ -317,7 +319,13 @@ export function TierAxis() {
             ))
           : null}
       </View>
-      <View style={styles.word} />
+      <View style={styles.word}>
+        {trailing ? (
+          <Text size={11} color="text/secondary" align="right" numberOfLines={1}>
+            {trailing}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 }

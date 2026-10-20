@@ -4,7 +4,8 @@
  *
  * `useGoOnAfterDone` reads what the decision needs (the profile's platforms
  * and the Steam link, only for a new user's stack) and follows `doneTarget`
- * (navigation.ts, where the rules are tested). A read that fails sends the
+ * (navigation.ts, where the rules are tested). The end of a medium's path
+ * goes through the flow (flow.ts): the next medium's first step, or Home. A read that fails sends the
  * user home rather than holding them on a written review.
  *
  * `useLeaveStack` is "back to where the door was". `router.back()` is not
@@ -22,9 +23,11 @@ import { useNavigation, useRouter } from 'expo-router';
 
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
+import type { LiveMedium } from '@/state/medium';
 
+import { useFinishPath } from '../use-flow';
 import { doneTarget, type DoneFacts } from './navigation';
-import { DECK_HREF, STEAM_HREF, TABS_HREF } from './routes';
+import { deckHref, LETTERBOXD_STEP_HREF, STEAM_HREF, TABS_HREF } from './routes';
 import type { SessionRequest } from './session-store';
 
 export function useLeaveStack(): () => void {
@@ -40,12 +43,13 @@ export function useLeaveStack(): () => void {
   };
 }
 
-export function useGoOnAfterDone(): (onDone: SessionRequest['onDone']) => Promise<void> {
+export function useGoOnAfterDone(): (onDone: SessionRequest['onDone'], medium?: LiveMedium) => Promise<void> {
   const router = useRouter();
   const queryClient = useQueryClient();
   const leave = useLeaveStack();
+  const finishPath = useFinishPath();
 
-  return async (onDone) => {
+  return async (onDone, medium = 'game') => {
     let facts: DoneFacts = { platforms: null, steamLinked: null };
     if (onDone === 'steam-or-tabs') {
       const [profile, link] = await Promise.allSettled([
@@ -63,10 +67,13 @@ export function useGoOnAfterDone(): (onDone: SessionRequest['onDone']) => Promis
         router.replace(STEAM_HREF);
         return;
       case 'tabs':
-        router.replace(TABS_HREF);
+        finishPath(medium);
+        return;
+      case 'letterboxd':
+        router.replace(LETTERBOXD_STEP_HREF);
         return;
       case 'deck':
-        router.replace(DECK_HREF);
+        router.replace(deckHref(medium));
         return;
       case 'leave':
         leave();

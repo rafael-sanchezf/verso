@@ -10,17 +10,17 @@
  * (media-picks.ts).
  *
  * Continue stores the media (`setProfileMedia`), which is what ends the new-user
- * state at the root layout's gate, logs `first_session`, and goes on to the
- * platforms when games is picked. A movies-only user goes to the tabs until
- * the movies onboarding lands (the movies session's work); that move waits for
- * the gate to have seen the stored media, because until then the tabs are not
- * registered and the navigation would go nowhere.
+ * state at the root layout's gate, logs `first_session`, starts the flow over
+ * the chosen media (flow.ts) and goes on to the first medium's first step:
+ * Platforms when games is picked, Services for a movies-only user. Someone
+ * who picked both runs the movies path after the games path
+ * (movies-build.md, PR 6, item 1).
  */
 
-import { getMyProfile, setProfileMedia } from '@verso/api';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { setProfileMedia } from '@verso/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -44,7 +44,9 @@ import {
   type LiveMedium,
   type MediaTile,
 } from './media-picks';
+import { startFlow } from './flow';
 import { BottomActions, TitleBlock } from './pieces';
+import { firstStepHref } from './session/routes';
 
 export function MediaScreen() {
   const t = useT();
@@ -55,10 +57,6 @@ export function MediaScreen() {
 
   const [picked, setPicked] = useState<Set<LiveMedium>>(() => new Set());
   const [notified, setNotified] = useState<Set<HeldMedium>>(() => new Set());
-  const [toTabs, setToTabs] = useState(false);
-
-  const profile = useQuery({ queryKey: queryKeys.profileMe(), queryFn: () => getMyProfile(supabase) });
-  const storedMedia = profile.data?.media ?? null;
 
   const save = useMutation({
     mutationFn: (media: LiveMedium[]) => setProfileMedia(supabase, media),
@@ -69,14 +67,10 @@ export function MediaScreen() {
       invalidateProfileSettings(queryClient);
       // A lost event is a lost data point, never a reason to stop the user.
       void logAppEvent('first_session').catch(() => undefined);
-      if (afterMedia(new Set(media)) === 'platforms') router.push('/onboarding/platforms');
-      else setToTabs(true);
+      startFlow({ media, origin: 'new' });
+      router.push(firstStepHref(afterMedia(new Set(media))));
     },
   });
-
-  useEffect(() => {
-    if (toTabs && storedMedia !== null) router.replace('/');
-  }, [toTabs, storedMedia, router]);
 
   const onHeld = (medium: HeldMedium) => {
     const { notified: next, log } = tapHeld(notified, medium);
@@ -129,7 +123,7 @@ export function MediaScreen() {
         ) : null}
         <Button
           label={t('common.continue')}
-          disabled={!canContinue(picked) || save.isPending || toTabs}
+          disabled={!canContinue(picked) || save.isPending}
           onPress={() => save.mutate(mediaToStore(picked))}
         />
       </BottomActions>

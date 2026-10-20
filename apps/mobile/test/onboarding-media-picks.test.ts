@@ -41,10 +41,10 @@ describe('the live tiles', () => {
     expect(mediaToStore(new Set<LiveMedium>(['movie', 'game']))).toEqual(['game', 'movie']);
   });
 
-  it('go to the platforms when games is picked, and to the tabs for movies alone', () => {
+  it('go to the platforms when games is picked, and to the services for movies alone', () => {
     expect(afterMedia(new Set(['game']))).toBe('platforms');
     expect(afterMedia(new Set<LiveMedium>(['game', 'movie']))).toBe('platforms');
-    expect(afterMedia(new Set(['movie']))).toBe('tabs');
+    expect(afterMedia(new Set(['movie']))).toBe('services');
   });
 });
 

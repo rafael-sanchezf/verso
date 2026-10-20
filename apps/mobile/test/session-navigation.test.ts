@@ -23,6 +23,11 @@ describe('doneTarget', () => {
     expect(doneTarget('back', { platforms: null, steamLinked: null })).toBe('leave');
     expect(doneTarget('deck', { platforms: [PC_PLATFORM], steamLinked: false })).toBe('deck');
   });
+
+  it('ends the film deck on the Letterboxd door, never on Link Steam (movies-build.md, PR 6)', () => {
+    expect(doneTarget('letterboxd', { platforms: [PC_PLATFORM], steamLinked: false })).toBe('letterboxd');
+    expect(doneTarget('letterboxd', { platforms: null, steamLinked: null })).toBe('letterboxd');
+  });
 });
 
 describe('rankMoreTarget', () => {

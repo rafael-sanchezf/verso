@@ -81,6 +81,7 @@ function Review({ run }: { run: FinishedRun }) {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const writes = useBatchWrites();
   const goOn = useGoOnAfterDone();
+  const medium = run.request.medium === 'movie' ? 'movie' : 'game';
 
   const base = useMemo(() => applyBatch(run.state), [run.state]);
   const [review, setReview] = useState(() => startReview(base, run.existing));
@@ -114,7 +115,7 @@ function Review({ run }: { run: FinishedRun }) {
   const onDone = async () => {
     if (busy || !(await write())) return;
     setLeaving(true);
-    await goOn(run.request.onDone);
+    await goOn(run.request.onDone, medium);
   };
 
   const onRankMore = async () => {
@@ -123,11 +124,11 @@ function Review({ run }: { run: FinishedRun }) {
     const target = rankMoreTarget(run.request);
     if (target === 'back-to-deck') {
       if (router.canGoBack()) router.back();
-      else router.replace(rankMoreHref('deck-returning'));
+      else router.replace(rankMoreHref('deck-returning', medium));
     } else if (target === 'search-add-many') {
       router.dismissTo(rankMoreHref(target));
     } else {
-      router.replace(rankMoreHref(target));
+      router.replace(rankMoreHref(target, medium));
     }
   };
 

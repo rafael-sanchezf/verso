@@ -39,6 +39,12 @@ describe('onboardingQueryKeys', () => {
     expect(onboardingQueryKeys.deck(null, 0)).not.toEqual(onboardingQueryKeys.deck(null, 10));
   });
 
+  it('keys the film deck apart from the games deck everywhere, under the same prefix', () => {
+    expect(onboardingQueryKeys.deck(null, 0, 10, 'movie')).toEqual(['deck', [], 10, 0, 'movie']);
+    expect(onboardingQueryKeys.deck(null, 0, 10, 'movie')).not.toEqual(onboardingQueryKeys.deck(null, 0, 10));
+    expect(onboardingQueryKeys.deck(null, 0, 10, 'game')).toEqual(onboardingQueryKeys.deck(null));
+  });
+
   it('keys the drain per medium', () => {
     expect(onboardingQueryKeys.playedNotRanked('game')).toEqual(['played-not-ranked', 'game']);
     expect(onboardingQueryKeys.playedNotRanked('movie')).not.toEqual(onboardingQueryKeys.playedNotRanked('game'));

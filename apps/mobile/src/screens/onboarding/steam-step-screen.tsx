@@ -13,7 +13,9 @@
  *
  * The step decides for itself whether it applies, the same rule the review
  * uses to send the user here (gate.ts, `offersSteam`): a player without PC, or
- * with a link already, goes straight to the tabs. No header and no `x`.
+ * with a link already, goes straight on. Every way out ends the games path
+ * (flow.ts): Home, or the movies path when both were picked. No header and
+ * no `x`.
  */
 
 import { getMyProfile } from '@verso/api';
@@ -37,6 +39,7 @@ import { Button, ErrorLine, Icon, Text, useTheme } from '@/ui';
 
 import { offersSteam } from './gate';
 import { TitleBlock } from './pieces';
+import { useFinishPath } from './use-flow';
 
 type Phase = 'offer' | 'importing' | 'privacy' | 'candidates';
 
@@ -50,7 +53,10 @@ export function SteamStepScreen() {
   const link = useSteamAccount();
   const [phase, setPhase] = useState<Phase>('offer');
 
-  const toTabs = () => router.replace('/');
+  // The end of the games path: Home, or the movies path for someone who
+  // picked both (flow.ts).
+  const finishPath = useFinishPath();
+  const toTabs = () => finishPath('game');
 
   const showCandidates = (playtimeHidden: boolean) => {
     // The candidates screen reads `hidden` off its route, as it does in Settings.
@@ -69,8 +75,8 @@ export function SteamStepScreen() {
   useEffect(() => {
     if (decided.current || !profile.data || link.data === undefined) return;
     decided.current = true;
-    if (!offersSteam(profile.data.platforms, link.data !== null)) router.replace('/');
-  }, [profile.data, link.data, router]);
+    if (!offersSteam(profile.data.platforms, link.data !== null)) finishPath('game');
+  }, [profile.data, link.data, finishPath]);
 
   if (phase === 'privacy') {
     return (

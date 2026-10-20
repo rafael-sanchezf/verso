@@ -144,7 +144,7 @@ function Session({ request }: { request: SessionRequest }) {
     });
     if (!ok) return;
     clearSession();
-    await goOn(request.onDone);
+    await goOn(request.onDone, medium === 'movie' ? 'movie' : 'game');
   };
 
   /** Every game is placed: on to the review, or for the seeds, write and go on. */
