@@ -1,7 +1,8 @@
 import type { ProfileStats } from '@verso/api';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { translate, type TranslationKey, type TranslationVars } from '../src/lib/i18n/dictionary';
+import { languageStore } from '../src/lib/i18n/store';
 import {
   ACTIVITY_LINES,
   activityLine,
@@ -10,6 +11,7 @@ import {
   editPatch,
   initialsFor,
   monthGrid,
+  monthName,
   monthTitle,
   nameLine,
   profileShareText,
@@ -22,6 +24,7 @@ import {
   switcherOptions,
   toggleMedium,
   topPercentLabel,
+  weekdayLetters,
 } from '../src/screens/profile/model';
 
 /** The screens' `t`, in English: the sentences these tests read are the English dictionary's. */
@@ -192,9 +195,21 @@ describe('the month grid', () => {
 
   it('names and moves months across a year', () => {
     expect(monthTitle(2026, 10, say)).toBe('October 2026');
-    expect(monthTitle(2026, 10, (key, vars) => translate('es', key, vars))).toBe('Octubre de 2026');
+    expect(monthName(10)).toBe('October');
+    expect(monthName(13)).toBe('');
     expect(shiftMonth(2026, 1, -1)).toEqual({ year: 2025, month: 12 });
     expect(shiftMonth(2026, 12, 1)).toEqual({ year: 2027, month: 1 });
+  });
+
+  it("reads the month and the week row off format.ts's tables, in the app's language", () => {
+    expect(weekdayLetters()).toEqual(['S', 'M', 'T', 'W', 'T', 'F', 'S']);
+    try {
+      languageStore.setPreference('es');
+      expect(monthTitle(2026, 10, (key, vars) => translate('es', key, vars))).toBe('Octubre de 2026');
+      expect(weekdayLetters()).toEqual(['D', 'L', 'M', 'M', 'J', 'V', 'S']);
+    } finally {
+      languageStore.setPreference('system');
+    }
   });
 });
 

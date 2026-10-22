@@ -1,19 +1,23 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { translate, type TranslationKey, type TranslationVars } from '../src/lib/i18n/dictionary';
+import { languageStore } from '../src/lib/i18n/store';
 import { joinedLabel, subtitleFor } from '../src/screens/profile/identity';
 
 /** The screens' `t`, in English: the sentences these tests read are the English dictionary's. */
 const say = (key: TranslationKey, vars?: TranslationVars) => translate('en', key, vars);
 
 describe('joinedLabel', () => {
-  it('reads the month and year off an ISO timestamp', () => {
-    expect(joinedLabel('2026-09-16T12:00:00.000Z', say)).toBe('Sep 2026');
-    expect(joinedLabel('2026-09-16T12:00:00.000Z', (key, vars) => translate('es', key, vars))).toBe('sept 2026');
+  afterEach(() => languageStore.setPreference('system'));
+
+  it("reads the month and year off an ISO timestamp, in the app's language", () => {
+    expect(joinedLabel('2026-09-16T12:00:00.000Z')).toBe('Sep 2026');
+    languageStore.setPreference('es');
+    expect(joinedLabel('2026-09-16T12:00:00.000Z')).toBe('sept 2026');
   });
 
   it('is null for a string that is not a date', () => {
-    expect(joinedLabel('not-a-date', say)).toBeNull();
+    expect(joinedLabel('not-a-date')).toBeNull();
   });
 });
 

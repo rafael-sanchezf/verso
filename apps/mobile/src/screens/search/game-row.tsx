@@ -14,9 +14,14 @@
  * doors") it is a check circle: a plus on `bg/surface` until the game is
  * added, then `brand/primary` with the check in `brand/on-primary`, as the
  * primary button. Once tracked, the pill's check is in `brand/text`.
+ *
+ * The pill sits beside the row's pressable, not in its trailing slot: the row's
+ * press target is a `<button>` on web, and a pill inside it was a `<button>`
+ * inside a `<button>` (VER-269). The outer row repeats `ListRow`'s direction,
+ * centring and 12pt gap, so it looks the same.
  */
 
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
 import { Icon, ListRow } from '@/ui';
@@ -68,31 +73,34 @@ export function GameRow({
   onControl,
   film = false,
 }: GameRowProps) {
+  const theme = useTheme();
+
   return (
-    <ListRow
-      coverWidth={44}
-      coverRadius={6}
-      coverAspect={film ? 'poster' : 'cover'}
-      titleWeight={film ? 600 : 500}
-      candidates={candidates}
-      title={title}
-      subtitle={subtitle}
-      onPress={onPress}
-      trailing={
-        control === 'addmany' ? (
-          <AddManyCircle title={title} added={added} pending={pending} disabled={disabled} onPress={onControl} />
-        ) : (
-          <ControlPill
-            title={title}
-            control={control}
-            tracked={tracked}
-            pending={pending}
-            disabled={disabled}
-            onPress={onControl}
-          />
-        )
-      }
-    />
+    <View style={[styles.row, { gap: theme.space[3] }]}>
+      <ListRow
+        coverWidth={44}
+        coverRadius={6}
+        coverAspect={film ? 'poster' : 'cover'}
+        titleWeight={film ? 600 : 500}
+        candidates={candidates}
+        title={title}
+        subtitle={subtitle}
+        onPress={onPress}
+        style={styles.press}
+      />
+      {control === 'addmany' ? (
+        <AddManyCircle title={title} added={added} pending={pending} disabled={disabled} onPress={onControl} />
+      ) : (
+        <ControlPill
+          title={title}
+          control={control}
+          tracked={tracked}
+          pending={pending}
+          disabled={disabled}
+          onPress={onControl}
+        />
+      )}
+    </View>
   );
 }
 
@@ -205,6 +213,10 @@ function AddManyCircle({
 }
 
 const styles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center' },
+  // Takes the width the control leaves; `minWidth: 0` keeps a long title
+  // ellipsizing instead of pushing the control off the edge.
+  press: { flex: 1, minWidth: 0 },
   circle: {
     width: 28,
     height: 28,

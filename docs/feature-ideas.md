@@ -306,6 +306,8 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 
 ## 13. "Rank this", not "I finished this"
 
+**Built 2026-10-22** (VER-224, PR #134), with question 15's defaults: ranking never writes a finished date or changes a Playing or Dropped status, a game with no entry becomes Played with no date, and the Playing tile's long press offers "Rank this" and "Done playing". The text below is the proposal as written on 2026-10-13.
+
 **What Rafa described** (2026-10-13). Every reference to finishing a game becomes a reference to ranking it. Multiplayer games have no ending; a bad game gets dropped and ranked, not finished; and "finished" is arbitrary anyway (main story, side quests, 100%). A ranked game is not necessarily a finished one, so the app should never say finished when it means ranked.
 
 **Where it sits.** Not scheduled; a copy and model pass on the games loop. Games only: a film watched is a fact, so "I watched this" stays (rule 18's per-medium labels).
@@ -343,4 +345,4 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 12. The Steam link offered inside the deck for PC players now, its screens coded from conventions (decision 16)? Default yes. Not addressed 2026-09-28; the default stands.
 13. Past ten (2026-09-28): the app says the taste profile is unlocked and offers to stop or keep going once, then never asks again, with a way out on every card? Default yes; inferred from "it should let you go past ten, maybe after a couple of games".
 14. Same-series pivots (2026-10-13): ahead of the genre preference, within two positions of the midpoint instead of one, with no minimum peer count, and spin-offs kept apart by using IGDB's series rather than its franchise? Default yes.
-15. "Rank this" (2026-10-13): ranking never writes a finished date or changes a Playing or Dropped status, a game with no entry becomes Played with no date, and the Playing tile's long press offers "Rank this" and "Done playing" as two lines? Default yes; movies keep "I watched this".
+15. "Rank this" (2026-10-13): ranking never writes a finished date or changes a Playing or Dropped status, a game with no entry becomes Played with no date, and the Playing tile's long press offers "Rank this" and "Done playing" as two lines? Default yes; movies keep "I watched this". Built on the default 2026-10-22 (VER-224); say if any part is wrong.

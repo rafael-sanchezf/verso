@@ -2,6 +2,12 @@
  * One Backlog row: cover, title, the two fallback-chain lines, and a trailing
  * Start button plus the drag handle. docs/design/specs/next.md, "Backlog
  * segment".
+ *
+ * The Start button and the handle sit beside the row's pressable, not inside
+ * it: `ListRow`'s press target is a `<button>` on web, and a Start button in
+ * its trailing slot was a `<button>` inside a `<button>`, which is invalid
+ * HTML and React warns about it (VER-269). Same look: the outer row repeats
+ * `ListRow`'s row direction, centring and 12pt gap.
  */
 
 import { coverCandidates, type EntryRow } from '@verso/api';
@@ -36,26 +42,30 @@ export function BacklogRow({ entry, draggable, onStart }: BacklogRowProps) {
   ) : null;
 
   return (
-    <ListRow
-      coverWidth={44}
-      coverRadius={6}
-      candidates={coverCandidates(entry)}
-      title={entry.title}
-      subtitle={backlogSubtitle(entry)}
-      detail={detail === null ? null : 'text' in detail ? detail.text : t(detail.key, { date: detail.date })}
-      onPress={() =>
-        router.push({ pathname: '/game/[id]', params: { id: entry.mediaItemId, from: 'Next' } })
-      }
-      trailing={
-        <View style={[styles.trailing, { gap: theme.space[3] }]}>
-          <StartButton onPress={onStart} />
-          {handle}
-        </View>
-      }
-    />
+    <View style={[styles.row, { gap: theme.space[3] }]}>
+      <ListRow
+        coverWidth={44}
+        coverRadius={6}
+        candidates={coverCandidates(entry)}
+        title={entry.title}
+        subtitle={backlogSubtitle(entry)}
+        detail={detail === null ? null : 'text' in detail ? detail.text : t(detail.key, { date: detail.date })}
+        onPress={() =>
+          router.push({ pathname: '/game/[id]', params: { id: entry.mediaItemId, from: 'Next' } })
+        }
+        style={styles.press}
+      />
+      <View style={[styles.row, { gap: theme.space[3] }]}>
+        <StartButton onPress={onStart} />
+        {handle}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  trailing: { flexDirection: 'row', alignItems: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center' },
+  // Takes the width the trailing controls leave; `minWidth: 0` keeps a long
+  // title ellipsizing instead of pushing them off the edge.
+  press: { flex: 1, minWidth: 0 },
 });

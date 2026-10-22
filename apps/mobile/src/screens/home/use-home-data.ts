@@ -88,7 +88,10 @@ export function useHomeData(): HomeData {
 
 /** What the long press on a Playing card can do (home.md, Behavior). */
 export interface PlayingActions {
-  markAsFinished: (id: string) => void;
+  /** "Rank this": the log flow, with the game left in Playing. */
+  rankThis: (id: string) => void;
+  /** "Done playing": the explicit finish that takes it out of Playing. */
+  donePlaying: (id: string) => void;
   logHours: (id: string) => void;
   moveToBacklog: (id: string) => void;
 }
@@ -110,17 +113,27 @@ export function usePlayingActions(): PlayingActions {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  /**
+   * "Rank this" (VER-224, feature-ideas item 13): no write at all. A game
+   * ranked from Playing stays in Playing, so a multiplayer game with no ending
+   * stays on Home after it is ranked, and Profile reads "Ranked X". The tier
+   * sheet belongs to the log flow over the game page, and `log=1` is how the
+   * game page knows to open it as soon as it has loaded, or to offer "Re-rank"
+   * when the game is already ranked (README.md, Params). Home does not open it
+   * itself.
+   */
+  const rankThis = useCallback(
+    (id: string) => router.push({ pathname: '/game/[id]', params: { id, from: 'Home', log: '1' } }),
+    [router],
+  );
+
   const finish = useMutation({
-    // A Playing card, so the log flow's playing-to-played write: Profile reads
-    // "Finished X" on this day (movies-build.md, PR 5).
+    // The explicit finish from Playing: played, finished today, and
+    // `finished_from` so Profile reads "Finished X" on this day. Nothing opens:
+    // ranking is "Rank this", beside it in the menu.
     mutationFn: (id: string) => markFinished(supabase, id, { finishedFrom: 'playing' }),
-    onSuccess: (_result, id) => {
-      invalidateEntry(queryClient, id);
-      // The tier sheet belongs to the log flow over the game page, and `log=1`
-      // is how the game page knows to open it as soon as it has loaded
-      // (README.md, Params). Home does not open it itself.
-      router.push({ pathname: '/game/[id]', params: { id, from: 'Home', log: '1' } });
-    },
+    // The card leaves Playing on its own once `['playing']` refetches.
+    onSuccess: (_result, id) => invalidateEntry(queryClient, id),
     onError: () => failed(t('browse.home.playing.couldNotFinish')),
   });
 
@@ -138,7 +151,8 @@ export function usePlayingActions(): PlayingActions {
   );
 
   return {
-    markAsFinished: finish.mutate,
+    rankThis,
+    donePlaying: finish.mutate,
     logHours,
     moveToBacklog: backlogMove.mutate,
   };

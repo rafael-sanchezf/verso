@@ -2,6 +2,8 @@
 
 Frames `F · Log · tier sheet` (26:348), `F · Log · compare` (26:385), `F · Log · confirm` (26:415). Route `app/log/[id].tsx`, a form sheet that opens at the tier step and expands to full height for the comparisons and the confirm step: one continuous surface from "I finished this" to placement (ui-principles, "Things Rafa specifically wants"). Owner: Log flow agent. The game page pushes this route after `markFinished`. Read [README.md](README.md) first.
 
+**2026-10-22 (VER-224, [feature-ideas item 13](../../feature-ideas.md#13-rank-this-not-i-finished-this)).** Built. The flow runs from "Rank this" to placement, not from "I finished this": the game page pushes this route after `startRanking`, which never writes a finished date and leaves a Playing or Dropped game in its status, so a game is not necessarily finished when it is ranked. The left card's subtitle for a game reads "ranking now" (Spanish "clasificando ahora"), not "just finished"; a film keeps "just watched". Closing early leaves the game unranked in whatever status `startRanking` left it. The lines below are kept as written; where they say "just finished" or `markFinished`, this note wins.
+
 ## Step 1, the tier sheet (26:348)
 
 - The sheet at about 44% of the height (top at 489 of 874): `bg/canvas`, top radius 24, grabber, padding top 12, sides 16, bottom safe area, column gap 10, centered.

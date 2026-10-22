@@ -15,6 +15,7 @@ import {
   setPurchasedAt,
   setStartedAt,
   setStatus,
+  startRanking,
   todayLocal,
 } from '../src/entries';
 import { insertRankingEntry } from '../src/ranking';
@@ -46,6 +47,10 @@ describe.skipIf(!live)('entries against a local stack', () => {
       { key: 'other' },
       { key: 'ranked' },
       { key: 'gone' },
+      { key: 'fresh' },
+      { key: 'queued' },
+      { key: 'live' },
+      { key: 'quit' },
     ]);
   });
 
@@ -129,6 +134,45 @@ describe.skipIf(!live)('entries against a local stack', () => {
 
     const result = await markFinished(client, id);
     expect(result.alreadyRanked).toBe(true);
+  });
+
+  // VER-224, feature-ideas item 13: "Rank this" never writes a finished date.
+  it('makes an untracked game played with no finished date when it is ranked', async () => {
+    const result = await startRanking(client, games['fresh']!.mediaItemId);
+
+    expect(result.entry.status).toBe('played');
+    expect(result.entry.finishedAt).toBeNull();
+    expect(result.alreadyRanked).toBe(false);
+  });
+
+  it('takes a backlogged game out of the queue as played, still with no finished date', async () => {
+    const id = games['queued']!.mediaItemId;
+    await setStatus(client, id, 'backlog');
+
+    const result = await startRanking(client, id);
+    expect(result.entry.status).toBe('played');
+    expect(result.entry.finishedAt).toBeNull();
+    expect(result.entry.backlogPosition).toBeNull();
+  });
+
+  it('leaves a Playing or Dropped game as it was, and writes nothing', async () => {
+    for (const [key, status] of [['live', 'playing'], ['quit', 'dropped']] as const) {
+      const id = games[key]!.mediaItemId;
+      const before = await setStatus(client, id, status);
+
+      const result = await startRanking(client, id);
+      expect(result.entry).toEqual(before);
+      expect(await getEntry(client, id)).toEqual(before);
+    }
+  });
+
+  it('says when the game is already ranked, so the page offers Re-rank', async () => {
+    const id = games['live']!.mediaItemId;
+    await insertRankingEntry(client, { mediaItemId: id, medium: 'game', tier: 'fine', position: 0 });
+
+    const result = await startRanking(client, id);
+    expect(result.alreadyRanked).toBe(true);
+    expect(result.entry.status).toBe('playing');
   });
 
   it('accepts a finished date in the past, and refuses one that is not a date', async () => {

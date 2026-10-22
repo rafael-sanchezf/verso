@@ -22,10 +22,11 @@ import { coverCandidates, movieWatchlist, todayLocal, type MovieWatchlistRow } f
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { useT } from '@/lib/i18n';
+import { useContentWidth } from '@/lib/use-layout';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { useMyProfile } from '@/state/medium';
@@ -66,7 +67,7 @@ export function WatchlistSegment({
   const t = useT();
   const theme = useTheme();
   const router = useRouter();
-  const { width: screenWidth } = useWindowDimensions();
+  const screenWidth = useContentWidth();
   const profile = useMyProfile();
   const hasServices = (profile.data?.watchProviderIds.length ?? 0) > 0;
 
@@ -306,7 +307,7 @@ export function WatchlistSegment({
 
 function GridSkeleton() {
   const theme = useTheme();
-  const { width: screenWidth } = useWindowDimensions();
+  const screenWidth = useContentWidth();
   const width = cardWidth(Math.min(screenWidth, 640), 3);
   return (
     <View style={[styles.chips, { paddingHorizontal: theme.space[4], gap: 10, paddingTop: theme.space[3] }]}>

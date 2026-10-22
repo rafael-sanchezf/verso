@@ -13,13 +13,16 @@
 
 import { coverCandidates } from '@verso/api';
 import type { Medium } from '@verso/core';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { useContentWidth, useLayout } from '@/lib/use-layout';
 import { Cover, Pressed, Text, useTheme } from '@/ui';
 
 import { coverSourceOf, type RankingItem } from './model';
 
+/** Three on a phone; four from regular width, an even number so the Duo's fold splits the grid cleanly (duo-brief.md). */
 const COLUMNS = 3;
+const COLUMNS_REGULAR = 4;
 const GAP = 12;
 const SIDE_PADDING = 16;
 
@@ -31,17 +34,20 @@ export interface RankingGridProps {
 }
 
 export function RankingGrid({ items, onOpen, medium = 'game' }: RankingGridProps) {
-  const { width } = useWindowDimensions();
+  // The screen's width, not the window's: on the iPhone Duo's outer display
+  // the tab rail takes a column on the right (lib/use-layout.ts).
+  const width = useContentWidth();
+  const columns = useLayout().width === 'compact' ? COLUMNS : COLUMNS_REGULAR;
 
   // specs/ranking.md gives the cells flex 1; at the frame's 402pt that is a
   // 115pt cell. Computing it instead of flexing gives `Cover` the number it
   // needs to hold the cover ratio, and comes out at the same size. Nothing here
   // fixes a cell height: the tile is as tall as the art it holds (rule 29).
-  const cell = Math.floor((width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
+  const cell = Math.floor((width - SIDE_PADDING * 2 - GAP * (columns - 1)) / columns);
 
   const rows: RankingItem[][] = [];
-  for (let index = 0; index < items.length; index += COLUMNS) {
-    rows.push(items.slice(index, index + COLUMNS));
+  for (let index = 0; index < items.length; index += columns) {
+    rows.push(items.slice(index, index + columns));
   }
 
   return (

@@ -134,7 +134,7 @@ function DialogBody({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const layout = useLayout();
-  const wide = layout === 'wide';
+  const wide = layout.width === 'wide';
   const cardRef = useRef<View>(null);
   useRestoreFocus();
 
@@ -171,7 +171,10 @@ function DialogBody({
     return () => card.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const order = buttonOrder(buttons, layout);
+  // The dialog knows two presentations: the web's centered card at wide, and
+  // the sheet below it. A regular window (the Duo's inner display) gets the
+  // sheet until docs/design/duo-brief.md decides otherwise.
+  const order = buttonOrder(buttons, wide ? 'wide' : 'compact');
 
   return (
     <View style={[styles.fill, wide ? [styles.centered, { paddingHorizontal: theme.space[4] }] : styles.bottom]}>

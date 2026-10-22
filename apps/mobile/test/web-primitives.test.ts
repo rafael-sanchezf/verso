@@ -5,22 +5,22 @@ vi.mock('react-native', () => ({
   useWindowDimensions: () => ({ width: 0, height: 0 }),
 }));
 
-import { layoutFor, WIDE_BREAKPOINT } from '../src/lib/use-layout';
+import { WIDE_BREAKPOINT, widthClassFor } from '../src/lib/layout-model';
 import { isTypingTarget, matchesShortcut, type ShortcutEvent } from '../src/lib/use-shortcut';
 import { dateOnly, dateOnlyOf, localDateOf } from '../src/ui/date-field-value';
 import { menuPosition } from '../src/ui/menu-position';
 
-describe('layoutFor', () => {
-  it('turns wide at 1024, the one breakpoint', () => {
+describe('widthClassFor', () => {
+  it('turns wide at 1024, the web breakpoint', () => {
     expect(WIDE_BREAKPOINT).toBe(1024);
-    expect(layoutFor(1023)).toBe('compact');
-    expect(layoutFor(1024)).toBe('wide');
-    expect(layoutFor(1440)).toBe('wide');
+    expect(widthClassFor(1023)).toBe('regular');
+    expect(widthClassFor(1024)).toBe('wide');
+    expect(widthClassFor(1440)).toBe('wide');
   });
 
   it('is compact for every phone, and before the window is measured', () => {
-    expect(layoutFor(402)).toBe('compact');
-    expect(layoutFor(0)).toBe('compact');
+    expect(widthClassFor(402)).toBe('compact');
+    expect(widthClassFor(0)).toBe('compact');
   });
 });
 

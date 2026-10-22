@@ -16,7 +16,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from '../src/client';
 import { logSeen, logWatch } from '../src/diary';
-import { getEntry, markFinished, setStatus, todayLocal } from '../src/entries';
+import { getEntry, markFinished, setStatus, startRanking, todayLocal } from '../src/entries';
 import { activityMonth, profileHours, rankerPercentile, recentActivity } from '../src/profile';
 import { AVATAR_BUCKET, AVATAR_MAX_BYTES, getMyProfile, updateMyProfile, uploadAvatar } from '../src/profiles';
 import { insertRankingEntry } from '../src/ranking';
@@ -66,7 +66,7 @@ describe.skipIf(!live)('the profile reads against a local stack', () => {
     // A Letterboxd row with a date: one "watched" line, no runtime in the catalog.
     const imported = await alice.from('watch_log').insert({ media_item_id: id('imported'), watched_on: today, source: 'import' });
     if (imported.error) throw imported.error;
-    // A game finished from Playing through the log flow, in the one write PR 5 will send, and ranked.
+    // A game finished from Playing on purpose, in the one write Home's "Done playing" sends, and ranked.
     await setStatus(alice, id('finished'), 'playing');
     const { error } = await alice
       .from('user_entries')
@@ -74,7 +74,7 @@ describe.skipIf(!live)('the profile reads against a local stack', () => {
       .eq('media_item_id', id('finished'));
     if (error) throw error;
     await insertRankingEntry(alice, { mediaItemId: id('finished'), medium: 'game', tier: 'loved', position: 0 });
-    // A game finished from the game page's button: played, no finished_from, no line.
+    // A game finished from Playing without finished_from (any finish but "Done playing"): played, no line.
     await setStatus(alice, id('tapped'), 'playing');
     await markFinished(alice, id('tapped'));
 
@@ -222,5 +222,46 @@ describe.skipIf(!live)('the profile reads against a local stack', () => {
     expect(own.error).toBeNull();
     const peek = await bob.storage.from(AVATAR_BUCKET).list(aliceId);
     expect(peek.data ?? []).toEqual([]);
+  });
+});
+
+// VER-224, feature-ideas item 13: ranking a game from Playing is not a finish.
+describe.skipIf(!live)('a game ranked from Playing, against a local stack', () => {
+  let carol: Client;
+  let items: Record<string, SeededGame>;
+  const today = todayLocal();
+
+  beforeAll(async () => {
+    ({ client: carol } = await signUpUser('profile-rank-this'));
+    items = await seedGames([
+      { key: 'ranked', medium: 'game' },
+      { key: 'done', medium: 'game' },
+    ]);
+
+    // "Rank this" on a Playing game: no write, then the log flow places it.
+    await setStatus(carol, items.ranked!.mediaItemId, 'playing');
+    await startRanking(carol, items.ranked!.mediaItemId);
+    await insertRankingEntry(carol, { mediaItemId: items.ranked!.mediaItemId, medium: 'game', tier: 'loved', position: 0 });
+
+    // "Done playing": the explicit finish from Playing.
+    await setStatus(carol, items.done!.mediaItemId, 'playing');
+    await markFinished(carol, items.done!.mediaItemId, { finishedFrom: 'playing' });
+  });
+
+  afterAll(async () => {
+    await stopClients();
+  });
+
+  it('reads "Ranked", keeps the game in Playing, and keeps "Finished" for the explicit finish', async () => {
+    const recent = await recentActivity(carol);
+    const byItem = new Map(recent.map((event) => [event.mediaItemId, event]));
+
+    expect(byItem.get(items.ranked!.mediaItemId)).toMatchObject({ kind: 'ranked', onDate: today });
+    expect(byItem.get(items.ranked!.mediaItemId)!.score).toBeCloseTo(9.3);
+    const entry = await getEntry(carol, items.ranked!.mediaItemId);
+    expect(entry!.status).toBe('playing');
+    expect(entry!.finishedAt).toBeNull();
+
+    expect(byItem.get(items.done!.mediaItemId)).toMatchObject({ kind: 'finished', onDate: today, score: null });
   });
 });

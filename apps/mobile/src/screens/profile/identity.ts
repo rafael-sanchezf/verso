@@ -13,30 +13,15 @@
  * Takes a minimal local shape rather than `Profile` from `@verso/api` so this
  * module has no dependency, even a type-only one, on the api package.
  *
- * The words are the dictionary's (`profile.page.joined`, `profile.calendar`):
- * the screen passes its `t` as `say`, so this module never loads the i18n
- * binding, which needs the device.
+ * The words are the dictionary's (`profile.page.joined`) and the joined date is
+ * `format.ts`'s (`monthYear`): the screen passes its `t` as `say`, so this
+ * module never loads the i18n binding, which needs the device.
  */
 
+import { monthYear } from '../../lib/format';
 import type { TranslationKey, TranslationVars } from '../../lib/i18n/dictionary';
 
 type Say = (key: TranslationKey, vars?: TranslationVars) => string;
-
-/** The short month names, January first, as keys. */
-const MONTHS: readonly TranslationKey[] = [
-  'profile.calendar.monthsShort.jan',
-  'profile.calendar.monthsShort.feb',
-  'profile.calendar.monthsShort.mar',
-  'profile.calendar.monthsShort.apr',
-  'profile.calendar.monthsShort.may',
-  'profile.calendar.monthsShort.jun',
-  'profile.calendar.monthsShort.jul',
-  'profile.calendar.monthsShort.aug',
-  'profile.calendar.monthsShort.sep',
-  'profile.calendar.monthsShort.oct',
-  'profile.calendar.monthsShort.nov',
-  'profile.calendar.monthsShort.dec',
-];
 
 export interface IdentityProfile {
   displayName: string | null;
@@ -46,10 +31,8 @@ export interface IdentityProfile {
 }
 
 /** `Sep 2026` (`sept 2026`) from an ISO timestamp, or null if it does not parse. */
-export function joinedLabel(createdAt: string, say: Say): string | null {
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return null;
-  return say('profile.calendar.monthYear', { month: say(MONTHS[date.getMonth()]!), year: date.getFullYear() });
+export function joinedLabel(createdAt: string): string | null {
+  return monthYear(createdAt);
 }
 
 /**
@@ -62,7 +45,7 @@ export function joinedLabel(createdAt: string, say: Say): string | null {
  * vitest.config.ts comment). The two do the same thing.
  */
 export function subtitleFor(profile: Pick<IdentityProfile, 'username' | 'createdAt'>, say: Say): string {
-  const joined = joinedLabel(profile.createdAt, say);
+  const joined = joinedLabel(profile.createdAt);
   const parts = [
     profile.username ? `@${profile.username}` : null,
     joined ? say('profile.page.joined', { date: joined }) : null,

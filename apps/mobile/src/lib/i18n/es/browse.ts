@@ -57,7 +57,8 @@ export const browse: Dictionary['browse'] = {
       emptyBacklog: 'Empieza un juego de tus pendientes.',
       pickFromBacklog: 'Elegir de pendientes',
       searchNewGame: 'Buscar un juego nuevo',
-      markAsFinished: 'Marcar como terminado',
+      rankThis: 'Clasifícalo',
+      donePlaying: 'Terminé de jugarlo',
       logHours: 'Registrar horas',
       moveToBacklog: 'Mover a pendientes',
       couldNotFinish: 'No se pudo marcar como terminado',
@@ -142,8 +143,8 @@ export const browse: Dictionary['browse'] = {
       backlogBody: 'Para jugarlo después',
       playing: 'Jugando ahora',
       playingBody: 'Ya lo empecé',
-      finished: 'Lo terminé',
-      finishedBody: 'Clasifícalo ahora',
+      rankThis: 'Clasifícalo',
+      rankThisBody: 'Ubícalo en tu lista',
       wantToPlay: 'Quiero jugarlo',
       outOn: 'Sale: {date} · aparece en Próximamente',
       toBeAnnounced: 'Fecha de estreno por anunciar',
@@ -179,11 +180,10 @@ export const browse: Dictionary['browse'] = {
     },
     actions: {
       ranked: 'Clasificado · {score}',
-      finished: 'Lo terminé',
+      rankThis: 'Clasifícalo',
       moveInRanking: 'Mover en el Ranking',
       addToBacklog: 'Agregar a pendientes',
       startPlaying: 'Empezar a jugar',
-      rankIt: 'Clasificar',
     },
     status: {
       playingSince: 'Jugando desde el {date}',
@@ -334,12 +334,6 @@ export const browse: Dictionary['browse'] = {
     tierStep: {
       howWas: '¿Qué tal {title}?',
     },
-    tiers: {
-      loved: 'Me encantó',
-      liked: 'Me gustó',
-      fine: 'Normal',
-      disliked: 'No me gustó',
-    },
     tierInSentence: {
       loved: 'Me encantó',
       liked: 'Me gustó',
@@ -348,7 +342,7 @@ export const browse: Dictionary['browse'] = {
     },
     compare: {
       justWatched: 'recién vista',
-      justFinished: 'recién terminado',
+      rankingNow: 'clasificando ahora',
       tooClose: 'Muy parejos',
       cantCompare: 'No puedo comparar',
       close: 'Cerrar',

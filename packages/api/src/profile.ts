@@ -304,8 +304,13 @@ async function countTiers(
  * - `ranked`: a placement, on the day it was placed. Every bulk-entry and
  *   import row reads this way, since nothing says when it was watched.
  * - `watched`: a film logged through the log sheet, on the day the person set.
- * - `finished`: a game the log flow moved from Playing to played
- *   (`user_entries.finished_from`), on its finished day.
+ * - `finished`: a game someone said they finished while it was in Playing
+ *   (`user_entries.finished_from`, written only by Home's "Done playing"
+ *   through `markFinished`), on its finished day. Ranking never writes it
+ *   (VER-224, 2026-10-22): a game ranked from Playing stays in Playing and
+ *   reads `ranked` ("Ranked X · 9.4"). The read is unchanged; the condition
+ *   on `finished_from` was already the explicit finish once ranking stopped
+ *   calling `markFinished`.
  *
  * A placement on the same day as a watch or finish of the same item is folded
  * into that line, which then carries the score ("Finished X · 9.4").

@@ -78,6 +78,7 @@ Apple's es-419 words first, then Verso's own words, decided here so five waves a
 | Where to watch / Rent / Buy / In theaters | Dónde ver / Alquilar / Comprar / En cines | Apple TV; wave 4 |
 | Cast / Runtime | Reparto / Duración | Apple TV; wave 4 |
 | I finished this / I watched this | Lo terminé / La vi | Verso; wave 4 |
+| Rank this (a game) / Place it in your list / Done playing / ranking now | Clasifícalo / Ubícalo en tu lista / Terminé de jugarlo / clasificando ahora | Verso; VER-224, 2026-10-22: replaces "Lo terminé", "Marcar como terminado" and "recién terminado" for games; "La vi" stays for films |
 | Want to play / Want to watch | Quiero jugarlo / Quiero verla | Verso; wave 4 |
 | Played on / Not recorded | Jugado en / Sin registrar | Verso; wave 4 |
 | Time to beat | Para terminarlo | Verso; IGDB's average; wave 4 |

@@ -8,9 +8,10 @@
 
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { EntryRow } from '@verso/api';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
+import { useContentWidth } from '@/lib/use-layout';
 import { coverHeight, EmptyState, EmptyStateCard, ErrorLine, Skeleton, useTheme } from '@/ui';
 import { BlockTitle } from './block';
 
@@ -127,7 +128,9 @@ function PlayingBody({
  */
 function AlsoPlaying({ rows, actions }: { rows: EntryRow[]; actions: PlayingActions }) {
   const theme = useTheme();
-  const { width } = useWindowDimensions();
+  // The screen's width, not the window's: on the iPhone Duo's outer display
+  // the tab rail takes a column on the right (lib/use-layout.ts).
+  const width = useContentWidth();
 
   if (rows.length === 0) return null;
 

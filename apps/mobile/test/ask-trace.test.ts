@@ -141,6 +141,133 @@ describe('lengthLine', () => {
   });
 });
 
+// VER-204: the same rules read a Spanish note, whatever the device's language.
+describe('a Spanish note', () => {
+  describe('buildTrace', () => {
+    it('writes the family line', () => {
+      expect(buildTrace('movie', 'algo para toda la familia')[2]).toBe('Keeping it for every age');
+    });
+
+    it('says co-op for a friend in a game', () => {
+      expect(buildTrace('game', 'algo para jugar con un amigo')[2]).toBe('Keeping the co-op games');
+    });
+
+    it('keeps the pool first when the note names nothing', () => {
+      expect(buildTrace('movie', 'sorpréndeme')[2]).toBe('Keeping your watchlist first');
+      expect(buildTrace('game', 'lo que sea')[2]).toBe('Keeping your backlog first');
+    });
+
+    it('names a length over every other rule', () => {
+      expect(buildTrace('movie', 'una película familiar de menos de 2 horas')[2]).toBe('Keeping it under 2 hours');
+    });
+
+    it('reads a group for films, not co-op', () => {
+      expect(buildTrace('movie', 'con amigos esta noche')[2]).toBe('Keeping it for a group');
+    });
+
+    it('does not read a word inside another word', () => {
+      // "niñera" is not "niña", "amigable" is not "amigo", "cortina" is not "corto".
+      expect(buildTrace('movie', 'la niñera, nada amigable, tras la cortina')[2]).toBe(
+        'Keeping your watchlist first',
+      );
+    });
+
+    it('reads a word that ends in an accented letter', () => {
+      expect(buildTrace('game', 'algo para el sofá')[2]).toBe('Keeping the co-op games');
+    });
+
+    it('writes the whole trace in Spanish', () => {
+      expect(buildTrace('movie', 'una película familiar de menos de 2 horas', 'es')).toEqual([
+        'Leyendo tu ranking',
+        'Dejando fuera lo que ya viste',
+        'Que dure menos de 2 horas',
+      ]);
+    });
+  });
+
+  describe('the rules', () => {
+    it.each([
+      ['algo para los niños', 'Keeping it for every age'],
+      ['para todas las edades', 'Keeping it for every age'],
+      ['algo de miedo', 'Keeping it scary'],
+      ['una de terror', 'Keeping it scary'],
+      ['algo divertido', 'Keeping it light'],
+      ['una comedia', 'Keeping it light'],
+      ['algo ligero', 'Keeping it light'],
+      ['algo corto', 'Keeping it short'],
+      ['algo rápido', 'Keeping it short'],
+      ['un clásico', 'Keeping to the classics'],
+      ['algo reciente', 'Keeping it recent'],
+    ])('reads %s', (note, line) => {
+      expect(readNote(note, 'movie')).toEqual({ maxMinutes: null, line });
+    });
+  });
+
+  describe('readMaxMinutes', () => {
+    it.each([
+      ['menos de 2 horas', 120],
+      ['máximo 2 horas', 120],
+      ['maximo 2 horas', 120],
+      ['bajo 2 horas', 120],
+      ['2 horas o menos', 120],
+      ['1,5 horas', 90],
+      ['1 hora', 60],
+      ['90 minutos', 90],
+      ['algo de 45 min', 45],
+      ['1 minuto', 1],
+      ['más o menos una hora', 60],
+    ])('reads %s as %i', (note, minutes) => {
+      expect(readMaxMinutes(note)).toBe(minutes);
+    });
+
+    it.each(['dos amigos', 'los 2 hobbits', '0 horas', 'a las 2'])('reads no length in %s', (note) => {
+      expect(readMaxMinutes(note)).toBeNull();
+    });
+
+    it.each([
+      ['1 hora 30', 90],
+      ['2 horas 15', 135],
+      ['menos de 2 horas 15 minutos', 135],
+    ])('reads the hours-and-minutes form %s as %i', (note, minutes) => {
+      expect(readMaxMinutes(note)).toBe(minutes);
+    });
+
+    it.each([
+      'más de 2 horas',
+      'mas de 90 minutos',
+      'algo más largo que 2h',
+      'al menos una hora',
+      'por lo menos 1 hora',
+      'mínimo 1 h 30',
+      'minimo 1 h 30',
+      '2 horas o más',
+      '3 horas o mas',
+      'una épica, 2h+',
+    ])('reads a floor, %s, as no ceiling', (note) => {
+      expect(readMaxMinutes(note)).toBeNull();
+    });
+  });
+
+  it('lets a floor fall through to the other rules', () => {
+    expect(readNote('una película familiar de más de 2 horas', 'movie')).toEqual({
+      maxMinutes: null,
+      line: 'Keeping it for every age',
+    });
+    expect(buildTrace('movie', 'al menos 2 horas')[2]).toBe('Keeping your watchlist first');
+  });
+
+  it('turns a length into the filter and the line together', () => {
+    expect(readNote('rápido, menos de 90 minutos', 'movie')).toEqual({
+      maxMinutes: 90,
+      line: 'Keeping it under 1 h 30',
+    });
+  });
+
+  it.each([45, 60, 90, 120, 135, 150])('round-trips the Spanish line for %i minutes', (minutes) => {
+    expect(readMaxMinutes(say(lengthLineKey(minutes), 'es'))).toBe(minutes);
+  });
+});
+
 describe('the sheet\'s other words', () => {
   it('asks the site\'s question per medium', () => {
     expect(askQuestion('movie')).toBe('What do you want to watch?');

@@ -413,7 +413,7 @@ function WebPrimitives({ scheme }: { scheme: ColorScheme }) {
     <>
       <Section title="Dialog">
         <Note>
-          {`Layout now: ${layout}. Centered at 1024 and wider, anchored to the bottom below that. Escape cancels, Enter presses the default button, a click on the dim cancels.`}
+          {`Layout now: ${layout.width}, bar ${layout.bar}. Centered at 1024 and wider, anchored to the bottom below that. Escape cancels, Enter presses the default button, a click on the dim cancels.`}
         </Note>
         <Button
           label="One button: alert(title, message)"

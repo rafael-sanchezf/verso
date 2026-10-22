@@ -8,18 +8,18 @@
  * here assumes an entry, a `game_details` row, a score, or a cover: each block
  * decides for itself whether it has anything to say.
  *
- * The one write that leaves the page is "I finished this" — `markFinished` and
- * then the log flow, which is the core loop (rule 10). Everything else is a
- * single call from `entries.ts` followed by `invalidateEntry`.
+ * The one write that leaves the page is "Rank this" — `startRanking` and then
+ * the log flow, which is the core loop (rule 10). Everything else is a single
+ * call from `entries.ts` followed by `invalidateEntry`.
  */
 
 import {
-  markFinished,
   moveToBacklog,
   removeEntry,
   releaseState,
   removeRankingEntry,
   setStatus,
+  startRanking,
 } from '@verso/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -32,6 +32,7 @@ import { t as translateNow, useT } from '@/lib/i18n';
 import { invalidateEntry, invalidateRanking } from '@/lib/invalidate';
 import { supabase } from '@/lib/supabase';
 import { ErrorLine, Icon, useTheme } from '@/ui';
+import { ColumnButton, useSideColumn } from '@/ui/side-column';
 import { GamePageSkeleton } from './states';
 
 import { detailRows, timeToBeatBreakdown } from './details-rows';
@@ -87,53 +88,58 @@ export function GamePageScreen() {
   const openPlatforms = () => router.push({ pathname: '/game/[id]/platforms', params: { id } });
 
   /**
-   * "I finished this". The entry is marked played either way; what happens next
-   * depends on whether this game is already in the ranked list, which is the
-   * one thing the entry cannot say.
+   * A game already in the ranked list cannot be placed a second time, so the
+   * way into the log flow for one is "Re-rank", which takes the old place out
+   * first.
    */
-  const finishing = useMutation({
-    // The log flow's playing-to-played write says so (`finished_from`), so
-    // Profile reads "Finished X" on this day (movies-build.md, PR 5). Only
-    // from Playing: a fresh entry is an insert the before-update trigger
-    // never sees, so the app must not send it for one.
-    mutationFn: () =>
-      markFinished(supabase, id, page?.entry?.status === 'playing' ? { finishedFrom: 'playing' } : {}),
-    onSuccess: (result) => {
-      if (!result.alreadyRanked) {
-        openLog();
-        return;
-      }
-
-      Alert.alert(t('browse.game.alreadyRankedTitle'), t('browse.game.alreadyRankedMessage'), [
-        { text: t('browse.game.keep'), style: 'cancel' },
-        {
-          text: t('browse.game.reRank'),
-          onPress: () => {
-            void removeRankingEntry(supabase, id)
-              .then(() => {
-                invalidateRanking(queryClient, id);
-                openLog();
-              })
-              .catch(writeFailed);
-          },
+  const offerReRank = () =>
+    Alert.alert(t('browse.game.alreadyRankedTitle'), t('browse.game.alreadyRankedMessage'), [
+      { text: t('browse.game.keep'), style: 'cancel' },
+      {
+        text: t('browse.game.reRank'),
+        onPress: () => {
+          void removeRankingEntry(supabase, id)
+            .then(() => {
+              invalidateRanking(queryClient, id);
+              openLog();
+            })
+            .catch(writeFailed);
         },
-      ]);
+      },
+    ]);
+
+  /**
+   * "Rank this" (VER-224). Never a finish: `startRanking` makes an untracked
+   * or backlogged game played with no finished date and leaves Playing,
+   * Dropped and Played alone, so a game ranked from Playing stays on Home and
+   * Profile reads "Ranked X", not "Finished X". What happens next depends on
+   * whether it is already in the ranked list, the one thing the entry cannot
+   * say.
+   */
+  const rankThis = useMutation({
+    mutationFn: () => startRanking(supabase, id),
+    onSuccess: (result) => {
+      if (result.alreadyRanked) offerReRank();
+      else openLog();
     },
     onError: writeFailed,
     onSettled: () => invalidateEntry(queryClient, id),
   });
 
   /**
-   * Home and Search mark a game finished before they push here, so the page
-   * loads and then hands straight over to the log flow. Once, however many
-   * times this component renders.
+   * Home's "Rank this" and Search's add-to sheet push here with `log=1`, so the
+   * page loads and then hands straight over to the log flow, or to "Re-rank"
+   * for a game already ranked (a Playing game stays on Home after it is
+   * ranked, so its long press can reach one). Once, however many times this
+   * component renders.
    */
   const handedOver = useRef(false);
   useEffect(() => {
     if (!opensLog || handedOver.current || !page) return;
     handedOver.current = true;
-    openLog();
-    // `openLog` and `page` are stable enough for this: the ref is what makes it
+    if (page.ranking !== null) offerReRank();
+    else openLog();
+    // `openLog`, `offerReRank` and `page` are stable enough for this: the ref is what makes it
     // happen once, not the dependency list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opensLog, page]);
@@ -187,6 +193,15 @@ export function GamePageScreen() {
       ],
     });
 
+  // On the Duo's outer display UIKit moves the native Back into the column on
+  // the right; the overflow goes under it (ui/side-column.tsx), and the header
+  // keeps only the Back.
+  const moreInColumn = useSideColumn(
+    () => <ColumnButton icon="ellipsis" label={t('browse.game.more')} onPress={openEllipsisMenu} />,
+    [t, openEllipsisMenu],
+    { belowNativeBack: true },
+  );
+
   const header = (
     <Stack.Screen
       options={{
@@ -195,16 +210,21 @@ export function GamePageScreen() {
         // stack's own back button is the convention and carries the swipe.
         headerBackTitle: from,
         headerBackButtonDisplayMode: from ? 'default' : 'minimal',
-        headerRight: () => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('browse.game.more')}
-            hitSlop={10}
-            onPress={openEllipsisMenu}
-            style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
-            <Icon name="ellipsis" size={20} />
-          </Pressable>
-        ),
+        // With the Back in the Duo's column the bar is empty, and an empty bar
+        // with a hairline reads as a stripe across the page.
+        headerShadowVisible: !moreInColumn,
+        headerRight: moreInColumn
+          ? undefined
+          : () => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('browse.game.more')}
+                hitSlop={10}
+                onPress={openEllipsisMenu}
+                style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+                <Icon name="ellipsis" size={20} />
+              </Pressable>
+            ),
       }}
     />
   );
@@ -243,9 +263,6 @@ export function GamePageScreen() {
         return;
       case 'play':
         run(() => setStatus(supabase, id, 'playing'));
-        return;
-      case 'rank':
-        openLog();
         return;
       case 'move':
         // Moving a game means dragging it in the ranked list, and the Ranking
@@ -286,8 +303,8 @@ export function GamePageScreen() {
         <ActionsRow
           primary={primary}
           secondary={secondary}
-          busy={finishing.isPending || write.isPending}
-          onPrimary={() => finishing.mutate()}
+          busy={rankThis.isPending || write.isPending}
+          onPrimary={() => rankThis.mutate()}
           onSecondary={onSecondary}
         />
 

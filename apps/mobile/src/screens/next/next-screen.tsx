@@ -9,7 +9,9 @@ import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
+import { useLayout } from '@/lib/use-layout';
 import { MediumChip, ScreenHeader, SegmentedControl, type Segment } from '@/ui';
+import { Pane, PaneRow } from '@/ui/pane';
 import { useTheme } from '@/ui/theme';
 
 import { BacklogSegment } from './backlog-segment';
@@ -37,6 +39,27 @@ export function NextScreen() {
   useEffect(() => {
     if (params.segment !== undefined) setSegment(segmentFromParam(params.segment));
   }, [params.segment]);
+
+  // The inner display of the iPhone Duo, or any regular window: Backlog on
+  // the left, Upcoming on the right, no control to switch them, the seam at
+  // the middle (duo-brief.md, "The inner display").
+  const panes = useLayout().width === 'regular';
+
+  if (panes) {
+    return (
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors['bg/canvas'] }}>
+        <ScreenHeader title={t('lists.next.title')} right={<MediumChip />} />
+        <PaneRow>
+          <Pane>
+            <BacklogSegment />
+          </Pane>
+          <Pane>
+            <UpcomingSegment />
+          </Pane>
+        </PaneRow>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors['bg/canvas'] }}>

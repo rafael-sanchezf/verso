@@ -3,7 +3,7 @@
  *
  * A released game gets the three drawn in 26:189. A game that is not out gets
  * one row, because nothing else is true of it yet: nobody is playing GTA 6 and
- * nobody has finished it (phone feedback entry 7, specs/search.md). The
+ * nobody has played it (phone feedback entry 7, specs/search.md). The
  * platform row the sheet once carried under the three left with decision 26. The row writes what "Backlog"
  * writes, and the game then lists in Home's Coming up and the Next tab's
  * Upcoming, which already split the backlog by release date.
@@ -24,7 +24,7 @@ import type { TranslationKey } from '../../lib/i18n/dictionary';
 import type { Phrase } from '../game/phrase';
 
 /** Which row was tapped. */
-export type Choice = 'backlog' | 'playing' | 'finished' | 'watched';
+export type Choice = 'backlog' | 'playing' | 'rank' | 'watched';
 
 /** The words are dictionary keys and phrases the sheet says (the Spanish wave). */
 export interface AddOption {
@@ -54,9 +54,9 @@ const RELEASED: AddSheetRows = {
       filled: false,
     },
     {
-      choice: 'finished',
-      title: 'browse.search.addSheet.finished',
-      description: { key: 'browse.search.addSheet.finishedBody' },
+      choice: 'rank',
+      title: 'browse.search.addSheet.rankThis',
+      description: { key: 'browse.search.addSheet.rankThisBody' },
       filled: true,
     },
   ],

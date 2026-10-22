@@ -217,15 +217,15 @@ Unblocks: the "playing now" number on Steam game pages and the trend history it 
 
   Rows appear only for games someone tracks that have a Steam id, so a small count is normal at first.
 
-## 4. TMDB, the film and TV catalog (10 minutes, then a half-hour sync)
+## 4. TMDB, the film and TV catalog (done by 2026-10-14)
 
-Unblocks: the whole movie and TV catalog on the hosted project. Until the token exists the weekly workflow runs, prints one line, and exits green.
+Unblocks: the whole movie and TV catalog on the hosted project. Done: on 2026-10-14 `popular_games(p_medium => 'movie')` on the hosted project returned Interstellar, Inception and The Avengers, so the token, the secret and the full import are in place and the weekly run has taken over. The boxes below were ticked on 2026-10-22 (VER-227); the steps were done earlier without ticking them.
 
-- [ ] Follow steps 1 to 5 of [docs/design/tmdb-setup.md](../design/tmdb-setup.md): a free account, Settings, API, Request an API Key, type **Developer**, the form answers as written there. Copy the **API Read Access Token** (the long one), not the v3 key.
-- [ ] Add it to `.env` as `TMDB_API_READ_ACCESS_TOKEN=`, then run the curl test in that document; `Fight Club 1999-10-15 139 min` and four appended keys means the token works.
-- [ ] GitHub: the repository's Settings, Secrets and variables, Actions, New repository secret, name `TMDB_API_READ_ACCESS_TOKEN`, the same value.
-- [ ] Smoke test in the cloud: Actions, **TMDB sync**, Run workflow, tick `dry-run`, set `max-ids` to `5`, Run. Green, with five mapped titles in the log and nothing written.
-- [ ] The full import, from the laptop (about 37,600 requests, roughly half an hour; it reads `DATABASE_URL` from `.env`, which is already there):
+- [x] Follow steps 1 to 5 of [docs/design/tmdb-setup.md](../design/tmdb-setup.md): a free account, Settings, API, Request an API Key, type **Developer**, the form answers as written there. Copy the **API Read Access Token** (the long one), not the v3 key.
+- [x] Add it to `.env` as `TMDB_API_READ_ACCESS_TOKEN=`, then run the curl test in that document; `Fight Club 1999-10-15 139 min` and four appended keys means the token works.
+- [x] GitHub: the repository's Settings, Secrets and variables, Actions, New repository secret, name `TMDB_API_READ_ACCESS_TOKEN`, the same value.
+- [x] Smoke test in the cloud: Actions, **TMDB sync**, Run workflow, tick `dry-run`, set `max-ids` to `5`, Run. Green, with five mapped titles in the log and nothing written.
+- [x] The full import, from the laptop (about 37,600 requests, roughly half an hour; it reads `DATABASE_URL` from `.env`, which is already there):
 
   ```bash
   pnpm catalog:tmdb-sync:full
@@ -233,7 +233,7 @@ Unblocks: the whole movie and TV catalog on the hosted project. Until the token 
 
   A projection, not a measurement (VER-163, 2026-10-12): the first cloud run wrote about 100 films a minute because each title cost eight to ten database round trips, up to about 5,000 per 500-title batch; writes are now at most 12 round trips per batch, so the TMDB fetch at 20 a second sets the pace again and the whole pull should take roughly 35 minutes, well inside the workflow's two-hour timeout.
 
-- [ ] Nothing more: the weekly run is scheduled Mondays at 14:00 UTC (daily until 2026-10-14, decision 40) and takes over from here. It mirrors movies only (2026-10-12): TV is held until its ranking unit is decided, and the free tier's 500 MB would not hold the series. When TV is scheduled, drop the default in `tmdb-sync.yml` and raise its popularity threshold first.
+- [x] Nothing more: the weekly run is scheduled Mondays at 14:00 UTC (daily until 2026-10-14, decision 40) and takes over from here. It mirrors movies only (2026-10-12): TV is held until its ranking unit is decided, and the free tier's 500 MB would not hold the series. When TV is scheduled, drop the default in `tmdb-sync.yml` and raise its popularity threshold first.
 
 ## 5. Optional keys (5 minutes each, any time)
 

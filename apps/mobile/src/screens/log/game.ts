@@ -62,14 +62,6 @@ export const TIER_IN_SENTENCE: Readonly<Record<Tier, TranslationKey>> = {
   disliked: 'browse.log.tierInSentence.disliked',
 };
 
-/** The tier step's rows, the chip's words, as dictionary keys. */
-export const TIER_ROW_LABELS: Readonly<Record<Tier, TranslationKey>> = {
-  loved: 'browse.log.tiers.loved',
-  liked: 'browse.log.tiers.liked',
-  fine: 'browse.log.tiers.fine',
-  disliked: 'browse.log.tiers.disliked',
-};
-
 /** One decimal, as every score in the app is written. */
 export function scoreText(score: number): string {
   return score.toFixed(1);

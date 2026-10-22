@@ -28,13 +28,15 @@ describe('addSheetRows for a released game', () => {
     expect(rows.options.map((option) => option.title)).toEqual([
       'Backlog',
       'Playing now',
-      'I finished this',
+      'Rank this',
     ]);
-    expect(rows.options.map((option) => option.choice)).toEqual(['backlog', 'playing', 'finished']);
+    expect(rows.options.map((option) => option.choice)).toEqual(['backlog', 'playing', 'rank']);
     expect(rows.options.map((option) => option.filled)).toEqual([false, false, true]);
     // Decision 26: no platform row under the three, and no ownership in the words.
     expect(Object.keys(rows)).toEqual(['options']);
     expect(rows.options[0]!.description).toBe('Play it later');
+    // VER-224: ranking, not finishing.
+    expect(rows.options[2]!.description).toBe('Place it in your list');
   });
 
   it('treats a game out today as released', () => {
@@ -61,7 +63,7 @@ describe('addSheetRows for a game that is not out', () => {
     ]);
   });
 
-  it('hides Playing and Finished', () => {
+  it('hides Playing and Rank this', () => {
     const rows = rowsFor('2026-11-19');
 
     expect(rows.options.some((option) => option.choice !== 'backlog')).toBe(false);

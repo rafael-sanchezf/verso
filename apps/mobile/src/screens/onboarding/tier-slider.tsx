@@ -52,6 +52,7 @@ import {
   TIER_STOPS,
   TIER_THUMB_ICONS,
   TIER_WORDS,
+  axisWordWidth,
   nearestStop,
   positionAtX,
   sliderWord,
@@ -72,8 +73,6 @@ const GAP = 12;
 const ROW_HEIGHT = 44;
 const LINE = 3;
 const STOP = 10;
-/** Each axis word's box, centered over its stop. */
-const AXIS_WORD = 64;
 const SNAP = { duration: 160 } as const;
 const STOP_POSITIONS = [0, 1, 2, 3];
 
@@ -306,17 +305,20 @@ export function TierAxis({ trailing }: { trailing?: string } = {}) {
       style={[styles.row, { gap: GAP }]}>
       <View style={[styles.axis]} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
         {width > 0
-          ? TIER_STOPS.map((tier, index) => (
-              <Text
-                key={tier}
-                size={11}
-                color="text/secondary"
-                align="center"
-                numberOfLines={1}
-                layout={[styles.axisWord, { left: xAtPosition(index, width) - AXIS_WORD / 2 }]}>
-                {t(TIER_WORDS[tier])}
-              </Text>
-            ))
+          ? TIER_STOPS.map((tier, index) => {
+              const box = axisWordWidth(index);
+              return (
+                <Text
+                  key={tier}
+                  size={11}
+                  color="text/secondary"
+                  align="center"
+                  numberOfLines={1}
+                  layout={[styles.axisWord, { width: box, left: xAtPosition(index, width) - box / 2 }]}>
+                  {t(TIER_WORDS[tier])}
+                </Text>
+              );
+            })
           : null}
       </View>
       <View style={styles.word}>
@@ -372,6 +374,5 @@ const styles = StyleSheet.create({
   axisWord: {
     position: 'absolute',
     top: 0,
-    width: AXIS_WORD,
   },
 });

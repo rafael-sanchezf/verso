@@ -25,11 +25,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import '@/global.css';
 import { useT } from '@/lib/i18n';
+import { useReadingInset, useSideColumnWidth } from '@/lib/use-layout';
 import { usePasswordRecovery } from '@/lib/password-recovery';
 import { useAppOpenEvent } from '@/lib/use-app-open-event';
 import { useSession } from '@/lib/use-session';
 import { useOnboardingGate } from '@/screens/onboarding/use-onboarding-gate';
 import { DialogHost } from '@/ui/dialog';
+import { SideColumnHost } from '@/ui/side-column';
 import { navigationThemeFor } from '@/ui/navigation-theme';
 import { useTheme } from '@/ui/theme';
 
@@ -81,6 +83,20 @@ export default function RootLayout() {
   const theme = useTheme();
   const session = useSession();
 
+  // On the iPhone Duo's outer display iOS reserves a column along the right
+  // edge for the status bar, the camera and the bars (docs/design/duo-brief.md).
+  // The tabs leave it to the column host; every other screen in the stack
+  // keeps its content out of it with this padding, which is zero wherever
+  // there is no column.
+  const columnWidth = useSideColumnWidth();
+  // In a regular window the one-column stack screens (Settings, the pages,
+  // the onboarding) are capped at the reading width and centered as well.
+  const readingInset = useReadingInset();
+  const clearOfColumn = {
+    paddingLeft: readingInset,
+    paddingRight: columnWidth + readingInset,
+  };
+
   // Opening a password-reset link signs the user in, which would otherwise send
   // them straight past the step where they type the new password. While this is
   // set the gate keeps the app on the sign-in screen; see lib/password-recovery.
@@ -131,7 +147,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={navigationThemeFor(theme)}>
           <StatusBar style="auto" />
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: clearOfColumn }}>
             {/*
               The gate. `loading` never reaches here — the splash is still up —
               so these two cover every state the app can be rendered in, and
@@ -145,7 +161,8 @@ export default function RootLayout() {
                 stores the answer the tabs come back, and the stack ends there.
               */}
               <Stack.Protected guard={!gate.newUser}>
-                <Stack.Screen name="(tabs)" />
+                {/* The tabs draw their rail in the column, so they take the whole window. */}
+                <Stack.Screen name="(tabs)" options={{ contentStyle: { paddingRight: 0 } }} />
               </Stack.Protected>
 
               {/*
@@ -281,6 +298,8 @@ export default function RootLayout() {
             platform's own.
           */}
           <DialogHost />
+          {/* The Duo's column: the focused screen's controls and the tabs, over everything (ui/side-column.tsx). */}
+          <SideColumnHost />
         </ThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

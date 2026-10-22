@@ -21,10 +21,10 @@
 import {
   coverCandidates,
   gamePage,
-  markFinished,
   moveToBacklog,
   releaseState,
   setStatus,
+  startRanking,
   type GamePage,
 } from '@verso/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -61,7 +61,9 @@ export function AddSheet({ id }: { id: string }) {
       if (choice === 'watched') return null;
       if (choice === 'backlog') return moveToBacklog(supabase, id);
       if (choice === 'playing') return setStatus(supabase, id, 'playing');
-      return markFinished(supabase, id);
+      // "Rank this" (VER-224): never a finish. An untracked or backlogged game
+      // becomes played with no finished date; Playing and Dropped stay put.
+      return startRanking(supabase, id);
     },
     onSuccess: (_result, choice) => {
       invalidateEntry(queryClient, id);
@@ -73,10 +75,11 @@ export function AddSheet({ id }: { id: string }) {
         router.push({ pathname: '/log/[id]', params: { id } });
         return;
       }
-      // "I finished this" is the start of the ranking flow, not the end of the
+      // "Rank this" is the start of the ranking flow, not the end of the
       // sheet: the game page opens with `log=1` and pushes the tier sheet as
-      // soon as it has loaded (specs/game-page.md). `from` is the back title.
-      if (choice === 'finished') {
+      // soon as it has loaded, or offers "Re-rank" for a game already ranked
+      // (specs/game-page.md). `from` is the back title.
+      if (choice === 'rank') {
         router.push({ pathname: '/game/[id]', params: { id, from: 'Search', log: '1' } });
       }
     },

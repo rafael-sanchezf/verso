@@ -100,7 +100,7 @@ export function CompareStep({
           style={[styles.pair, { gap: theme.space[3] }]}>
           <CompareCard
             game={newGame}
-            subtitle={medium === 'movie' ? t('browse.log.compare.justWatched') : t('browse.log.compare.justFinished')}
+            subtitle={medium === 'movie' ? t('browse.log.compare.justWatched') : t('browse.log.compare.rankingNow')}
             cue={cue}
             onPress={() => onAnswer('a')}
           />

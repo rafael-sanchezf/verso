@@ -20,8 +20,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { askQuestion } from '@/screens/ask/trace';
 import { searchHref } from '@/screens/search/intent';
+import { useLayout } from '@/lib/use-layout';
 import { useActiveMedium } from '@/state/medium';
 import { useTheme } from '@/ui';
+import { Pane, PaneRow } from '@/ui/pane';
 
 import { AskButton } from './ask-button';
 import { ComingUpBlock } from './coming-up-block';
@@ -44,6 +46,12 @@ export function HomeScreen() {
 
   const data = useHomeData();
   const actions = usePlayingActions();
+
+  // The inner display of the iPhone Duo, or any regular window: Playing on
+  // the left, Up next over Coming up on the right, the seam at the middle so
+  // the fold falls on it (duo-brief.md, "The inner display"). Three blocks
+  // still (rule 3); only their arrangement changes.
+  const panes = useLayout().width === 'regular';
 
   const openGame = useCallback(
     (id: string) => router.push({ pathname: '/game/[id]', params: { id, from: 'Home' } }),
@@ -96,22 +104,46 @@ export function HomeScreen() {
               tintColor={theme.colors['text/secondary']}
             />
           }>
-          <PlayingBlock
-            query={data.playing}
-            firstRun={firstRun}
-            // The Up next read, which is the backlog; no read of its own.
-            backlog={data.upNext.isSuccess ? data.upNext.data.length : null}
-            actions={actions}
-            onPickFromBacklog={goToBacklog}
-            onSearchNew={searchNewGame}
-          />
-          <UpNextBlock
-            query={data.upNext}
-            onSeeAll={goToBacklog}
-            onSearch={goToSearch}
-            onOpenGame={openGame}
-          />
-          <ComingUpBlock query={data.comingUp} onOpenGame={openGame} />
+          {(() => {
+            const playing = (
+              <PlayingBlock
+                query={data.playing}
+                firstRun={firstRun}
+                // The Up next read, which is the backlog; no read of its own.
+                backlog={data.upNext.isSuccess ? data.upNext.data.length : null}
+                actions={actions}
+                onPickFromBacklog={goToBacklog}
+                onSearchNew={searchNewGame}
+              />
+            );
+            const upNext = (
+              <UpNextBlock
+                query={data.upNext}
+                onSeeAll={goToBacklog}
+                onSearch={goToSearch}
+                onOpenGame={openGame}
+              />
+            );
+            const comingUp = <ComingUpBlock query={data.comingUp} onOpenGame={openGame} />;
+            if (!panes) {
+              return (
+                <>
+                  {playing}
+                  {upNext}
+                  {comingUp}
+                </>
+              );
+            }
+            return (
+              <PaneRow>
+                <Pane>{playing}</Pane>
+                <Pane style={{ gap: theme.space[6] }}>
+                  {upNext}
+                  {comingUp}
+                </Pane>
+              </PaneRow>
+            );
+          })()}
         </ScrollView>
       ) : (
         <MoviesHome />

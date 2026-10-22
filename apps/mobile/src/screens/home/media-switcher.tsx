@@ -26,6 +26,10 @@
  * PR 6, item 1): Services, Films you love, the film deck and the Letterboxd
  * door for movies, the platforms onward for games. Its last step comes back
  * to this Home in the added medium; skipping every step leaves the flag alone.
+ *
+ * On the iPhone Duo's outer display the other media and the "+" sit in the
+ * column on the right, under the clock, as round buttons (`ui/side-column.tsx`);
+ * the word stays where it is, alone on its row, as the rule above wants it.
  */
 
 import { setProfileMedia, type Profile } from '@verso/api';
@@ -41,6 +45,7 @@ import { supabase } from '@/lib/supabase';
 import { useStartAddedMedia } from '@/screens/onboarding/use-flow';
 import { addableMedia, MEDIUM_WORDS, otherMedia, useActiveMedium, useMyProfile } from '@/state/medium';
 import { Icon, Text, useTheme } from '@/ui';
+import { ColumnButton, useSideColumn } from '@/ui/side-column';
 
 import { addMediumHandlers } from './add-medium';
 
@@ -87,6 +92,37 @@ export function MediaSwitcher() {
 
   const word = MEDIUM_WORDS[medium];
 
+  // The column takes the icons where the bar is on the side (the Duo's outer
+  // display); the row below then shows the word alone.
+  const othersKey = others.join(',');
+  const inColumn = useSideColumn(
+    () => (
+      <>
+        {others.map((other) => (
+          <ColumnButton
+            key={other}
+            icon={MEDIUM_WORDS[other].icon}
+            label={t(MEDIUM_WORDS[other].plural)}
+            hint={t('shell.mediaSwitcher.switchTo', { medium: t(MEDIUM_WORDS[other].plural) })}
+            onPress={() => setMedium(other)}
+          />
+        ))}
+        {addable.length > 0 ? (
+          <ColumnButton
+            icon="plus"
+            label={t('shell.mediaSwitcher.addMedium')}
+            dashed
+            iconSize={16}
+            disabled={add.isPending}
+            onPress={offerToAdd}
+          />
+        ) : null}
+      </>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [othersKey, addable.length, add.isPending, t, setMedium],
+  );
+
   return (
     <View
       style={[
@@ -104,6 +140,7 @@ export function MediaSwitcher() {
         </Text>
       </Animated.View>
 
+      {inColumn ? null : (
       <View style={[styles.others, { gap: 10 }]}>
         {others.map((other) => (
           <Pressable
@@ -135,6 +172,7 @@ export function MediaSwitcher() {
           </Pressable>
         ) : null}
       </View>
+      )}
     </View>
   );
 }

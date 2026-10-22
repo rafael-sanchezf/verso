@@ -16,16 +16,29 @@
  * On web an item dims under the pointer and draws the focus ring for the
  * keyboard (`interaction.ts`). On the phone an item has no pressed state, as
  * before.
+ *
+ * On the iPhone Duo's outer display, and on its inner display held in
+ * landscape, iOS moves its own bars into a column along the right edge, under
+ * the status bar and the camera (docs/design/duo-brief.md, "The rail"). A
+ * drawn bar gets none of that for free, so when `useLayout()` says the bar is
+ * on the side this component hands its five items to the column host
+ * (`side-column.tsx`), which draws them at the bottom of the column under the
+ * focused screen's own controls, and leaves the navigator a spacer of the
+ * column's width so the screens stop where the column begins. The column is
+ * the page's own background, with no edge of its own.
  */
 
+import { useIsFocused } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useT, type TranslationKey } from '@/lib/i18n';
+import { useLayout, useSideColumnWidth } from '@/lib/use-layout';
 import { MEDIUM_WORDS, useActiveMedium } from '@/state/medium';
 
 import { Icon, type IconName } from './icon';
+import { ColumnButton, useSideColumnTabs } from './side-column';
 import { focusRing, isFocusVisible, isHovered, HOVER_OPACITY, type InteractionState } from './interaction';
 import { Text } from './text';
 import { useTheme } from './theme';
@@ -60,6 +73,93 @@ export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarP
   // not (the preview route renders this bar outside a navigator).
   const bottom = insets?.bottom ?? safeArea.bottom;
 
+  const { bar } = useLayout();
+  const rail = bar === 'side';
+  const columnWidth = useSideColumnWidth();
+
+  const items = state.routes.map((route, index) => {
+    const found = TABS.find((candidate) => candidate.name === route.name);
+    if (!found) return null;
+    const tab = { ...found, label: t(found.name === 'next' ? MEDIUM_WORDS[medium].listTab : found.label) };
+
+    const focused = state.index === index;
+    const { options } = descriptors[route.key] ?? {};
+
+    const onPress = () => {
+      const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+      // `preventDefault` is how a screen says "I handled this" — scrolling
+      // a list to the top on a second tap, for instance.
+      if (!focused && !event.defaultPrevented) {
+        navigation.navigate(route.name, route.params);
+      }
+    };
+
+    return (
+      <Pressable
+        key={route.key}
+        accessibilityRole="button"
+        accessibilityState={{ selected: focused }}
+        accessibilityLabel={options?.tabBarAccessibilityLabel ?? tab.label}
+        onPress={onPress}
+        onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+        style={(state: InteractionState) => [
+          styles.item,
+          { gap: theme.space[1], paddingTop: 2 },
+          // The active tab is where you are; only the others answer hover.
+          !focused && isHovered(state) && styles.hovered,
+          isFocusVisible(state) && focusRing(theme, theme.radius.sm),
+        ]}>
+        <Icon
+          name={tab.icon}
+          size={24}
+          color={focused ? 'brand/text' : 'text/secondary'}
+          strokeWidth={focused ? 2.5 : 2}
+        />
+        <Text
+          size={10}
+          weight={focused ? 600 : 400}
+          color={focused ? 'brand/text' : 'text/secondary'}>
+          {tab.label}
+        </Text>
+      </Pressable>
+    );
+  });
+
+  // The column's copy of the items, icons alone as the system's own vertical
+  // tab bar draws them, published while the bar is on the side and the tabs
+  // are the screen in front. A page pushed over the tabs hides the bar on a
+  // phone (specs/game-page.md), so the column drops the items too.
+  const tabsInFront = useIsFocused();
+  const cells = rail
+    ? state.routes.map((route, index) => {
+        const found = TABS.find((candidate) => candidate.name === route.name);
+        if (!found) return null;
+        const label = t(found.name === 'next' ? MEDIUM_WORDS[medium].listTab : found.label);
+        const focused = state.index === index;
+        return (
+          <ColumnButton
+            key={route.key}
+            icon={found.icon}
+            label={descriptors[route.key]?.options?.tabBarAccessibilityLabel ?? label}
+            selected={focused}
+            strokeWidth={focused ? 2.5 : 2}
+            onPress={() => {
+              const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+              if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+            }}
+            onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+          />
+        );
+      })
+    : null;
+  useSideColumnTabs(rail && tabsInFront ? <>{cells}</> : null);
+
+  if (rail) {
+    // Nothing of its own to draw: the host draws the items in the column; this
+    // keeps the screens clear of it.
+    return <View style={{ width: columnWidth }} />;
+  }
+
   return (
     <View
       style={[
@@ -72,56 +172,13 @@ export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarP
           paddingBottom: bottom,
         },
       ]}>
-      {state.routes.map((route, index) => {
-        const found = TABS.find((candidate) => candidate.name === route.name);
-        if (!found) return null;
-        const tab = { ...found, label: t(found.name === 'next' ? MEDIUM_WORDS[medium].listTab : found.label) };
-
-        const focused = state.index === index;
-        const { options } = descriptors[route.key] ?? {};
-
-        const onPress = () => {
-          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          // `preventDefault` is how a screen says "I handled this" — scrolling
-          // a list to the top on a second tap, for instance.
-          if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
-          }
-        };
-
-        return (
-          <Pressable
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={{ selected: focused }}
-            accessibilityLabel={options?.tabBarAccessibilityLabel ?? tab.label}
-            onPress={onPress}
-            onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
-            style={(state: InteractionState) => [
-              styles.item,
-              { gap: theme.space[1], paddingTop: 2 },
-              // The active tab is where you are; only the others answer hover.
-              !focused && isHovered(state) && styles.hovered,
-              isFocusVisible(state) && focusRing(theme, theme.radius.sm),
-            ]}>
-            <Icon
-              name={tab.icon}
-              size={24}
-              color={focused ? 'brand/text' : 'text/secondary'}
-              strokeWidth={focused ? 2.5 : 2}
-            />
-            <Text
-              size={10}
-              weight={focused ? 600 : 400}
-              color={focused ? 'brand/text' : 'text/secondary'}>
-              {tab.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+      {items}
     </View>
   );
 }
+
+const RAIL_MIN_WIDTH = 72;
+const RAIL_STATUS_BAND = 160;
 
 const styles = StyleSheet.create({
   bar: {

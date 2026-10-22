@@ -1,11 +1,13 @@
 /**
  * The two Playing cards, and the long press that turns either into a menu.
  *
- * A tap opens the game page; a long press offers the three things you do to a
+ * A tap opens the game page; a long press offers the four things you do to a
  * game you are in the middle of. That second gesture is the quick version of
  * the core loop — "several ways to say 'I finished this'... a long press on the
- * Playing tile on Home" (ui-principles.md) — so it has to feel like the system
- * menu it is imitating, not like a sheet somebody drew.
+ * Playing tile on Home" (ui-principles.md), reworded 2026-10-22 (VER-224) as
+ * "Rank this" and "Done playing" on two lines, since a ranked game is not
+ * necessarily a finished one — so it has to feel like the system menu it is
+ * imitating, not like a sheet somebody drew.
  *
  * Which is why this is `Link` with `Link.Menu` rather than the overlay the
  * frame draws. home.md says so outright ("Use the native context menu... the
@@ -16,7 +18,8 @@
  *
  * - The menu's icons are SF Symbols, because a UIKit menu takes no other kind.
  *   `checkmark`, `clock` and `square.stack` are the system's own versions of
- *   the Lucide `check`, `clock` and `layers` the spec names.
+ *   the Lucide `check`, `clock` and `layers` the spec names; "Rank this" takes
+ *   `list.number`, the ranked list, and `checkmark` stays with the finish.
  * - The menu's type and color are the system's. The frame's "16 semibold in
  *   the accent green" cannot be asked for and should not be: a context menu that
  *   does not look like every other context menu on the phone reads as a
@@ -163,8 +166,11 @@ function PlayingCardLink({
       </Link.Trigger>
 
       <Link.Menu>
-        <Link.MenuAction icon="checkmark" onPress={() => actions.markAsFinished(id)}>
-          {t('browse.home.playing.markAsFinished')}
+        <Link.MenuAction icon="list.number" onPress={() => actions.rankThis(id)}>
+          {t('browse.home.playing.rankThis')}
+        </Link.MenuAction>
+        <Link.MenuAction icon="checkmark" onPress={() => actions.donePlaying(id)}>
+          {t('browse.home.playing.donePlaying')}
         </Link.MenuAction>
         <Link.MenuAction icon="clock" onPress={() => actions.logHours(id)}>
           {t('browse.home.playing.logHours')}

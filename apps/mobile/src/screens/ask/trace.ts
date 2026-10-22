@@ -13,9 +13,12 @@
  *
  * The sheet's sentences are the dictionary's (`lists.ask`): what this returns
  * is a key, or a `TraceLine` (a key and its numbers), and the sheet says it
- * with `t`, so this module never loads `@/lib/i18n` (spanish-build.md). The
- * rules still read English words in the note; a Spanish note reaches the
- * model as typed, and earns the default third line.
+ * with `t`, so this module never loads `@/lib/i18n` (spanish-build.md).
+ *
+ * The rules read the note in English and in Spanish at once, whatever the
+ * device's language (VER-204): a person may type either, and every rule tries
+ * both word sets, so "menos de 2 horas" sets the same filter and line as
+ * "under 2 hours". The note still reaches the model as typed.
  */
 
 // Types only, erased at build.
@@ -51,51 +54,88 @@ export function askChipLabel(medium: AskMedium): TranslationKey {
 
 /** What the note asks for, read once: a length the request filters on, and the trace's third line. */
 export interface NoteConstraints {
-  /** A length the person typed ("under 2 hours", "90 minutes"), in minutes. */
+  /** A length the person typed ("under 2 hours", "menos de 90 minutos"), in minutes. */
   maxMinutes: number | null;
   /** The third trace line the note earns, or null when it names nothing the rules know. */
   line: TraceLine | null;
 }
 
 /**
- * Words that name a constraint, in the order they win. Kept short on purpose:
- * a line the sheet writes from a guess is worse than the default line.
+ * Spanish words as a whole-word pattern. `\b` only knows ASCII letters, so it
+ * finds no edge after the á of "sofá" and finds one inside "película"; these
+ * edges count accented letters and ñ as part of a word.
  */
-const RULES: { test: RegExp; line: (medium: AskMedium) => TranslationKey }[] = [
-  { test: /\b(family|kids?|children|every age|all ages)\b/i, line: () => 'lists.ask.trace.everyAge' },
+function spanishWords(words: string): RegExp {
+  const letter = '\\wáéíóúüñ';
+  return new RegExp(`(?:^|[^${letter}])(?:${words})(?![${letter}])`, 'i');
+}
+
+/**
+ * Words that name a constraint, in the order they win, each in English and
+ * in Spanish. Kept short on purpose: a line the sheet writes from a guess is
+ * worse than the default line.
+ */
+const RULES: { en: RegExp; es: RegExp; line: (medium: AskMedium) => TranslationKey }[] = [
   {
-    test: /\b(friends?|co-?op|together|multiplayer|couch|partner|two of us)\b/i,
+    en: /\b(family|kids?|children|every age|all ages)\b/i,
+    es: spanishWords('familia|familiar(?:es)?|niñ[oa]s?|hij[oa]s|peques?|todas las edades|cualquier edad'),
+    line: () => 'lists.ask.trace.everyAge',
+  },
+  {
+    en: /\b(friends?|co-?op|together|multiplayer|couch|partner|two of us)\b/i,
+    es: spanishWords('amig[oa]s?|cooperativ[oa]s?|junt[oa]s|multijugador|sof[aá]|pareja|novi[oa]|los dos|nosotr[oa]s dos'),
     line: (medium) => (medium === 'game' ? 'lists.ask.trace.coop' : 'lists.ask.trace.group'),
   },
-  { test: /\b(scary|horror|spooky|creepy)\b/i, line: () => 'lists.ask.trace.scary' },
-  { test: /\b(funny|comedy|laugh|light|fun|feel-?good|cozy|cosy|chill)\b/i, line: () => 'lists.ask.trace.light' },
-  { test: /\b(short|quick)\b/i, line: () => 'lists.ask.trace.short' },
-  { test: /\bclassics?\b/i, line: () => 'lists.ask.trace.classics' },
-  { test: /\b(recent|latest)\b/i, line: () => 'lists.ask.trace.recent' },
+  {
+    en: /\b(scary|horror|spooky|creepy)\b/i,
+    es: spanishWords('miedo|terror|horror|escalofriantes?|espeluznantes?|aterrador(?:a|es|as)?'),
+    line: () => 'lists.ask.trace.scary',
+  },
+  {
+    en: /\b(funny|comedy|laugh|light|fun|feel-?good|cozy|cosy|chill)\b/i,
+    es: spanishWords('divertid[oa]s?|comedias?|re[ií]r(?:me|nos)?|risas?|liger[oa]s?|acogedor(?:a|es|as)?|relajad[oa]s?|tranquil[oa]s?'),
+    line: () => 'lists.ask.trace.light',
+  },
+  { en: /\b(short|quick)\b/i, es: spanishWords('cort[oa]s?|r[aá]pid[oa]s?'), line: () => 'lists.ask.trace.short' },
+  { en: /\bclassics?\b/i, es: spanishWords('cl[aá]sic[oa]s?'), line: () => 'lists.ask.trace.classics' },
+  {
+    en: /\b(recent|latest)\b/i,
+    es: spanishWords('recientes?|lo [uú]ltimo|estrenos?'),
+    line: () => 'lists.ask.trace.recent',
+  },
 ];
 
-/** Words before a figure that make it a floor: "over 2 hours", "at least 90 minutes". */
-const FLOOR_BEFORE = /\b(over|more than|longer than|at least|minimum)\s*$/;
-/** Words after a figure that make it a floor: "2 hours or more", "2h+". */
-const FLOOR_AFTER = /^\s*(\+|or more\b|or longer\b)/;
+/**
+ * Words before a figure that make it a floor: "over 2 hours", "at least 90
+ * minutes"; "más de 2 horas", "al menos 90 minutos".
+ */
+const FLOOR_BEFORE =
+  /\b(over|more than|longer than|at least|minimum|m[aá]s (?:de|que)|m[aá]s larg[oa] (?:de|que)|al menos|por lo menos|m[ií]nimo)\s*$/;
+/** Words after a figure that make it a floor: "2 hours or more", "2 horas o más", "2h+". */
+const FLOOR_AFTER = /^\s*(\+|or more\b|or longer\b|o m[aá]s\b)/;
+
+/** A unit of hours or of minutes, in either language: "2 hours", "2 horas", "90 min", "90 minutos". */
+const HOURS = '(?:h|hr|hrs|hour|hours|hora|horas)';
+const MINUTES = '(?:m|min|mins|minute|minutes|minuto|minutos)';
 
 /** The app's own format first ("1 h 30", "2h30", "2 hours 15 min"), then hours, then minutes. */
 const LENGTHS: { pattern: RegExp; minutes: (match: RegExpExecArray) => number }[] = [
   {
-    pattern: /(\d+)\s*(?:h|hr|hrs|hour|hours)\s*(\d{1,2})(?:\s*(?:m|min|mins|minute|minutes))?\b/,
+    pattern: new RegExp(`(\\d+)\\s*${HOURS}\\s*(\\d{1,2})(?:\\s*${MINUTES})?\\b`),
     minutes: (match) => Number(match[1]) * 60 + Number(match[2]),
   },
   {
-    pattern: /(\d+(?:[.,]\d+)?)\s*(?:h|hr|hrs|hour|hours)\b/,
+    pattern: new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*${HOURS}\\b`),
     minutes: (match) => Math.round(Number(match[1]!.replace(',', '.')) * 60),
   },
-  { pattern: /(\d+)\s*(?:m|min|mins|minute|minutes)\b/, minutes: (match) => Number(match[1]) },
-  { pattern: /\b(?:an|one) hour\b/, minutes: () => 60 },
+  { pattern: new RegExp(`(\\d+)\\s*${MINUTES}\\b`), minutes: (match) => Number(match[1]) },
+  { pattern: /\b(?:(?:an|one) hour|una hora)\b/, minutes: () => 60 },
 ];
 
 /**
  * A ceiling in the note, as minutes: "under 2 hours", "2h", "1.5 hrs",
- * "1 h 30", "90 minutes", "an hour". Only a number with its unit counts; "2"
+ * "1 h 30", "90 minutes", "an hour", "menos de 2 horas", "máximo 90
+ * minutos", "una hora". Only a number with its unit counts; "2"
  * alone is not a length. A floor ("over 2 hours", "2 hours or more", "2h+")
  * is not a ceiling and gives null: the note still reaches the model, but SQL
  * is not asked to filter on it.
@@ -126,7 +166,7 @@ export function lengthLine(minutes: number): TraceLine {
 export function readNote(note: string, medium: AskMedium): NoteConstraints {
   const maxMinutes = readMaxMinutes(note);
   if (maxMinutes !== null) return { maxMinutes, line: lengthLine(maxMinutes) };
-  const rule = RULES.find(({ test }) => test.test(note));
+  const rule = RULES.find(({ en, es }) => en.test(note) || es.test(note));
   return { maxMinutes: null, line: rule ? { key: rule.line(medium) } : null };
 }
 

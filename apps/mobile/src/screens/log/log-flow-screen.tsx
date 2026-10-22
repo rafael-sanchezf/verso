@@ -1,5 +1,5 @@
 /**
- * The log flow: one sheet from "I finished this" to a placed game.
+ * The log flow: one sheet from "Rank this" to a placed game.
  *
  * Step 1 asks for a tier at the small detent, step 2 asks the comparisons at
  * full height, step 3 confirms the placement. The engine in `@verso/core`
@@ -11,8 +11,10 @@
  * here, and comparisons are never written separately (specs/log-flow.md,
  * Notes).
  *
- * Closing at any step leaves the game played and unranked, with nothing
- * half-written: the game page then offers "Rank it".
+ * Closing at any step leaves the game unranked, with nothing half-written: in
+ * whatever status `startRanking` left it (played for one that was untracked or
+ * in the backlog, otherwise as it was), and the game page offers "Rank this"
+ * again.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -59,7 +61,8 @@ const FULL_HEIGHT_SHEET = { sheetAllowedDetents: [1] };
 /**
  * `rank` skips a film's log sheet and opens at the tier step: the movie
  * page's "Rank it ›" for a film already in the diary. A game always opens at
- * the tier step, since its page marked it finished before pushing here.
+ * the tier step: a game has no log sheet, and ranking one never marks it
+ * finished (VER-224).
  */
 export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean }) {
   const t = useT();

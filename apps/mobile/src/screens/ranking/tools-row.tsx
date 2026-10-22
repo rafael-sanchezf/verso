@@ -43,6 +43,8 @@ export interface ToolsRowProps {
   platforms: readonly string[];
   view: RankingView;
   onViewChange: (view: RankingView) => void;
+  /** The toggle is in the Duo's column (ranking-screen.tsx); draw the filters alone. */
+  hideToggle?: boolean;
 }
 
 export function ToolsRow({
@@ -53,6 +55,7 @@ export function ToolsRow({
   platforms,
   view,
   onViewChange,
+  hideToggle = false,
 }: ToolsRowProps) {
   const t = useT();
   const theme = useTheme();
@@ -101,7 +104,7 @@ export function ToolsRow({
         ) : null}
       </View>
 
-      <ViewToggle value={view} onChange={onViewChange} />
+      {hideToggle ? null : <ViewToggle value={view} onChange={onViewChange} />}
     </View>
   );
 }

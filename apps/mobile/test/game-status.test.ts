@@ -1,5 +1,5 @@
 /**
- * The sentence under the buttons and the label on the button beside "I finished
+ * The sentence under the buttons and the label on the button beside "Rank
  * this". Both are chains of conditions, and both are read by someone deciding
  * what to do next, so a wrong one is a wrong instruction rather than a cosmetic
  * bug.
@@ -130,7 +130,7 @@ const ANNOUNCED = releaseState(null, { today: TODAY, status: 'unreleased' });
 
 describe('primaryAction', () => {
   it('is the core loop until the game is ranked', () => {
-    expect(primaryAction(null, OUT)).toEqual({ label: 'I finished this', disabled: false });
+    expect(primaryAction(null, OUT)).toEqual({ label: 'Rank this', disabled: false });
   });
 
   it('becomes the score, and stops being a button', () => {
@@ -144,8 +144,8 @@ describe('primaryAction', () => {
   });
 
   it('is offered for a game out today, and for an undated one the catalog says nothing about', () => {
-    expect(primaryAction(null, releaseState(TODAY, { today: TODAY }))?.label).toBe('I finished this');
-    expect(primaryAction(null, releaseState(null, { today: TODAY }))?.label).toBe('I finished this');
+    expect(primaryAction(null, releaseState(TODAY, { today: TODAY }))?.label).toBe('Rank this');
+    expect(primaryAction(null, releaseState(null, { today: TODAY }))?.label).toBe('Rank this');
   });
 
   it('still shows the score of a ranked game that is not out, which is a fact rather than an offer', () => {
@@ -165,11 +165,10 @@ describe('secondaryAction', () => {
     });
   });
 
-  it('offers the ranking to a game that was played and never ranked', () => {
-    expect(secondaryAction(entry({ status: 'played' }), false, OUT)).toEqual({
-      label: 'Rank it',
-      kind: 'rank',
-    });
+  it('offers nothing beside "Rank this" for a game that was played and never ranked (VER-224)', () => {
+    // The primary button is already the way into the log flow; a second
+    // "Rank it" would say the same thing twice.
+    expect(secondaryAction(entry({ status: 'played' }), false, OUT)).toBeNull();
   });
 
   it('sends a playing or dropped game back to the backlog', () => {

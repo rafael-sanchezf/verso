@@ -27,6 +27,7 @@ import { useLanguage, useT } from '@/lib/i18n';
 import { RankingBanner } from '@/screens/onboarding/session/ranking-banner';
 import { useActiveMedium } from '@/state/medium';
 import { EmptyState, MediumChip, ScreenHeader, useTheme } from '@/ui';
+import { ColumnButton, useSideColumn } from '@/ui/side-column';
 
 import { RankingDoors } from './doors';
 import { FilmsBanner, FilmsEmpty } from './films-banner';
@@ -135,6 +136,19 @@ export function RankingScreen() {
 
   const hasItems = items.length > 0;
 
+  // On the Duo's outer display the list-or-grid toggle stands in the column
+  // on the right (ui/side-column.tsx); the tools row then holds the filters alone.
+  const toggleInColumn = useSideColumn(
+    () =>
+      hasItems ? (
+        <>
+          <ColumnButton icon="list" label={t('lists.ranking.listView')} selected={view === 'list'} onPress={() => setView('list')} />
+          <ColumnButton icon="grid-2x2" label={t('lists.ranking.gridView')} selected={view === 'grid'} onPress={() => setView('grid')} />
+        </>
+      ) : null,
+    [hasItems, view, setView, t],
+  );
+
   return (
     <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
       <ScreenHeader
@@ -155,6 +169,7 @@ export function RankingScreen() {
           platforms={platforms}
           view={view}
           onViewChange={setView}
+          hideToggle={toggleInColumn}
         />
       ) : null}
 

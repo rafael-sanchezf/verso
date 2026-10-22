@@ -53,6 +53,7 @@ import { say } from '@/screens/game/phrase';
 import { GoingSheet, type GoingTarget } from '@/screens/watchlist/going-sheet';
 import { useMyProfile } from '@/state/medium';
 import { Button, Chip, Cover, ErrorLine, Icon, Skeleton, Text, TextButton, useTheme } from '@/ui';
+import { ColumnButton, useSideColumn } from '@/ui/side-column';
 
 import { diaryLine, streamingRow, theatricalLine } from './diary-line';
 import { DiarySheet } from './diary-sheet';
@@ -126,52 +127,67 @@ export function MoviePageScreen() {
   const entry = page.data?.entry ?? null;
   const ranking = page.data?.ranking ?? null;
 
+  const openMore = () =>
+    select({
+        choices: [
+          ...(data?.tmdbId
+            ? [
+                {
+                  label: t('browse.movie.openOnTmdb'),
+                  onPress: () => void Linking.openURL(`https://www.themoviedb.org/movie/${data.tmdbId}`),
+                },
+              ]
+            : []),
+          ...(entry
+            ? [
+                {
+                  label: t('browse.movie.removeFromLibrary'),
+                  destructive: true,
+                  onPress: () =>
+                    showDialog({
+                      title: t('browse.movie.removeFromLibrary'),
+                      message: t('browse.movie.removeMessage'),
+                      buttons: [
+                        { text: t('common.cancel'), style: 'cancel' },
+                        { text: t('browse.movie.remove'), style: 'destructive', onPress: () => removal.mutate() },
+                      ],
+                    }),
+                },
+              ]
+            : []),
+        ],
+      });
+
+  // On the Duo's outer display UIKit moves the native Back into the column on
+  // the right; the overflow goes under it (ui/side-column.tsx).
+  const moreInColumn = useSideColumn(
+    () => <ColumnButton icon="ellipsis" label={t('browse.movie.more')} onPress={openMore} />,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, data?.tmdbId, entry],
+    { belowNativeBack: true },
+  );
+
   const header = (
     <Stack.Screen
       options={{
         title: '',
         headerBackTitle: from,
         headerBackButtonDisplayMode: from ? 'default' : 'minimal',
-        headerRight: () => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('browse.movie.more')}
-            hitSlop={10}
-            onPress={() =>
-              select({
-                choices: [
-                  ...(data?.tmdbId
-                    ? [
-                        {
-                          label: t('browse.movie.openOnTmdb'),
-                          onPress: () => void Linking.openURL(`https://www.themoviedb.org/movie/${data.tmdbId}`),
-                        },
-                      ]
-                    : []),
-                  ...(entry
-                    ? [
-                        {
-                          label: t('browse.movie.removeFromLibrary'),
-                          destructive: true,
-                          onPress: () =>
-                            showDialog({
-                              title: t('browse.movie.removeFromLibrary'),
-                              message: t('browse.movie.removeMessage'),
-                              buttons: [
-                                { text: t('common.cancel'), style: 'cancel' },
-                                { text: t('browse.movie.remove'), style: 'destructive', onPress: () => removal.mutate() },
-                              ],
-                            }),
-                        },
-                      ]
-                    : []),
-                ],
-              })
-            }
-            style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
-            <Icon name="ellipsis" size={20} />
-          </Pressable>
-        ),
+        // With the Back in the Duo's column the bar is empty, and an empty bar
+        // with a hairline reads as a stripe across the page.
+        headerShadowVisible: !moreInColumn,
+        headerRight: moreInColumn
+          ? undefined
+          : () => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('browse.movie.more')}
+                hitSlop={10}
+                onPress={openMore}
+                style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+                <Icon name="ellipsis" size={20} />
+              </Pressable>
+            ),
       }}
     />
   );

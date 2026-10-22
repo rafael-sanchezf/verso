@@ -7,9 +7,8 @@
  * binding: they return a key, or take the screen's `t` as an argument, so the
  * sentences live here and nowhere else.
  *
- * `calendar` is the month and weekday names Activity and the joined line need.
- * `lib/format.ts` owns dates, but does not export its tables; these move there
- * when it does.
+ * The month and weekday names Activity and the joined line need are not here:
+ * they are `lib/format.ts`'s tables (`dateTables`, `monthYear`), the one copy.
  */
 
 export const profile = {
@@ -121,50 +120,6 @@ export const profile = {
     nothingThisMonthBody: 'What you rank, watch and finish lands on its day.',
     day: 'Day {day}: {title}',
     dayAndMore: 'Day {day}: {title} and {count} more',
-  },
-
-  calendar: {
-    months: {
-      january: 'January',
-      february: 'February',
-      march: 'March',
-      april: 'April',
-      may: 'May',
-      june: 'June',
-      july: 'July',
-      august: 'August',
-      september: 'September',
-      october: 'October',
-      november: 'November',
-      december: 'December',
-    },
-    /** `Sep 2026`, the joined line's month. */
-    monthsShort: {
-      jan: 'Jan',
-      feb: 'Feb',
-      mar: 'Mar',
-      apr: 'Apr',
-      may: 'May',
-      jun: 'Jun',
-      jul: 'Jul',
-      aug: 'Aug',
-      sep: 'Sep',
-      oct: 'Oct',
-      nov: 'Nov',
-      dec: 'Dec',
-    },
-    /** `Sep 2026`. */
-    monthYear: '{month} {year}',
-    /** The week row, Sunday first. */
-    weekdayLetters: {
-      sunday: 'S',
-      monday: 'M',
-      tuesday: 'T',
-      wednesday: 'W',
-      thursday: 'T',
-      friday: 'F',
-      saturday: 'S',
-    },
   },
 
   /** Edit profile (screens/profile/edit-profile-screen.tsx). */

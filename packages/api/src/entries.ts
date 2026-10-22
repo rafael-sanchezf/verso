@@ -140,7 +140,7 @@ export class UnknownPlatformError extends Error {
  * Today as `YYYY-MM-DD` in the device's own timezone.
  *
  * Not `toISOString().slice(0, 10)`, which is UTC: for anyone west of Greenwich
- * that spells yesterday all evening, and "I finished this" stamping the wrong
+ * that spells yesterday all evening, and a finish stamping the wrong
  * day is the kind of quiet wrongness rule 9 is about. The `date` columns and
  * the Upcoming split both mean a calendar day where the user is standing.
  */
@@ -240,7 +240,7 @@ export async function setStatus(
   return writeEntry(client, mediaItemId, { status }, 'setStatus');
 }
 
-/** What the tier sheet needs to know after "I finished this". */
+/** What the tier sheet needs to know after "Rank this" or a finish. */
 export interface MarkFinishedResult {
   entry: Entry;
   /**
@@ -256,18 +256,24 @@ export interface MarkFinishedOptions {
   /** The day it was finished, `YYYY-MM-DD`. Defaults to today where the user is. */
   finishedAt?: string;
   /**
-   * `'playing'` when the log flow moves a game from Playing to played (the
-   * game page's "I finished this" and Home's long press, which both open it):
-   * written as `user_entries.finished_from` in the same write, so Profile reads
-   * "Finished X" on that day (20261014100000_profile_reads.sql). The database
-   * keeps it only when the entry really was in Playing, and clears it on every
-   * other path, so sending it from a backlog game is harmless.
+   * `'playing'` when someone says they finished a game they were playing:
+   * Home's long press "Done playing", the one explicit finish that leaves
+   * Playing in one gesture. Written as `user_entries.finished_from` in the same
+   * write, so Profile reads "Finished X" on that day
+   * (20261014100000_profile_reads.sql). The database keeps it only when the
+   * entry really was in Playing, and clears it on every other path, so sending
+   * it from a backlog game is harmless.
+   *
+   * Ranking never sends it (VER-224, feature-ideas item 13, 2026-10-22): a
+   * game ranked from Playing stays in Playing and reads "Ranked X".
    */
   finishedFrom?: 'playing';
 }
 
 /**
- * "I finished this", from the game page's primary button or Home's long press.
+ * Finished, said on purpose: Home's long press "Done playing", the Details
+ * sheet's Finished date, onboarding's deck and seeds, Search's add-many pill.
+ * Not "Rank this", which is `startRanking` and never writes a finished date.
  *
  * The ranked check runs alongside the write rather than after it, so the sheet
  * pays one round trip of latency instead of two.
@@ -294,6 +300,33 @@ export async function markFinished(
     isRanked(client, mediaItemId),
   ]);
 
+  return { entry, alreadyRanked };
+}
+
+/**
+ * "Rank this" (VER-224, feature-ideas item 13, 2026-10-22): the game page's
+ * primary button and the add-to sheet, before the log flow opens.
+ *
+ * Ranking says the game was played and nothing more, so it never writes a
+ * finished date and never takes a game out of Playing or Dropped:
+ *
+ * - no entry: the game becomes `played` with `finished_at` null;
+ * - backlog: `played` too, with whatever `finished_at` it had (normally none),
+ *   since a game you are ranking is not one you still mean to start;
+ * - playing, dropped, played: no write at all. A multiplayer game stays on
+ *   Home after it is ranked; a dropped game ranks as dropped.
+ *
+ * The ranked check runs alongside the read, as in `markFinished`, so the page
+ * can offer "Re-rank" instead of opening a flow that would place it twice.
+ */
+export async function startRanking(client: Client, mediaItemId: string): Promise<MarkFinishedResult> {
+  const [current, alreadyRanked] = await Promise.all([
+    getEntry(client, mediaItemId),
+    isRanked(client, mediaItemId),
+  ]);
+  if (current && current.status !== 'backlog') return { entry: current, alreadyRanked };
+
+  const entry = await writeEntry(client, mediaItemId, { status: 'played' }, 'startRanking');
   return { entry, alreadyRanked };
 }
 

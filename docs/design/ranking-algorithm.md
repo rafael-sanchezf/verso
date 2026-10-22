@@ -6,6 +6,8 @@ Written 2026-09-07 to make the options in [docs/research/beli-ranking-algorithm.
 
 Given a new game the user just finished, and a list of games they have already ranked, figure out where the new game belongs by asking as few "this one or that one?" questions as possible, and turn the resulting position into a 0 to 10 score.
 
+2026-10-22 (VER-224, [feature-ideas item 13](../feature-ideas.md#13-rank-this-not-i-finished-this)): read "just finished" here and "finishes" in the example below as "chose to rank". The app no longer ties ranking to finishing: the game page's button is "Rank this", ranking never writes a finished date, and a game still in Playing or one that was dropped can be ranked. Nothing in the engine changes; it never knew about finishing.
+
 ## What Beli does (the baseline)
 
 Beli's system is two ideas stacked on top of each other.

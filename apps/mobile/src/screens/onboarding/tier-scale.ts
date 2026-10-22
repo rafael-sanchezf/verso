@@ -53,6 +53,23 @@ export const TIER_THUMB_ICONS = {
 export const THUMB_SIZE = 24;
 export const TRACK_INSET = THUMB_SIZE / 2;
 
+/**
+ * Each axis word's box, centered over its stop. An inner word has neighbours
+ * on both sides, so its box stays about one stop's spacing wide. An end word
+ * has open space on its outer side, so its box is wider: the Spanish "No me
+ * gustó" is 66 wide at 11 regular Inter and truncated in 64 (VER-244). Widening
+ * a box around the same centre leaves a word that already fit where it was, so
+ * the English axis does not move. At 88 the end words still clear their
+ * neighbours by 10 or more at 402 wide and by about 3 at 375.
+ */
+export const AXIS_WORD = 64;
+export const AXIS_END_WORD = 88;
+
+/** The width of the axis word's box over a stop. */
+export function axisWordWidth(index: number): number {
+  return index === 0 || index === LAST_STOP ? AXIS_END_WORD : AXIS_WORD;
+}
+
 /** Where a value sits on the track, or null for an untouched row. */
 export function stopIndex(value: TierValue): number | null {
   return value === null ? null : TIER_STOPS.indexOf(value);

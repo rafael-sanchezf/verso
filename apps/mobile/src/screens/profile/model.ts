@@ -15,7 +15,7 @@
 import type { ActivityEvent, ActivityKind, ProfileStats } from '@verso/api';
 import type { Medium } from '@verso/core';
 
-import { personalDate } from '../../lib/format';
+import { dateTables, personalDate } from '../../lib/format';
 import type { TranslationKey, TranslationVars } from '../../lib/i18n/dictionary';
 import { LIVE_MEDIA, MEDIUM_WORDS, trackedMedia, type LiveMedium } from '../../state/medium-model';
 
@@ -220,22 +220,6 @@ export function activityLine(event: Pick<ActivityEvent, 'kind' | 'title' | 'scor
   return say(line.scored, { title: event.title, score: event.score.toFixed(1) });
 }
 
-/** The month names, January first, as keys. */
-const MONTH_KEYS: readonly TranslationKey[] = [
-  'profile.calendar.months.january',
-  'profile.calendar.months.february',
-  'profile.calendar.months.march',
-  'profile.calendar.months.april',
-  'profile.calendar.months.may',
-  'profile.calendar.months.june',
-  'profile.calendar.months.july',
-  'profile.calendar.months.august',
-  'profile.calendar.months.september',
-  'profile.calendar.months.october',
-  'profile.calendar.months.november',
-  'profile.calendar.months.december',
-];
-
 /** A `YYYY-MM-DD` day as a local midnight, or null. */
 function parseDay(day: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(day);
@@ -320,26 +304,19 @@ export function monthGrid<T extends { day: number }>(year: number, month: number
   return weeks;
 }
 
-/** The week header, Sunday first, as keys. */
-export const WEEKDAY_LETTERS: readonly TranslationKey[] = [
-  'profile.calendar.weekdayLetters.sunday',
-  'profile.calendar.weekdayLetters.monday',
-  'profile.calendar.weekdayLetters.tuesday',
-  'profile.calendar.weekdayLetters.wednesday',
-  'profile.calendar.weekdayLetters.thursday',
-  'profile.calendar.weekdayLetters.friday',
-  'profile.calendar.weekdayLetters.saturday',
-];
+/** The week header, Sunday first: `format.ts`'s letters, in the app's language. */
+export function weekdayLetters(): readonly string[] {
+  return dateTables().weekdayLetters;
+}
 
 /** "October 2026", the Activity header. */
 export function monthTitle(year: number, month: number, say: Say): string {
-  return say('profile.activity.monthTitle', { month: monthName(month, say), year });
+  return say('profile.activity.monthTitle', { month: monthName(month), year });
 }
 
-/** "October", the list's header under the grid. */
-export function monthName(month: number, say: Say): string {
-  const key = MONTH_KEYS[month - 1];
-  return key ? say(key) : '';
+/** "October", the list's header under the grid: `format.ts`'s name, in the app's language. */
+export function monthName(month: number): string {
+  return dateTables().monthNames[month - 1] ?? '';
 }
 
 /** The month before or after, as a year and a 1-to-12 month. */

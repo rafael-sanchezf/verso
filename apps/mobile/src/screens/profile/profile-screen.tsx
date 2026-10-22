@@ -32,6 +32,7 @@ import { queryKeys } from '@/lib/query-keys';
 import { assembleRanking } from '@/screens/ranking/model';
 import { setActiveMedium, trackedMedia, type LiveMedium } from '@/state/medium';
 import { Button, EmptyState, EmptyStateCard, ErrorLine, Icon, ScreenHeader, Skeleton, Text } from '@/ui';
+import { ColumnButton, useSideColumn } from '@/ui/side-column';
 import { useTheme } from '@/ui/theme';
 
 import { ProfileAvatar } from './avatar';
@@ -149,6 +150,12 @@ export function ProfileScreen() {
 
   const name = profile ? nameLine(profile) : null;
 
+  // On the Duo's outer display the gear sits in the column on the right.
+  const gearInColumn = useSideColumn(
+    () => <ColumnButton icon="settings" label={t('profile.page.settings')} onPress={() => router.push('/settings')} />,
+    [t, router],
+  );
+
   return (
     <SafeAreaView style={styles.fill} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: theme.space[10] }}>
@@ -156,14 +163,16 @@ export function ProfileScreen() {
           title={t('profile.page.title')}
           paddingBottom={8}
           right={
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.page.settings')}
-              hitSlop={10}
-              onPress={() => router.push('/settings')}
-              style={({ pressed }) => [styles.settingsButton, pressed ? styles.pressed : undefined]}>
-              <Icon name="settings" size={24} />
-            </Pressable>
+            gearInColumn ? null : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.page.settings')}
+                hitSlop={10}
+                onPress={() => router.push('/settings')}
+                style={({ pressed }) => [styles.settingsButton, pressed ? styles.pressed : undefined]}>
+                <Icon name="settings" size={24} />
+              </Pressable>
+            )
           }
         />
 

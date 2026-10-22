@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  AXIS_END_WORD,
+  AXIS_WORD,
   LAST_STOP,
   TIER_STOPS,
   TIER_THUMB_ICONS,
   TIER_WORDS,
   TRACK_INSET,
+  axisWordWidth,
   nearestStop,
   positionAtX,
   sliderWord,
@@ -123,5 +126,22 @@ describe('the accessibility steps', () => {
   it('starts an untouched row at the first stop, and a decrement leaves it untouched', () => {
     expect(stepValue(null, 'increment')).toBe('disliked');
     expect(stepValue(null, 'decrement')).toBeNull();
+  });
+});
+
+describe('the axis words', () => {
+  it('gives the end words the wider box and the inner words one stop of room', () => {
+    expect(axisWordWidth(0)).toBe(AXIS_END_WORD);
+    expect(axisWordWidth(LAST_STOP)).toBe(AXIS_END_WORD);
+    expect(axisWordWidth(1)).toBe(AXIS_WORD);
+    expect(axisWordWidth(2)).toBe(AXIS_WORD);
+  });
+
+  it('fits "No me gustó", 66 wide at 11 regular Inter, at either end (VER-244)', () => {
+    expect(AXIS_END_WORD).toBeGreaterThan(66);
+  });
+
+  it('keeps an inner box within one stop of spacing on the 220 track, so neighbouring inner boxes do not overlap', () => {
+    expect(AXIS_WORD).toBeLessThanOrEqual(SPAN / LAST_STOP);
   });
 });

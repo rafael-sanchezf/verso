@@ -1,6 +1,6 @@
 /**
- * The sentence under the buttons, and the label on the button beside "I
- * finished this".
+ * The sentence under the buttons, and the label on the button beside "Rank
+ * this".
  *
  * Both are the same question asked twice — what is this game to you right now?
  * — so they live in one file and are tested together. Both are pure.
@@ -13,7 +13,7 @@
  *
  * A game that is not out yet gets two actions and no more: into the backlog,
  * and out of the library (phone feedback entry 10, polish list item 1). Nobody
- * is playing GTA 6 and nobody has finished it, so the buttons and the Change
+ * is playing GTA 6 and nobody has played it, so the buttons and the Change
  * menu stop offering either, the same rule the add sheet applies through
  * `addSheetRows` (search/add-options.ts). Out or not is `releaseState` from
  * `@verso/api`, the rule Coming up and Upcoming apply, so the page can never
@@ -111,7 +111,14 @@ export function statusChoices(release: ReleaseState): readonly StatusChoice[] {
   return release.released ? STATUS_CHOICES : STATUS_CHOICES.filter(({ status }) => status === 'backlog');
 }
 
-/** The primary button: "I finished this", or the score once there is one. */
+/**
+ * The primary button: "Rank this", or the score once there is one.
+ *
+ * "Rank this", not "I finished this" (VER-224, feature-ideas item 13,
+ * 2026-10-22): a ranked game is not necessarily a finished one. The tap is
+ * `startRanking` and then the log flow; finishing is said in the Details sheet
+ * or the Change menu.
+ */
 export interface PrimaryAction {
   label: Phrase;
   disabled: boolean;
@@ -119,7 +126,7 @@ export interface PrimaryAction {
 
 /**
  * Null when there is no primary button: a game that is not out cannot be
- * finished. A ranked one still shows its score, which is a fact rather than an
+ * ranked. A ranked one still shows its score, which is a fact rather than an
  * offer.
  */
 export function primaryAction(ranking: { score: number } | null, release: ReleaseState): PrimaryAction | null {
@@ -127,7 +134,7 @@ export function primaryAction(ranking: { score: number } | null, release: Releas
     return { label: { key: 'browse.game.actions.ranked', vars: { score: ranking.score.toFixed(1) } }, disabled: true };
   }
   if (!release.released) return null;
-  return { label: { key: 'browse.game.actions.finished' }, disabled: false };
+  return { label: { key: 'browse.game.actions.rankThis' }, disabled: false };
 }
 
 /**
@@ -135,16 +142,17 @@ export function primaryAction(ranking: { score: number } | null, release: Releas
  * become.
  *
  * `move` once it is ranked, because from there the only thing left to change is
- * where it sits. `rank` for a game you have played and never ranked, which is
- * the one case that opens the log flow without marking it finished a second
- * time. Otherwise the core loop is one tap away (rule 10): into the backlog, or
- * out of the backlog and into your hands.
+ * where it sits. Nothing for a game you have played and never ranked: "Rank
+ * this" beside it is already the next thing (VER-224 made the played-and-
+ * unranked path and the primary button one path, so the "Rank it" that sat
+ * here would say the same thing twice). Otherwise the core loop is one tap away
+ * (rule 10): into the backlog, or out of the backlog and into your hands.
  *
  * A game that is not out only ever goes into the backlog: "Add to backlog"
  * from anywhere else, and no button at all once it is there, since the one
  * other thing left (removing it) is in the Change menu.
  */
-export type SecondaryKind = 'backlog' | 'play' | 'rank' | 'move';
+export type SecondaryKind = 'backlog' | 'play' | 'move';
 
 export interface SecondaryAction {
   label: TranslationKey;
@@ -166,7 +174,7 @@ export function secondaryAction(
     case 'backlog':
       return { label: 'browse.game.actions.startPlaying', kind: 'play' };
     case 'played':
-      return { label: 'browse.game.actions.rankIt', kind: 'rank' };
+      return null;
     case 'playing':
     case 'dropped':
       return { label: 'browse.game.actions.addToBacklog', kind: 'backlog' };

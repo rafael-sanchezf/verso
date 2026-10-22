@@ -67,7 +67,8 @@ export const browse = {
       emptyBacklog: 'Start a game from your backlog.',
       pickFromBacklog: 'Pick from backlog',
       searchNewGame: 'Search a new game',
-      markAsFinished: 'Mark as finished',
+      rankThis: 'Rank this',
+      donePlaying: 'Done playing',
       logHours: 'Log hours',
       moveToBacklog: 'Move to backlog',
       couldNotFinish: "Couldn't mark it finished",
@@ -154,8 +155,8 @@ export const browse = {
       backlogBody: 'Play it later',
       playing: 'Playing now',
       playingBody: 'Started it',
-      finished: 'I finished this',
-      finishedBody: 'Rank it now',
+      rankThis: 'Rank this',
+      rankThisBody: 'Place it in your list',
       wantToPlay: 'Want to play',
       outOn: 'Out {date} · shows in Coming up',
       toBeAnnounced: 'Release date to be announced',
@@ -191,11 +192,10 @@ export const browse = {
     },
     actions: {
       ranked: 'Ranked · {score}',
-      finished: 'I finished this',
+      rankThis: 'Rank this',
       moveInRanking: 'Move in Ranking',
       addToBacklog: 'Add to backlog',
       startPlaying: 'Start playing',
-      rankIt: 'Rank it',
     },
     status: {
       playingSince: 'Playing since {date}',
@@ -346,13 +346,6 @@ export const browse = {
     tierStep: {
       howWas: 'How was {title}?',
     },
-    /** The tier step's rows: the chip's words. */
-    tiers: {
-      loved: 'Loved it',
-      liked: 'Liked it',
-      fine: 'It was fine',
-      disliked: "Didn't like it",
-    },
     /** The tier named inside a sentence: "lands at #4 in Liked". */
     tierInSentence: {
       loved: 'Loved',
@@ -362,7 +355,7 @@ export const browse = {
     },
     compare: {
       justWatched: 'just watched',
-      justFinished: 'just finished',
+      rankingNow: 'ranking now',
       tooClose: 'Too close to call',
       cantCompare: "Can't compare these",
       close: 'Close',

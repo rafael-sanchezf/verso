@@ -13,10 +13,8 @@ import type { Tier } from '@verso/core';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import { Icon, Pressed, Skeleton, Text, TIER_ICONS, TIER_ORDER, tierColor } from '@/ui';
+import { Icon, Pressed, Skeleton, Text, TIER_ICONS, TIER_LABELS, TIER_ORDER, tierColor } from '@/ui';
 import { useTheme } from '@/ui/theme';
-
-import { TIER_ROW_LABELS } from './game';
 
 export interface TierStepProps {
   /** The game's title, or null while it is still loading. */
@@ -84,7 +82,7 @@ function TierRow({
         <Icon name={TIER_ICONS[tier]} size={16} color="tier/label" />
       </View>
       <Text size={17} weight={600} layout={styles.label}>
-        {t(TIER_ROW_LABELS[tier])}
+        {t(TIER_LABELS[tier])}
       </Text>
       {busy ? (
         <ActivityIndicator color={theme.colors['text/secondary']} />

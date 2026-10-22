@@ -33,36 +33,97 @@ import { genreDisplayName } from '@verso/core';
 import { languageStore } from './i18n/store';
 import type { Language } from './i18n/model';
 
-interface DateWords {
-  months: readonly [string, string, string, string, string, string, string, string, string, string, string, string];
-  weekdays: readonly [string, string, string, string, string, string, string];
+type Twelve = readonly [string, string, string, string, string, string, string, string, string, string, string, string];
+type Seven = readonly [string, string, string, string, string, string, string];
+
+/**
+ * One language's month and weekday names: the only copy in the app for
+ * everything that prints a date through here, and exported for a screen that
+ * lays out its own (Activity's calendar), so those words are never spelled a
+ * second time in the dictionary.
+ */
+export interface DateTables {
+  /** `Sep`, `sept`: the short month, inside a line. */
+  months: Twelve;
+  /** `September`, `Septiembre`: the month on its own, as a header. */
+  monthNames: Twelve;
+  /** `Monday`, `Lunes`: the weekday on its own, starting a line. */
+  weekdays: Seven;
+  /** `S M T W T F S`, `D L M M J V S`: a calendar's week row, Sunday first. */
+  weekdayLetters: Seven;
+}
+
+interface DateWords extends DateTables {
   today: string;
   yesterday: string;
   /** `Sep 24` or `24 sept`. */
   monthDay(month: string, day: number): string;
   /** `Sep 24, 2025` or `24 sept 2025`. */
   monthDayYear(month: string, day: number, year: number): string;
+  /** `Sep 2026` or `sept 2026`. */
+  monthYear(month: string, year: number): string;
   /** `14 h played` or `14 h jugadas`; `40 min played` or `40 min jugados`. */
   played(figure: string, unit: 'h' | 'min'): string;
 }
 
+/** A week row is each weekday's first letter, in every language the app speaks. */
+function letters(weekdays: Seven): Seven {
+  return weekdays.map((weekday) => weekday.charAt(0)) as unknown as Seven;
+}
+
+const EN_WEEKDAYS: Seven = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const ES_WEEKDAYS: Seven = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
 const DATE_WORDS: Readonly<Record<Language, DateWords>> = {
   en: {
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    monthNames: [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ],
+    weekdays: EN_WEEKDAYS,
+    weekdayLetters: letters(EN_WEEKDAYS),
     today: 'Today',
     yesterday: 'Yesterday',
     monthDay: (month, day) => `${month} ${day}`,
     monthDayYear: (month, day, year) => `${month} ${day}, ${year}`,
+    monthYear: (month, year) => `${month} ${year}`,
     played: (figure) => `${figure} played`,
   },
   es: {
     months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'],
-    weekdays: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+    // Capitalized: each stands alone at the start of a header, as `Hoy` does.
+    monthNames: [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ],
+    weekdays: ES_WEEKDAYS,
+    weekdayLetters: letters(ES_WEEKDAYS),
     today: 'Hoy',
     yesterday: 'Ayer',
     monthDay: (month, day) => `${day} ${month}`,
     monthDayYear: (month, day, year) => `${day} ${month} ${year}`,
+    monthYear: (month, year) => `${month} ${year}`,
     // Hours are feminine, minutes masculine.
     played: (figure, unit) => `${figure} ${unit === 'h' ? 'jugadas' : 'jugados'}`,
   },
@@ -71,6 +132,12 @@ const DATE_WORDS: Readonly<Record<Language, DateWords>> = {
 /** The words for the language the app is in at the moment of the call. */
 function words(): DateWords {
   return DATE_WORDS[languageStore.language()];
+}
+
+/** The month and weekday tables, in the language the app is in at the moment of the call. */
+export function dateTables(): DateTables {
+  const { months, monthNames, weekdays, weekdayLetters } = words();
+  return { months, monthNames, weekdays, weekdayLetters };
 }
 
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -108,6 +175,17 @@ function monthDay(date: Date): string {
 function monthDayYear(date: Date): string {
   const w = words();
   return w.monthDayYear(w.months[date.getMonth()]!, date.getDate(), date.getFullYear());
+}
+
+/**
+ * `Sep 2026`; `sept 2026` in Spanish: the Profile joined line. A timestamp is
+ * read in local time, as every date here is. Null if the value is not a date.
+ */
+export function monthYear(value: string | null | undefined): string | null {
+  const date = parse(value);
+  if (!date) return null;
+  const w = words();
+  return w.monthYear(w.months[date.getMonth()]!, date.getFullYear());
 }
 
 /** Whole days between two dates, counting calendar days rather than 24-hour spans. */

@@ -15,9 +15,10 @@
 
 import { coverCandidates, type HomeRow } from '@verso/api';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
+import { useContentWidth } from '@/lib/use-layout';
 import { EmptyState, ErrorLine, PosterCard, Skeleton, useTheme } from '@/ui';
 import { cardWidth, gapFor } from '@/screens/watchlist/zoom';
 
@@ -35,7 +36,8 @@ export function RowPageScreen() {
   const t = useT();
   const theme = useTheme();
   const router = useRouter();
-  const { width: screenWidth } = useWindowDimensions();
+  // The screen's width, not the window's (lib/use-layout.ts).
+  const screenWidth = useContentWidth();
   const params = useLocalSearchParams<{ index?: string; kind?: string; value?: string }>();
   const kind = KINDS.find((k) => k === firstParam(params.kind)) ?? null;
   const value = firstParam(params.value) ?? '';

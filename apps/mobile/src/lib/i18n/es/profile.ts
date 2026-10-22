@@ -109,49 +109,6 @@ export const profile: Dictionary['profile'] = {
     dayAndMore: 'Día {day}: {title} y {count} más',
   },
 
-  calendar: {
-    // Capitalized: each stands alone at the start of a header, as `Hoy` does.
-    months: {
-      january: 'Enero',
-      february: 'Febrero',
-      march: 'Marzo',
-      april: 'Abril',
-      may: 'Mayo',
-      june: 'Junio',
-      july: 'Julio',
-      august: 'Agosto',
-      september: 'Septiembre',
-      october: 'Octubre',
-      november: 'Noviembre',
-      december: 'Diciembre',
-    },
-    // The RAE's abbreviations, lowercase inside a line, as `lib/format.ts` writes them.
-    monthsShort: {
-      jan: 'ene',
-      feb: 'feb',
-      mar: 'mar',
-      apr: 'abr',
-      may: 'may',
-      jun: 'jun',
-      jul: 'jul',
-      aug: 'ago',
-      sep: 'sept',
-      oct: 'oct',
-      nov: 'nov',
-      dec: 'dic',
-    },
-    monthYear: '{month} {year}',
-    weekdayLetters: {
-      sunday: 'D',
-      monday: 'L',
-      tuesday: 'M',
-      wednesday: 'M',
-      thursday: 'J',
-      friday: 'V',
-      saturday: 'S',
-    },
-  },
-
   edit: {
     title: 'Editar perfil',
     back: 'Perfil',

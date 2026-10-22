@@ -32,7 +32,7 @@ import {
   shownMedia,
   shiftMonth,
   switcherOptions,
-  WEEKDAY_LETTERS,
+  weekdayLetters,
   type MonthCell,
   type ProfileView,
 } from './model';
@@ -116,9 +116,9 @@ export function ActivityScreen() {
 
         <View style={{ paddingHorizontal: theme.space[2], paddingTop: theme.space[3] }}>
           <View style={styles.row}>
-            {WEEKDAY_LETTERS.map((letter, index) => (
+            {weekdayLetters().map((letter, index) => (
               <Text key={index} size={12} color="text/secondary" align="center" layout={styles.column}>
-                {t(letter)}
+                {letter}
               </Text>
             ))}
           </View>
@@ -138,7 +138,7 @@ export function ActivityScreen() {
 
         <View style={{ paddingHorizontal: theme.space[4], paddingTop: 24, gap: 4 }}>
           <Text size={20} weight={600}>
-            {monthName(shown.month, t)}
+            {monthName(shown.month)}
           </Text>
           {month.isError ? (
             <ErrorLine message={t('profile.activity.somethingWentWrong')} onRetry={() => void month.refetch()} />

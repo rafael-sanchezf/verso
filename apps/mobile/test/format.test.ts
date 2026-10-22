@@ -2,11 +2,13 @@ import { GENRE_DISPLAY_NAMES } from '@verso/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  dateTables,
   fullDate,
   genreIcon,
   genreLabel,
   genres,
   hours,
+  monthYear,
   personalDate,
   platformGlyph,
   platformGlyphs,
@@ -464,5 +466,29 @@ describe('in Spanish', () => {
     expect(genreIcon('Platform')).toBe('brick-wall');
     expect(genreIcon('Role-playing (RPG)')).toBe('wand-sparkles');
     expect(genreIcon('Indie')).toBeNull();
+  });
+});
+
+describe('the date tables', () => {
+  afterEach(() => languageStore.setPreference('system'));
+
+  it("give a screen the month and weekday names in the app's language", () => {
+    expect(dateTables().months[8]).toBe('Sep');
+    expect(dateTables().monthNames[9]).toBe('October');
+    expect(dateTables().weekdayLetters).toEqual(['S', 'M', 'T', 'W', 'T', 'F', 'S']);
+    languageStore.setPreference('es');
+    expect(dateTables().months[8]).toBe('sept');
+    expect(dateTables().monthNames[9]).toBe('Octubre');
+    expect(dateTables().weekdays[3]).toBe('Miércoles');
+    expect(dateTables().weekdayLetters).toEqual(['D', 'L', 'M', 'M', 'J', 'V', 'S']);
+  });
+
+  it('write a month and year, or null for a value that is not a date', () => {
+    expect(monthYear('2026-09-16T12:00:00.000Z')).toBe('Sep 2026');
+    expect(monthYear('2026-01-01')).toBe('Jan 2026');
+    expect(monthYear('not-a-date')).toBeNull();
+    expect(monthYear(null)).toBeNull();
+    languageStore.setPreference('es');
+    expect(monthYear('2026-09-16T12:00:00.000Z')).toBe('sept 2026');
   });
 });

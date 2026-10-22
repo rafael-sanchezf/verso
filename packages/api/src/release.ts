@@ -5,7 +5,7 @@
  * screen can ask about a single item: `upcoming()` keeps a backlog game whose
  * `release_date` is after today, and `backlog()` keeps the rest, undated games
  * included. The add sheet (docs/design/specs/search.md) asks this before it
- * offers "Playing now" and "I finished this", and the two answers have to
+ * offers "Playing now" and "Rank this", and the two answers have to
  * agree: a game the sheet calls unreleased is one Coming up lists as soon as it
  * is in the backlog, and a game Coming up would never list is one the sheet
  * does not lock down.

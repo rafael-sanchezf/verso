@@ -26,7 +26,9 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
+import { useLayout } from '@/lib/use-layout';
 import { MediumChip, ScreenHeader, SegmentedControl, useTheme } from '@/ui';
+import { Pane, PaneRow } from '@/ui/pane';
 
 import { isSelectedTab } from '@/screens/search/intent';
 
@@ -70,16 +72,35 @@ export function WatchlistScreen() {
     [navigation, route.key],
   );
 
+  // The inner display of the iPhone Duo, or any regular window: the
+  // Watchlist on the left, the Calendar on the right, no control to switch
+  // them (duo-brief.md, "The inner display"). The visit still lands on the
+  // watchlist pane, which is always there.
+  const panes = useLayout().width === 'regular';
+
   return (
     <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
       <ScreenHeader title={t('lists.watchlist.title')} right={<MediumChip />} />
-      <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[3] }}>
-        <SegmentedControl<Segment> segments={segments} value={segment} onChange={setSegment} />
-      </View>
-      {segment === 'watchlist' ? (
-        <WatchlistSegment visit={visit} onVisitApplied={() => setVisit(null)} />
+      {panes ? (
+        <PaneRow>
+          <Pane>
+            <WatchlistSegment visit={visit} onVisitApplied={() => setVisit(null)} />
+          </Pane>
+          <Pane>
+            <CalendarSegment />
+          </Pane>
+        </PaneRow>
       ) : (
-        <CalendarSegment />
+        <>
+          <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[3] }}>
+            <SegmentedControl<Segment> segments={segments} value={segment} onChange={setSegment} />
+          </View>
+          {segment === 'watchlist' ? (
+            <WatchlistSegment visit={visit} onVisitApplied={() => setVisit(null)} />
+          ) : (
+            <CalendarSegment />
+          )}
+        </>
       )}
     </SafeAreaView>
   );

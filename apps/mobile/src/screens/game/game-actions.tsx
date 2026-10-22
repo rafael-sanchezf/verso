@@ -3,7 +3,7 @@
  *
  * The primary button is the core loop, one tap from any game (rule 10). It
  * becomes the score once the game is ranked and stops being a button, because
- * there is nothing left to finish — the way back in is "Move in Ranking" beside
+ * there is nothing left to rank — the way back in is "Move in Ranking" beside
  * it.
  *
  * "Change" opens a native action sheet with the four statuses and the
@@ -34,7 +34,7 @@ export function ActionsRow({
   onSecondary: () => void;
 }) {
   const t = useT();
-  // A game that is not out has no "I finished this" (status.ts), and none of
+  // A game that is not out has no "Rank this" (status.ts), and none of
   // the two once it is in the backlog: the row then takes what is left, full
   // width, or is not drawn (rule 20).
   if (!primary && !secondary) return null;
