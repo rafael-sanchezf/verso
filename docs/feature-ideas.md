@@ -329,6 +329,28 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 
 **Open.** Whether the Playing tile's long press keeps a way out of Playing beside "Rank this" (question 15). Whether an unranked game with no entry becomes `played` or stays entry-less until the placement is confirmed.
 
+## 14. Rate it where you watched it
+
+**What Rafa described** (2026-10-29). Meet people where they are: rank a film or show inside Netflix, Hulu or Disney+ as the credits roll, instead of in a separate app. Not possible on the current thesis; maybe a Chrome extension or something like it. A thought to record, nothing to build yet.
+
+**Where it sits.** Later, on the roadmap's read-only browser scrobbler line, which it extends from reading what you watched to asking you to rank it.
+
+**What exists.**
+- The roadmap already holds the extension as a sensor (2026-09-30, from the reframe): it reads what you watch the way Trakt's and Simkl's scrobblers do, and never alters a platform's page, because Netflix's terms forbid inserted code. A layer over other apps comes later, and only where a platform offers a supported hook.
+- Idea 4 found that no streaming service shares viewing history with third parties, so the page itself is the only signal on the desktop.
+- The ranking side needs nothing new: the log flow takes a TMDB id, and an insertion costs about four comparisons, which fits a small popup.
+
+**Sketch,** three forms from least to most intrusive:
+1. **The extension's own popup, not the player's page.** The scrobbler sees a title end (the credits, or the player's own playback calls), and the extension raises a notification or its toolbar popup: "Finished The Bear? Rank it." The comparisons run in the popup through `packages/api`. Nothing is drawn inside Netflix, so it stays on the sensor side of the line. Chrome first; Safari on the Mac takes the same Web Extension.
+2. **A panel inside the player.** Literally "within Netflix". There is precedent (Teleparty and Language Reactor draw their own panels inside Netflix's player; recalled, not researched for this entry), but it is the inserted code Netflix's terms forbid, and it breaks each time the player's markup changes. It crosses the line the reframe drew, so it is Rafa's call (question 16).
+3. **Off the desktop, where most streaming is watched.** A TV or a phone runs no extension. The supported hooks there: a Verso share extension that takes the link a streaming app shares from a title page (whether each app's shared text carries a title clean enough to match is to check), and idea 4's Siri phrase and widget. None is in the player, but each is one step from it.
+
+The matching problem is the same in every form: the services' ids are not in TMDB, so a title read off the page or a share is matched on title and year against `media_items`, with a confirm step when the match is unsure.
+
+**Cost.** Form 1: an extension package in the monorepo sharing `packages/core` and `packages/api`, sign-in inside the extension, the title match, and end-of-title detection per service, which needs upkeep for as long as it ships; medium, and the upkeep never ends. Form 2: form 1 plus a panel per player and the terms risk. The share extension: small to medium native work through an Expo config plugin, never `ios/` by hand.
+
+**Open.** Whether the extension's popup is enough, or "within Netflix" means a panel inside the player (question 16). Which service first, if ever; inferred default Netflix, after its file import.
+
 ## Questions for Rafa, with the defaults
 
 1. Bulk entry before the three-friends test and TestFlight? Default yes; it is V1's first item either way.
@@ -346,3 +368,4 @@ Recorded 2026-09-16 from what Rafa described and decided 2026-09-30 (decision 21
 13. Past ten (2026-09-28): the app says the taste profile is unlocked and offers to stop or keep going once, then never asks again, with a way out on every card? Default yes; inferred from "it should let you go past ten, maybe after a couple of games".
 14. Same-series pivots (2026-10-13): ahead of the genre preference, within two positions of the midpoint instead of one, with no minimum peer count, and spin-offs kept apart by using IGDB's series rather than its franchise? Default yes.
 15. "Rank this" (2026-10-13): ranking never writes a finished date or changes a Playing or Dropped status, a game with no entry becomes Played with no date, and the Playing tile's long press offers "Rank this" and "Done playing" as two lines? Default yes; movies keep "I watched this". Built on the default 2026-10-22 (VER-224); say if any part is wrong.
+16. Rating in the player (2026-10-29): if it is ever built, the extension asks in its own popup after the credits and never draws inside the streaming service's player, so "reads, never alters" holds? Default yes.

@@ -3,7 +3,7 @@
  * date, no drag. docs/design/specs/next.md, "Upcoming segment".
  */
 
-import { View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
 import { Text } from '@/ui';
@@ -33,18 +33,25 @@ export function UpcomingSegment() {
   }
 
   return (
-    <View>
+    <View style={styles.fill}>
       <View style={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[2] }}>
         <Text size={13} weight={500} color="text/secondary">
           {t(gameCountKey(data.length), { count: data.length })} · {t('lists.next.byReleaseDate')}
         </Text>
       </View>
-      {/* The rows' 16pt gutter; `ListRow` has none of its own. */}
-      <View style={{ paddingHorizontal: theme.space[4] }}>
+      {/* The rows' 16pt gutter; `ListRow` has none of its own. They scroll
+          under the count, as Backlog's do (VER-300). */}
+      <ScrollView
+        style={styles.fill}
+        contentContainerStyle={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[6] }}>
         {data.map((entry) => (
           <UpcomingRow key={entry.entry.id} entry={entry} />
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+});

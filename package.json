@@ -24,6 +24,7 @@
     "catalog:tmdb-sync": "pnpm --filter @verso/catalog run tmdb-sync",
     "catalog:tmdb-sync:full": "pnpm --filter @verso/catalog run tmdb-sync -- --full",
     "funnel": "pnpm --filter @verso/catalog run funnel",
+    "engine:report": "pnpm --filter @verso/catalog run engine-report",
     "tokens:build": "pnpm --filter @verso/tokens run build",
     "tokens:check": "pnpm --filter @verso/tokens run check",
     "typecheck": "pnpm -r --if-present run typecheck",

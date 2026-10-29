@@ -86,22 +86,22 @@ insert into public.media_items (id, medium, title, year, external_ids) values
 
 -- 1
 select is(
-  (select pg_get_function_arguments('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)'::regprocedure)),
-  'p_media_item_id uuid, p_medium medium, p_tier tier, p_position integer, p_comparisons jsonb, p_placed_by text DEFAULT ''user''::text',
-  'finish_insertion keeps its exact signature'
+  (select pg_get_function_arguments('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)'::regprocedure)),
+  'p_media_item_id uuid, p_medium medium, p_tier tier, p_position integer, p_comparisons jsonb, p_placed_by text DEFAULT ''user''::text, p_source text DEFAULT ''user''::text',
+  'finish_insertion keeps its arguments, with the optional source of 20261028110000_batch_insertion_source.sql last'
 );
 
 -- 2
 select ok(
   (select not p.prosecdef and p.proconfig = array['search_path=public, extensions']
-     from pg_proc p where p.oid = 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)'::regprocedure),
+     from pg_proc p where p.oid = 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)'::regprocedure),
   'finish_insertion is still security invoker with its pinned search_path'
 );
 
 -- 3
 select ok(
-  has_function_privilege('authenticated', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)', 'execute')
-  and not has_function_privilege('anon', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)', 'execute'),
+  has_function_privilege('authenticated', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)', 'execute')
+  and not has_function_privilege('anon', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)', 'execute'),
   'finish_insertion keeps its grants: signed-in users, not anon'
 );
 

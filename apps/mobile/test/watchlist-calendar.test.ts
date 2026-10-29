@@ -114,3 +114,55 @@ describe('in Spanish', () => {
     expect(going!.dateTop).toBe('SÁB');
   });
 });
+
+describe('every month and weekday word', () => {
+  afterEach(() => languageStore.setPreference('system'));
+
+  // One film in the middle of each month of 2026, and one going on each day of
+  // the week of Sunday 25 October 2026.
+  const months = Array.from({ length: 12 }, (_, month) => `2026-${String(month + 1).padStart(2, '0')}-15`);
+  const week = Array.from({ length: 7 }, (_, day) => `2026-10-${25 + day}`);
+  const opening = (onDate: string) => row({ mediaItemId: onDate, kind: 'opening', onDate });
+  const going = (onDate: string) => row({ mediaItemId: onDate, kind: 'going', onDate, plannedOn: onDate });
+
+  it('reads English: the month in capitals over the day, the full month for a group, the weekday when going', () => {
+    expect(months.map((day) => rowView(opening(day), 2026).dateTop)).toEqual([
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    ]);
+    expect(months.map((day) => shortDate(day, 2026))).toEqual([
+      'Jan 15', 'Feb 15', 'Mar 15', 'Apr 15', 'May 15', 'Jun 15', 'Jul 15', 'Aug 15', 'Sep 15', 'Oct 15', 'Nov 15', 'Dec 15',
+    ]);
+    expect(calendarGroups(months.map(opening), TODAY).map((group) => words(group.title))).toEqual([
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+    ]);
+    expect(calendarGroups(months.map(opening), '2025-10-12').map((group) => words(group.title))).toEqual([
+      'JANUARY 2026', 'FEBRUARY 2026', 'MARCH 2026', 'APRIL 2026', 'MAY 2026', 'JUNE 2026', 'JULY 2026', 'AUGUST 2026',
+      'SEPTEMBER 2026', 'OCTOBER 2026', 'NOVEMBER 2026', 'DECEMBER 2026',
+    ]);
+    expect(week.map((day) => rowView(going(day), 2026).dateTop)).toEqual(['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']);
+    expect(week.map(goingDate)).toEqual([
+      'Sun Oct 25', 'Mon Oct 26', 'Tue Oct 27', 'Wed Oct 28', 'Thu Oct 29', 'Fri Oct 30', 'Sat Oct 31',
+    ]);
+  });
+
+  it('reads Spanish: the day first, the RAE abbreviations, the weekday in capitals when going', () => {
+    languageStore.setPreference('es');
+    expect(months.map((day) => rowView(opening(day), 2026).dateTop)).toEqual([
+      'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEPT', 'OCT', 'NOV', 'DIC',
+    ]);
+    expect(months.map((day) => shortDate(day, 2026))).toEqual([
+      '15 ene', '15 feb', '15 mar', '15 abr', '15 may', '15 jun', '15 jul', '15 ago', '15 sept', '15 oct', '15 nov', '15 dic',
+    ]);
+    expect(calendarGroups(months.map(opening), TODAY).map((group) => words(group.title))).toEqual([
+      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE',
+    ]);
+    expect(calendarGroups(months.map(opening), '2025-10-12').map((group) => words(group.title))).toEqual([
+      'ENERO 2026', 'FEBRERO 2026', 'MARZO 2026', 'ABRIL 2026', 'MAYO 2026', 'JUNIO 2026', 'JULIO 2026', 'AGOSTO 2026',
+      'SEPTIEMBRE 2026', 'OCTUBRE 2026', 'NOVIEMBRE 2026', 'DICIEMBRE 2026',
+    ]);
+    expect(week.map((day) => rowView(going(day), 2026).dateTop)).toEqual(['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB']);
+    expect(week.map(goingDate)).toEqual([
+      'dom 25 oct', 'lun 26 oct', 'mar 27 oct', 'mié 28 oct', 'jue 29 oct', 'vie 30 oct', 'sáb 31 oct',
+    ]);
+  });
+});

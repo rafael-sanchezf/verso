@@ -17,10 +17,10 @@
 
 import type { EntryRow } from '@verso/api';
 
-import { personalDate, platformShortName, platforms, playtime, timeToBeat } from '../../lib/format';
+import { dateTables, personalDate, platformShortName, platforms, playtime, timeToBeat } from '../../lib/format';
 import type { TranslationKey } from '../../lib/i18n/dictionary';
 
-import { MONTH_KEYS, type Words } from '../game/phrase';
+import type { Words } from '../game/phrase';
 
 /**
  * The separator every subtitle in the specs is written with.
@@ -122,11 +122,11 @@ export function comingUpSubtitle(row: EntryRow): string | null {
  */
 export interface DateColumn {
   /**
-   * The month's short name as a dictionary key (`browse.dates.months.sep`),
-   * which the column says in capitals (`SEP`), or null when the catalog's date
-   * is not precise enough to name a month.
+   * The month's short name in the app's language (`Sep`, `sept`), which the
+   * column says in capitals (`SEP`), or null when the catalog's date is not
+   * precise enough to name a month.
    */
-  month: TranslationKey | null;
+  month: string | null;
   /** The day of the month, when the date is close enough to trust the day. */
   day: string | null;
   /** The year, when that is all the second line is worth. */
@@ -161,7 +161,7 @@ export function comingUpDate(value: string | null | undefined, now: Date = new D
   const date = parseLocalDate(value);
   if (!date) return null;
 
-  const month = MONTH_KEYS[date.getMonth()]!;
+  const month = dateTables().months[date.getMonth()]!;
   const year = String(date.getFullYear());
   const years = date.getFullYear() - now.getFullYear();
   if (years <= 0) return { month, day: String(date.getDate()), year: null };

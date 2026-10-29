@@ -10,16 +10,17 @@
  * Search's field and its 250 ms debounce, Search's result row with a plus
  * pill; a tap on a result adds it to the list and clears the field. "Rank"
  * waits for three and takes any number past it (Rafa's letters, 2026-10-14,
- * VER-228: no count in the copy). It marks each game played (`markFinished`),
- * or each film seen before Verso (`logSeen`, an undated diary row), and opens
- * the session with the picks in Loved and no predictions; the session goes
- * straight on to the deck, with no review (`onDone: 'deck'`).
+ * VER-228: no count in the copy). It marks each game played (`startRanking`,
+ * which writes no finished date, VER-281), or each film seen before Verso
+ * (`logSeen`, an undated diary row), and opens the session with the picks in
+ * Loved and no predictions; the session goes straight on to the deck, with no
+ * review (`onDone: 'deck'`).
  *
  * Rules (the floor, the slot, the button) are in seeds.ts. A tap on a pick's
  * check takes it back out.
  */
 
-import { coverCandidates, logSeen, markFinished, searchGames, type OnboardingGameRow } from '@verso/api';
+import { coverCandidates, logSeen, searchGames, startRanking, type OnboardingGameRow } from '@verso/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -76,7 +77,7 @@ export function SeedsScreen({
   const rank = useMutation({
     mutationFn: async (rows: OnboardingGameRow[]) => {
       // A film is seen before Verso (an undated diary row); a game is played.
-      const write = film ? logSeen : markFinished;
+      const write = film ? logSeen : startRanking;
       const outcomes = await Promise.all(rows.map((row) => write(supabase, row.mediaItemId)));
       // A title already ranked has its place; the session only places new ones.
       return rows.filter((_, index) => !outcomes[index]?.alreadyRanked);

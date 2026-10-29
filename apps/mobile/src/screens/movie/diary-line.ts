@@ -26,17 +26,17 @@
 
 import type { DiaryRow, Entry } from '@verso/api';
 
-import { personalDate } from '../../lib/format';
+import { dateTables, personalDate } from '../../lib/format';
 import type { TranslationKey } from '../../lib/i18n/dictionary';
 
-import { MONTH_KEYS, WEEKDAY_KEYS, type Phrase } from '../game/phrase';
+import type { Phrase } from '../game/phrase';
 
 export type DiaryAction = 'change' | 'open' | null;
 
 /**
  * Every line here is a phrase the page says (the Spanish wave): the words are
- * in the dictionary, and the dates are `format.ts`'s or the dictionary's
- * short month and weekday names, put in each language's order.
+ * in the dictionary, and the dates are `format.ts`'s or its short month and
+ * weekday names (`dateTables`), put in each language's order.
  */
 export interface DiaryLine {
   /** The words, or null when there is nothing to say (an untracked film). */
@@ -93,7 +93,7 @@ function local(value: string): Date | null {
 
 /** `Oct 24`, in the language's order (`24 oct`). */
 function monthDay(date: Date): Phrase {
-  return { key: 'browse.dates.monthDay', vars: { month: { key: MONTH_KEYS[date.getMonth()]! }, day: date.getDate() } };
+  return { key: 'browse.dates.monthDay', vars: { month: dateTables().months[date.getMonth()]!, day: date.getDate() } };
 }
 
 export interface TheatricalLine {
@@ -116,14 +116,11 @@ export function theatricalLine(
 ): TheatricalLine | null {
   if (plannedOn !== null && plannedOn >= today) {
     const date = local(plannedOn);
+    const { months, weekdaysShort } = dateTables();
     const when: Phrase | string = date
       ? {
           key: 'browse.dates.weekdayMonthDay',
-          vars: {
-            weekday: { key: WEEKDAY_KEYS[date.getDay()]! },
-            month: { key: MONTH_KEYS[date.getMonth()]! },
-            day: date.getDate(),
-          },
+          vars: { weekday: weekdaysShort[date.getDay()]!, month: months[date.getMonth()]!, day: date.getDate() },
         }
       : plannedOn;
     return { text: { key: 'browse.movie.theatrical.going', vars: { date: when } }, action: 'change' };
@@ -149,7 +146,7 @@ export function streamingRow(digitalOn: string | null, today: string): { label: 
   if (digitalOn <= today) {
     return {
       label: 'browse.movie.details.streamingSince',
-      value: { key: 'browse.dates.monthYear', vars: { month: { key: MONTH_KEYS[date.getMonth()]! }, year: date.getFullYear() } },
+      value: { key: 'browse.dates.monthYear', vars: { month: dateTables().months[date.getMonth()]!, year: date.getFullYear() } },
     };
   }
   return { label: 'browse.movie.details.streamingFrom', value: monthDay(date) };

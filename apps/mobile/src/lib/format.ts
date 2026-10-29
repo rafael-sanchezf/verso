@@ -39,8 +39,8 @@ type Seven = readonly [string, string, string, string, string, string, string];
 /**
  * One language's month and weekday names: the only copy in the app for
  * everything that prints a date through here, and exported for a screen that
- * lays out its own (Activity's calendar), so those words are never spelled a
- * second time in the dictionary.
+ * lays out its own (Activity's calendar, the watchlist's Calendar, the movie
+ * page's diary line), so those words are never spelled a second time.
  */
 export interface DateTables {
   /** `Sep`, `sept`: the short month, inside a line. */
@@ -49,6 +49,8 @@ export interface DateTables {
   monthNames: Twelve;
   /** `Monday`, `Lunes`: the weekday on its own, starting a line. */
   weekdays: Seven;
+  /** `Mon`, `lun`: the weekday inside a line, as `months` is. */
+  weekdaysShort: Seven;
   /** `S M T W T F S`, `D L M M J V S`: a calendar's week row, Sunday first. */
   weekdayLetters: Seven;
 }
@@ -92,6 +94,7 @@ const DATE_WORDS: Readonly<Record<Language, DateWords>> = {
       'December',
     ],
     weekdays: EN_WEEKDAYS,
+    weekdaysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     weekdayLetters: letters(EN_WEEKDAYS),
     today: 'Today',
     yesterday: 'Yesterday',
@@ -118,6 +121,7 @@ const DATE_WORDS: Readonly<Record<Language, DateWords>> = {
       'Diciembre',
     ],
     weekdays: ES_WEEKDAYS,
+    weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
     weekdayLetters: letters(ES_WEEKDAYS),
     today: 'Hoy',
     yesterday: 'Ayer',
@@ -136,8 +140,8 @@ function words(): DateWords {
 
 /** The month and weekday tables, in the language the app is in at the moment of the call. */
 export function dateTables(): DateTables {
-  const { months, monthNames, weekdays, weekdayLetters } = words();
-  return { months, monthNames, weekdays, weekdayLetters };
+  const { months, monthNames, weekdays, weekdaysShort, weekdayLetters } = words();
+  return { months, monthNames, weekdays, weekdaysShort, weekdayLetters };
 }
 
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;

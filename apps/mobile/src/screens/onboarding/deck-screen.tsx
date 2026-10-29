@@ -8,8 +8,9 @@
  * The rows are `deckCandidates` pages, each in `orderDeck` order (the three
  * most popular pinned on page one), appended below one another by "Show 10
  * more", each game once. Marks are local until "Rank": then each marked game
- * is marked played (`markFinished`), with its played-on platform filled when
- * it shares exactly one with the profile, and the session opens over the
+ * is marked played (`startRanking`, which writes no finished date: "played, and
+ * how it was" is not "finished", VER-281), with its played-on platform filled
+ * when it shares exactly one with the profile, and the session opens over the
  * (game, tier) pairs in the page's order. An untouched row is not played and
  * nothing is written for it.
  *
@@ -38,8 +39,8 @@ import {
   deckCandidates,
   getMyProfile,
   logSeen,
-  markFinished,
   setPlayedPlatforms,
+  startRanking,
   type DeckCandidateRow,
 } from '@verso/api';
 import type { Tier } from '@verso/core';
@@ -184,7 +185,7 @@ export function DeckScreen({ initialPicks = EMPTY_PICKS }: { initialPicks?: Deck
             written.current.set(row.mediaItemId, alreadyRanked);
             return;
           }
-          const { alreadyRanked } = await markFinished(supabase, row.mediaItemId);
+          const { alreadyRanked } = await startRanking(supabase, row.mediaItemId);
           written.current.set(row.mediaItemId, alreadyRanked);
           // The played-on pre-fill is a convenience: a refusal leaves the
           // game played with no platform, which the game page can fix.

@@ -271,9 +271,10 @@ export interface MarkFinishedOptions {
 }
 
 /**
- * Finished, said on purpose: Home's long press "Done playing", the Details
- * sheet's Finished date, onboarding's deck and seeds, Search's add-many pill.
- * Not "Rank this", which is `startRanking` and never writes a finished date.
+ * Finished, said on purpose: Home's long press "Done playing" and the Details
+ * sheet's Finished date. Not "Rank this", which is `startRanking` and never
+ * writes a finished date: the game page, the add-to sheet, onboarding's deck
+ * and seeds, and Search's add-many pill (VER-281) all call that.
  *
  * The ranked check runs alongside the write rather than after it, so the sheet
  * pays one round trip of latency instead of two.
@@ -305,7 +306,9 @@ export async function markFinished(
 
 /**
  * "Rank this" (VER-224, feature-ideas item 13, 2026-10-22): the game page's
- * primary button and the add-to sheet, before the log flow opens.
+ * primary button and the add-to sheet, before the log flow opens. Onboarding's
+ * deck and seeds and Search's add-many pill call it too (VER-281): they say
+ * "I played this", never "I finished this".
  *
  * Ranking says the game was played and nothing more, so it never writes a
  * finished date and never takes a game out of Playing or Dropped:

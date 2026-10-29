@@ -9,30 +9,9 @@
  */
 
 export const browse = {
+  // The month and weekday words are `lib/format.ts`'s tables (`dateTables`), the
+  // one copy; what is here is the order a date's parts go in.
   dates: {
-    months: {
-      jan: 'Jan',
-      feb: 'Feb',
-      mar: 'Mar',
-      apr: 'Apr',
-      may: 'May',
-      jun: 'Jun',
-      jul: 'Jul',
-      aug: 'Aug',
-      sep: 'Sep',
-      oct: 'Oct',
-      nov: 'Nov',
-      dec: 'Dec',
-    },
-    weekdays: {
-      sun: 'Sun',
-      mon: 'Mon',
-      tue: 'Tue',
-      wed: 'Wed',
-      thu: 'Thu',
-      fri: 'Fri',
-      sat: 'Sat',
-    },
     /** `Fri Oct 24`. */
     weekdayMonthDay: '{weekday} {month} {day}',
     /** `Oct 24`. */

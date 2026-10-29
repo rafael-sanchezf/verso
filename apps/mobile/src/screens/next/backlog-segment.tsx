@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import Sortable from 'react-native-sortables';
 
 import { useT } from '@/lib/i18n';
@@ -27,6 +28,7 @@ export function BacklogSegment() {
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
   const { data, isPending, isError, refetch } = useBacklogQuery();
   const [sort, setSort] = useState<BacklogSort>('your-order');
@@ -69,8 +71,16 @@ export function BacklogSegment() {
         against the left edge of the screen while the count and the sort menu
         above it were correctly inset. specs/README.md: "Content sits inside
         16pt side padding unless a spec says otherwise."
+
+        The rows scroll under the sub row, which stays put, and the grid is
+        handed the scroll view so a drag held near its edge scrolls it, as on
+        Ranking. Without one a backlog taller than the screen could not be
+        reached past its last visible row (VER-300).
       */}
-      <View style={[styles.fill, { paddingHorizontal: theme.space[4] }]}>
+      <Animated.ScrollView
+        ref={scrollRef}
+        style={styles.fill}
+        contentContainerStyle={{ paddingHorizontal: theme.space[4], paddingBottom: theme.space[6] }}>
       {draggable ? (
         <Sortable.Grid
           columns={1}
@@ -78,6 +88,7 @@ export function BacklogSegment() {
           customHandle
           keyExtractor={(item) => item.entry.id}
           rowGap={0}
+          scrollableRef={scrollRef}
           onDragEnd={({ fromIndex, toIndex, key, data: nextOrder }) => {
             if (fromIndex === toIndex) return;
             const movedMediaItemId = nextOrder[toIndex]?.mediaItemId ?? '';
@@ -100,7 +111,7 @@ export function BacklogSegment() {
           ))}
         </View>
       )}
-      </View>
+      </Animated.ScrollView>
     </View>
   );
 }

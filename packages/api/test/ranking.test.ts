@@ -1,5 +1,6 @@
 /**
- * `tierList` against a real local stack.
+ * `tierList` against a real local stack, and the insertion prediction each
+ * kind of placement logs (the second describe).
  *
  * The other ranking wrappers are exercised by the pgTAP suite (the position
  * shuffle is the database's job and that is where it is tested) and by the
@@ -15,7 +16,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from '../src/client';
 import { coverCandidates } from '../src/covers';
-import { insertRankingEntry, tierList } from '../src/ranking';
+import { finishInsertion, insertRankingEntry, tierList } from '../src/ranking';
 import { anonClient, live, seedGames, signUpUser, stopClients, type SeededGame } from './support';
 
 const STEAM_APP_ID = 1145360;
@@ -128,5 +129,59 @@ describe.skipIf(!live)('tierList against a local stack', () => {
     // execute on this function is revoked from anon: there is no such thing as
     // a signed-out tier.
     await expect(tierList(anonClient(), 'game', 'loved')).rejects.toThrow();
+  });
+});
+
+/**
+ * Every placement logs the engine's guess (VER-233), a direct
+ * `insertRankingEntry` included (VER-238). Through PostgREST the direct call
+ * is the only function on the stack and `finishInsertion`'s nested call is
+ * not, which is the difference the database reads to write exactly one row
+ * for each, so it is checked here from the outside as well as in pgTAP.
+ */
+describe.skipIf(!live)('insertion predictions through supabase-js', () => {
+  let carol: Client;
+  let games: Record<string, SeededGame>;
+
+  beforeAll(async () => {
+    carol = (await signUpUser('direct-c')).client;
+    games = await seedGames([{ key: 'direct' }, { key: 'finished' }]);
+  });
+
+  afterAll(async () => {
+    await stopClients();
+  });
+
+  it('writes one row for a direct insertRankingEntry and one for a finishInsertion', async () => {
+    const direct = games['direct']!.mediaItemId;
+    const finished = games['finished']!.mediaItemId;
+
+    await insertRankingEntry(carol, { mediaItemId: direct, medium: 'game', tier: 'loved', position: 0 });
+    await finishInsertion(carol, { mediaItemId: finished, medium: 'game', tier: 'loved', position: 1, comparisons: [] });
+
+    const { data, error } = await carol
+      .from('prediction_log')
+      .select('media_item_id, model_version, components')
+      .eq('surface', 'insertion');
+    if (error) throw error;
+
+    const rows = data.map((row) => ({
+      id: row.media_item_id,
+      model: row.model_version,
+      ...(row.components as { source: string; placed_by: string; list_size: number }),
+    }));
+    expect(rows).toHaveLength(2);
+    expect(rows.find((row) => row.id === direct)).toMatchObject({
+      model: 'content-v1',
+      source: 'user',
+      placed_by: 'user',
+      list_size: 0,
+    });
+    expect(rows.find((row) => row.id === finished)).toMatchObject({
+      model: 'content-v1',
+      source: 'user',
+      placed_by: 'user',
+      list_size: 1,
+    });
   });
 });

@@ -95,16 +95,16 @@ select ok(
 
 -- 12
 select ok(
-  to_regprocedure('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)') is not null
+  to_regprocedure('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)') is not null
   and to_regprocedure('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb)') is null,
   'finish_insertion takes the mark as a sixth argument, and the five-argument overload is gone'
 );
 
 -- 13
 select is(
-  (select pg_get_function_arguments('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)'::regprocedure)),
-  'p_media_item_id uuid, p_medium medium, p_tier tier, p_position integer, p_comparisons jsonb, p_placed_by text DEFAULT ''user''::text',
-  'finish_insertion''s mark is optional and defaults to user, so every existing caller makes the call it made'
+  (select pg_get_function_arguments('public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)'::regprocedure)),
+  'p_media_item_id uuid, p_medium medium, p_tier tier, p_position integer, p_comparisons jsonb, p_placed_by text DEFAULT ''user''::text, p_source text DEFAULT ''user''::text',
+  'finish_insertion''s mark is optional and defaults to user, so every existing caller makes the call it made (the source after it is 20261028110000''s)'
 );
 
 -- 14
@@ -121,7 +121,7 @@ select is(
   'insert_ranking_entry is security invoker'
 );
 select is(
-  (select p.prosecdef from pg_proc p where p.oid = 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)'::regprocedure),
+  (select p.prosecdef from pg_proc p where p.oid = 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)'::regprocedure),
   false,
   'finish_insertion is security invoker'
 );
@@ -142,7 +142,7 @@ select ok(
      from pg_proc p
     where p.oid in (
       'public.insert_ranking_entry(uuid,public.medium,public.tier,integer,text)'::regprocedure,
-      'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)'::regprocedure,
+      'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)'::regprocedure,
       'public.move_ranking_entry(uuid,public.tier,integer)'::regprocedure,
       'public.tier_list(public.medium,public.tier)'::regprocedure
     )),
@@ -159,9 +159,9 @@ select ok(
 
 -- 21
 select ok(
-  not has_function_privilege('anon', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)', 'execute')
-  and has_function_privilege('authenticated', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)', 'execute')
-  and has_function_privilege('service_role', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text)', 'execute'),
+  not has_function_privilege('anon', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)', 'execute')
+  and has_function_privilege('authenticated', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)', 'execute')
+  and has_function_privilege('service_role', 'public.finish_insertion(uuid,public.medium,public.tier,integer,jsonb,text,text)', 'execute'),
   'finish_insertion: authenticated and service_role, never anon'
 );
 

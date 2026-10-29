@@ -107,10 +107,16 @@ const RULES: { en: RegExp; es: RegExp; line: (medium: AskMedium) => TranslationK
 
 /**
  * Words before a figure that make it a floor: "over 2 hours", "at least 90
- * minutes"; "más de 2 horas", "al menos 90 minutos".
+ * minutes", "no less than 2 hours"; "más de 2 horas", "al menos 90 minutos",
+ * "no menos de 2 horas".
  */
 const FLOOR_BEFORE =
-  /\b(over|more than|longer than|at least|minimum|m[aá]s (?:de|que)|m[aá]s larg[oa] (?:de|que)|al menos|por lo menos|m[ií]nimo)\s*$/;
+  /\b(over|more than|longer than|at least|minimum|not? (?:less|shorter) than|m[aá]s (?:de|que)|m[aá]s larg[oa] (?:de|que)|al menos|por lo menos|m[ií]nimo|no menos (?:de|que))\s*$/;
+/**
+ * A floor's words after "no" or "not" keep the figure a ceiling, as "under"
+ * does: "no more than 2 hours", "not longer than 90 minutes"; "no más de 2 horas".
+ */
+const CEILING_BEFORE = /\bnot? (?:over|more than|longer than|m[aá]s (?:de|que)|m[aá]s larg[oa] (?:de|que))\s*$/;
 /** Words after a figure that make it a floor: "2 hours or more", "2 horas o más", "2h+". */
 const FLOOR_AFTER = /^\s*(\+|or more\b|or longer\b|o m[aá]s\b)/;
 
@@ -118,27 +124,41 @@ const FLOOR_AFTER = /^\s*(\+|or more\b|or longer\b|o m[aá]s\b)/;
 const HOURS = '(?:h|hr|hrs|hour|hours|hora|horas)';
 const MINUTES = '(?:m|min|mins|minute|minutes|minuto|minutos)';
 
-/** The app's own format first ("1 h 30", "2h30", "2 hours 15 min"), then hours, then minutes. */
+/**
+ * The app's own format first ("1 h 30", "2h30", "2 hours 15 min", "2 hours and
+ * 15 minutes"), then hours and a half, hours, minutes, and the hour in words.
+ * After "and" or "y" the minutes need their unit, so "2 hours and 2 friends"
+ * is 2 hours.
+ */
 const LENGTHS: { pattern: RegExp; minutes: (match: RegExpExecArray) => number }[] = [
   {
-    pattern: new RegExp(`(\\d+)\\s*${HOURS}\\s*(\\d{1,2})(?:\\s*${MINUTES})?\\b`),
-    minutes: (match) => Number(match[1]) * 60 + Number(match[2]),
+    pattern: new RegExp(
+      `(\\d+)\\s*${HOURS}\\s*(?:(\\d{1,2})(?:\\s*${MINUTES})?|(?:and|y)\\s+(\\d{1,2})\\s*${MINUTES})\\b`,
+    ),
+    minutes: (match) => Number(match[1]) * 60 + Number(match[2] ?? match[3]),
+  },
+  {
+    pattern: new RegExp(`(\\d+)(?:\\s*${HOURS}\\s+(?:and a half|y media)| and a half\\s*${HOURS})\\b`),
+    minutes: (match) => Number(match[1]) * 60 + 30,
   },
   {
     pattern: new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*${HOURS}\\b`),
     minutes: (match) => Math.round(Number(match[1]!.replace(',', '.')) * 60),
   },
   { pattern: new RegExp(`(\\d+)\\s*${MINUTES}\\b`), minutes: (match) => Number(match[1]) },
+  { pattern: /\b(?:(?:an |one )?hour and a half|one and a half hours?|(?:una )?hora y media)\b/, minutes: () => 90 },
+  { pattern: /\b(?:half an hour|(?:a )?half[- ]hour|media hora)\b/, minutes: () => 30 },
   { pattern: /\b(?:(?:an|one) hour|una hora)\b/, minutes: () => 60 },
 ];
 
 /**
- * A ceiling in the note, as minutes: "under 2 hours", "2h", "1.5 hrs",
- * "1 h 30", "90 minutes", "an hour", "menos de 2 horas", "máximo 90
- * minutos", "una hora". Only a number with its unit counts; "2"
- * alone is not a length. A floor ("over 2 hours", "2 hours or more", "2h+")
- * is not a ceiling and gives null: the note still reaches the model, but SQL
- * is not asked to filter on it.
+ * A ceiling in the note, as minutes: "under 2 hours", "no more than 2 hours",
+ * "2h", "1.5 hrs", "1 h 30", "90 minutes", "an hour", "half an hour", "menos
+ * de 2 horas", "no más de 2 horas", "máximo 90 minutos", "una hora", "hora y
+ * media". Only a number with its unit counts; "2" alone is not a length. A
+ * floor ("over 2 hours", "no less than 2 hours", "2 hours or more", "2h+") is
+ * not a ceiling and gives null: the note still reaches the model, but SQL is
+ * not asked to filter on it.
  */
 export function readMaxMinutes(note: string): number | null {
   const text = note.toLowerCase();
@@ -147,7 +167,8 @@ export function readMaxMinutes(note: string): number | null {
     if (!match) continue;
     const before = text.slice(0, match.index);
     const after = text.slice(match.index + match[0].length);
-    if (FLOOR_BEFORE.test(before) || FLOOR_AFTER.test(after)) return null;
+    const floorBefore = FLOOR_BEFORE.test(before) && !CEILING_BEFORE.test(before);
+    if (floorBefore || FLOOR_AFTER.test(after)) return null;
     const value = minutes(match);
     return value > 0 ? value : null;
   }

@@ -16,6 +16,12 @@
  * A game that is not out yet gets one option instead, "Want to play": none of
  * the rest can be true of it (phone feedback entry 7). Which rows, and their
  * words, are `addSheetRows` in `add-options.ts`.
+ *
+ * The sheet is painted as `SheetFrame` paints the other form sheets (VER-218):
+ * `bg/sheet` with `Sheet`'s dark-mode top hairline, the top corners at the
+ * root layout's radius, and the rows inside `ElevatedScope`, so the
+ * `bg/surface` options step up with the sheet. The scroll view stays the
+ * sheet's only child, so react-native-screens still sizes it to the detent.
  */
 
 import {
@@ -38,7 +44,8 @@ import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 import { say } from '@/screens/game/phrase';
 import { Cover, ErrorLine, Icon, Text } from '@/ui';
-import { useTheme, type ColorToken } from '@/ui/theme';
+import { sheetEdge } from '@/ui/sheet';
+import { ElevatedScope, useTheme, type ColorToken } from '@/ui/theme';
 
 import { addSheetRows, FILM_ROWS, type Choice } from './add-options';
 import { GameRowSkeleton } from './placeholders';
@@ -104,7 +111,15 @@ export function AddSheet({ id }: { id: string }) {
 
   return (
     <ScrollView
-      style={{ backgroundColor: theme.colors['bg/canvas'] }}
+      style={[
+        {
+          backgroundColor: theme.colors['bg/sheet'],
+          // The root layout's sheetCornerRadius.
+          borderTopLeftRadius: theme.radius.xl,
+          borderTopRightRadius: theme.radius.xl,
+        },
+        sheetEdge(theme),
+      ]}
       contentContainerStyle={{
         paddingTop: theme.space[3],
         paddingHorizontal: theme.space[4],
@@ -113,7 +128,7 @@ export function AddSheet({ id }: { id: string }) {
         paddingBottom: insets.bottom + theme.space[3],
         gap: theme.space[2],
       }}>
-      {body}
+      <ElevatedScope>{body}</ElevatedScope>
     </ScrollView>
   );
 }

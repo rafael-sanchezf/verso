@@ -2,31 +2,9 @@ import type { Dictionary } from '../dictionary';
 
 /** Wave 4 in Spanish; see `en/browse.ts` for the grouping. */
 export const browse: Dictionary['browse'] = {
+  // The month and weekday words are `lib/format.ts`'s tables (`dateTables`), the
+  // one copy; what is here is the order a date's parts go in.
   dates: {
-    // The same abbreviations as `lib/format.ts` (the RAE's, lowercase).
-    months: {
-      jan: 'ene',
-      feb: 'feb',
-      mar: 'mar',
-      apr: 'abr',
-      may: 'may',
-      jun: 'jun',
-      jul: 'jul',
-      aug: 'ago',
-      sep: 'sept',
-      oct: 'oct',
-      nov: 'nov',
-      dec: 'dic',
-    },
-    weekdays: {
-      sun: 'dom',
-      mon: 'lun',
-      tue: 'mar',
-      wed: 'mié',
-      thu: 'jue',
-      fri: 'vie',
-      sat: 'sáb',
-    },
     weekdayMonthDay: '{weekday} {day} {month}',
     monthDay: '{day} {month}',
     monthYear: '{month} {year}',

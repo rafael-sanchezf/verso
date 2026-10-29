@@ -1,6 +1,7 @@
 import type { Entry, EntryRow } from '@verso/api';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import { languageStore } from '../src/lib/i18n/store';
 import {
   comingUpDate as comingUpColumn,
   comingUpSubtitle,
@@ -21,7 +22,7 @@ function playingSubtitle(...args: Parameters<typeof playingParts>): string | nul
 
 function comingUpDate(...args: Parameters<typeof comingUpColumn>) {
   const column = comingUpColumn(...args);
-  return column && { ...column, month: column.month && english(column.month).toUpperCase() };
+  return column && { ...column, month: column.month && column.month.toUpperCase() };
 }
 
 function playingEmptyCard(...args: Parameters<typeof playingEmptyKeys>) {
@@ -190,6 +191,25 @@ describe('comingUpDate', () => {
     expect(comingUpDate(null, NOW)).toBeNull();
     expect(comingUpDate('', NOW)).toBeNull();
     expect(comingUpDate('not a date', NOW)).toBeNull();
+  });
+});
+
+describe('comingUpDate: every month', () => {
+  afterEach(() => languageStore.setPreference('system'));
+
+  // The 15th of each month of 2026, as the column draws it: in capitals.
+  const days = Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, '0')}-15`);
+  const months = () => days.map((day) => comingUpDate(day, NOW)!.month);
+
+  it('names the months in English', () => {
+    expect(months()).toEqual(['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']);
+  });
+
+  it('names the months in Spanish', () => {
+    languageStore.setPreference('es');
+    expect(months()).toEqual([
+      'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEPT', 'OCT', 'NOV', 'DIC',
+    ]);
   });
 });
 

@@ -15,7 +15,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { finishInsertion } from '@verso/api';
 import type { BatchFinishArgs } from '@verso/core';
 import { useRef, useState } from 'react';
 
@@ -24,7 +23,7 @@ import { logAppEvent } from '@/lib/log-event';
 import { queryKeys } from '@/lib/query-keys';
 import { supabase } from '@/lib/supabase';
 
-import { runWrites } from './writes';
+import { runWrites, writeBatchGame } from './writes';
 
 export interface BatchWrites {
   /** Write what is not written yet. Resolves true once every game has landed. */
@@ -49,7 +48,7 @@ export function useBatchWrites(): BatchWrites {
     setPending(0);
 
     const before = written.current;
-    const outcome = await runWrites(args, before, (call) => finishInsertion(supabase, call));
+    const outcome = await runWrites(args, before, (call) => writeBatchGame(supabase, call));
     written.current = outcome.written;
 
     const landed = [...outcome.written].filter((id) => !before.has(id));

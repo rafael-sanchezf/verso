@@ -2,12 +2,13 @@
  * Search's add-many intent as rules (specs/onboarding.md, "The doors";
  * `?intent=addmany`, Ranking's "I know what I played").
  *
- * Each tap on a row's pill marks the game played at once (`markFinished`) and
- * puts it in the ADDED list under the results; "Rank {n} games" then opens the
- * session over the added games with no tiers yet, so the session asks the tier
- * first for each. A game already ranked is marked played like any other but
- * is not added: the session places games that have no place yet, and this one
- * has one. The list belongs to the visit and ends with it.
+ * Each tap on a row's pill marks the game played at once (`startRanking`, which
+ * writes no finished date, VER-281) and puts it in the ADDED list under the
+ * results; "Rank {n} games" then opens the session over the added games with no
+ * tiers yet, so the session asks the tier first for each. A game already
+ * ranked gets the same write like any other but is not added: the session
+ * places games that have no place yet, and this one has one. The list belongs
+ * to the visit and ends with it.
  *
  * A game that is not out is never marked played (phone feedback entry 10):
  * its row keeps the plain add pill, which opens the add sheet and its one
@@ -48,7 +49,7 @@ export function isAdded(state: AddManyState, mediaItemId: string): boolean {
   return state.added.some((row) => row.mediaItemId === mediaItemId);
 }
 
-/** After `markFinished` answered for this row. */
+/** After `startRanking` answered for this row. */
 export function afterMarked(state: AddManyState, row: OnboardingGameRow, alreadyRanked: boolean): AddManyState {
   if (alreadyRanked) return { ...state, alreadyRanked: row.title };
   if (isAdded(state, row.mediaItemId)) return state;

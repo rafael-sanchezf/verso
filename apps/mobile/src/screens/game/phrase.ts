@@ -5,8 +5,8 @@
  * Those modules cannot import `@/lib/i18n` (it pulls `expo-localization`), so
  * where one used to return an English sentence it returns a `Phrase` and the
  * component says it with its own `t`. A variable may itself be a phrase (a
- * weekday, a month, a tier's name), said in the same language first; a word
- * that is data (a title, a date `format.ts` already wrote) stays a string.
+ * tier's name), said in the same language first; a word that is data (a title,
+ * a date or a month name `format.ts` already wrote) stays a string.
  *
  * No React; relative imports only.
  */
@@ -39,30 +39,3 @@ export function say(t: Say, words: Words): string {
 export function sayJoined(t: Say, parts: readonly Words[]): string {
   return parts.map((part) => say(t, part)).join(' · ');
 }
-
-/** The short month names, January first, for a pure module that names a month. */
-export const MONTH_KEYS = [
-  'browse.dates.months.jan',
-  'browse.dates.months.feb',
-  'browse.dates.months.mar',
-  'browse.dates.months.apr',
-  'browse.dates.months.may',
-  'browse.dates.months.jun',
-  'browse.dates.months.jul',
-  'browse.dates.months.aug',
-  'browse.dates.months.sep',
-  'browse.dates.months.oct',
-  'browse.dates.months.nov',
-  'browse.dates.months.dec',
-] as const satisfies readonly TranslationKey[];
-
-/** The short weekday names, Sunday first, as `Date.getDay()` counts them. */
-export const WEEKDAY_KEYS = [
-  'browse.dates.weekdays.sun',
-  'browse.dates.weekdays.mon',
-  'browse.dates.weekdays.tue',
-  'browse.dates.weekdays.wed',
-  'browse.dates.weekdays.thu',
-  'browse.dates.weekdays.fri',
-  'browse.dates.weekdays.sat',
-] as const satisfies readonly TranslationKey[];

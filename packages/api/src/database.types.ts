@@ -126,6 +126,30 @@ export type Database = {
           },
         ]
       }
+      feature_document_frequencies: {
+        Row: {
+          computed_at: string
+          feature: string
+          item_count: number
+          medium: Database["public"]["Enums"]["medium"]
+          medium_item_count: number
+        }
+        Insert: {
+          computed_at?: string
+          feature: string
+          item_count: number
+          medium: Database["public"]["Enums"]["medium"]
+          medium_item_count: number
+        }
+        Update: {
+          computed_at?: string
+          feature?: string
+          item_count?: number
+          medium?: Database["public"]["Enums"]["medium"]
+          medium_item_count?: number
+        }
+        Relationships: []
+      }
       game_availability: {
         Row: {
           first_seen_at: string
@@ -1408,6 +1432,7 @@ export type Database = {
           p_medium: Database["public"]["Enums"]["medium"]
           p_placed_by?: string
           p_position: number
+          p_source?: string
           p_tier: Database["public"]["Enums"]["tier"]
         }
         Returns: number
@@ -1765,6 +1790,10 @@ export type Database = {
           score: number
           tier: Database["public"]["Enums"]["tier"]
         }[]
+      }
+      refresh_feature_document_frequencies: {
+        Args: { p_medium?: Database["public"]["Enums"]["medium"] }
+        Returns: number
       }
       refresh_item_priors: {
         Args: { p_medium?: Database["public"]["Enums"]["medium"] }

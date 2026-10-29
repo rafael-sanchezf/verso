@@ -17,6 +17,7 @@
     "availability": "tsx src/cli.ts availability",
     "tmdb-sync": "tsx src/cli.ts tmdb-sync",
     "funnel": "tsx src/funnel-cli.ts",
+    "engine-report": "tsx src/engine-report-cli.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

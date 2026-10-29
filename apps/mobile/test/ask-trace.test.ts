@@ -86,7 +86,37 @@ describe('readMaxMinutes', () => {
     ['2 h 15', 135],
     ['2h30', 150],
     ['under 2 hours 15 min', 135],
+    ['2 hours and 15 minutes', 135],
+    ['under 1 hour and 30 min', 90],
+    ['2h 15m', 135],
   ])('reads the hours-and-minutes form %s as %i', (note, minutes) => {
+    expect(readMaxMinutes(note)).toBe(minutes);
+  });
+
+  it('reads no minutes in a count after "and"', () => {
+    // "and" takes minutes only with their unit: two friends are not two minutes.
+    expect(readMaxMinutes('2 hours and 2 friends')).toBe(120);
+  });
+
+  it.each([
+    ['half an hour', 30],
+    ['a half hour', 30],
+    ['an hour and a half', 90],
+    ['under an hour and a half', 90],
+    ['one and a half hours', 90],
+    ['2 hours and a half', 150],
+    ['2 and a half hours', 150],
+  ])('reads the half-hour form %s as %i', (note, minutes) => {
+    expect(readMaxMinutes(note)).toBe(minutes);
+  });
+
+  it.each([
+    ['no more than 2 hours', 120],
+    ['not more than 90 minutes', 90],
+    ['no longer than 2h', 120],
+    ['no more than an hour and a half', 90],
+    ['at most 2 hours', 120],
+  ])('reads a ceiling, %s, as %i', (note, minutes) => {
     expect(readMaxMinutes(note)).toBe(minutes);
   });
 
@@ -99,8 +129,23 @@ describe('readMaxMinutes', () => {
     '2 hours or more',
     '3 hours or longer',
     'an epic, 2h+',
+    'no less than 2 hours',
+    'not less than 90 minutes',
+    'no shorter than 2h',
+    'over half an hour',
+    'at least an hour and a half',
   ])('reads a floor, %s, as no ceiling', (note) => {
     expect(readMaxMinutes(note)).toBeNull();
+  });
+});
+
+describe('a ceiling in the note', () => {
+  it('sets the filter and the line an under sets', () => {
+    expect(readNote('no more than 2 hours', 'movie')).toEqual(readNote('under 2 hours', 'movie'));
+    expect(readNote('a family movie, no more than 2 hours', 'movie')).toEqual({
+      maxMinutes: 120,
+      line: 'Keeping it under 2 hours',
+    });
   });
 });
 
@@ -228,7 +273,35 @@ describe('a Spanish note', () => {
       ['1 hora 30', 90],
       ['2 horas 15', 135],
       ['menos de 2 horas 15 minutos', 135],
+      ['2 horas y 15 minutos', 135],
+      ['menos de 1 hora y 30 min', 90],
     ])('reads the hours-and-minutes form %s as %i', (note, minutes) => {
+      expect(readMaxMinutes(note)).toBe(minutes);
+    });
+
+    it('reads no minutes in a count after "y"', () => {
+      expect(readMaxMinutes('2 horas y 2 amigos')).toBe(120);
+    });
+
+    it.each([
+      ['media hora', 30],
+      ['menos de media hora', 30],
+      ['hora y media', 90],
+      ['una hora y media', 90],
+      ['una película de hora y media', 90],
+      ['2 horas y media', 150],
+    ])('reads the half-hour form %s as %i', (note, minutes) => {
+      expect(readMaxMinutes(note)).toBe(minutes);
+    });
+
+    it.each([
+      ['no más de 2 horas', 120],
+      ['no mas de 90 minutos', 90],
+      ['no más larga que 2h', 120],
+      ['no más de hora y media', 90],
+      ['como mucho 2 horas', 120],
+      ['como máximo 90 minutos', 90],
+    ])('reads a ceiling, %s, as %i', (note, minutes) => {
       expect(readMaxMinutes(note)).toBe(minutes);
     });
 
@@ -243,9 +316,18 @@ describe('a Spanish note', () => {
       '2 horas o más',
       '3 horas o mas',
       'una épica, 2h+',
+      'no menos de 2 horas',
+      'no menos de 90 minutos',
+      'más de media hora',
+      'al menos hora y media',
     ])('reads a floor, %s, as no ceiling', (note) => {
       expect(readMaxMinutes(note)).toBeNull();
     });
+  });
+
+  it('sets the filter and the line for a ceiling as for a menos de', () => {
+    expect(readNote('no más de 2 horas', 'movie')).toEqual(readNote('menos de 2 horas', 'movie'));
+    expect(buildTrace('movie', 'no más de 2 horas', 'es')[2]).toBe('Que dure menos de 2 horas');
   });
 
   it('lets a floor fall through to the other rules', () => {

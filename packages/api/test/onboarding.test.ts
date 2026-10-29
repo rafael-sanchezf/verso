@@ -1,7 +1,8 @@
 /**
  * The onboarding backend against a real local stack: the profile's platforms
  * and media, the events, the provisional mark through the wrappers, the deck's
- * candidates with their boost, the batch's guesses, and the drain.
+ * candidates with their boost, the batch's guesses, the drain, and the batch
+ * session's source on the insertion prediction.
  *
  * The pgTAP suite (supabase/tests/onboarding_backend.test.sql) proves the
  * rules; this proves the wrappers: that each call reaches its function by
@@ -21,7 +22,7 @@
 import { orderDeck } from '@verso/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from '../src/client';
-import { markFinished, setStatus } from '../src/entries';
+import { markFinished, setStatus, startRanking } from '../src/entries';
 import { logEvent, type EventKind } from '../src/events';
 import { batchPredictions, deckCandidates, playedNotRanked } from '../src/onboarding';
 import { getMyProfile, setProfileMedia, setProfilePlatforms, updateMyProfile, UsernameError } from '../src/profiles';
@@ -286,6 +287,83 @@ describe.skipIf(!live)('the onboarding backend against a local stack', () => {
         placedBy: 'prior',
       });
       expect((await tierList(carol, 'game', 'liked')).map((row) => row.placed_by)).toEqual(['prior']);
+    });
+
+    // VER-281: the deck, the seeds and Search's add-many pill write
+    // `startRanking`, so a game they mark played and the session never places
+    // is played with no finished date, and the drain lists it undated.
+    it('lists a game onboarding marked played with no finished date', async () => {
+      const { entry } = await startRanking(carol, id('deckLoved'));
+      expect(entry.status).toBe('played');
+      expect(entry.finishedAt).toBeNull();
+
+      const drain = await playedNotRanked(carol, 'game');
+      expect(drain.map((row) => [row.mediaItemId, row.finishedAt])).toEqual([[id('deckLoved'), null]]);
+    });
+  });
+
+  describe("the batch session's source", () => {
+    let dave: Client;
+    let batchGames: Record<string, SeededGame>;
+    const batchId = (key: string) => batchGames[key]!.mediaItemId;
+
+    beforeAll(async () => {
+      dave = (await signUpUser('onboard-d')).client;
+      batchGames = await seedGames([{ key: 'logged' }, { key: 'answered' }, { key: 'provisional' }]);
+    });
+
+    it('logs the log flow as user and both kinds of batch game as batch', async () => {
+      await finishInsertion(dave, { mediaItemId: batchId('logged'), medium: 'game', tier: 'loved', position: 0, comparisons: [] });
+      await finishInsertion(dave, {
+        mediaItemId: batchId('answered'),
+        medium: 'game',
+        tier: 'loved',
+        position: 1,
+        comparisons: [],
+        placedBy: 'user',
+        source: 'batch',
+      });
+      await finishInsertion(dave, {
+        mediaItemId: batchId('provisional'),
+        medium: 'game',
+        tier: 'fine',
+        position: 0,
+        comparisons: [],
+        placedBy: 'prior',
+        source: 'batch',
+      });
+
+      const { data, error } = await dave
+        .from('prediction_log')
+        .select('media_item_id, components')
+        .eq('surface', 'insertion')
+        .in('media_item_id', [batchId('logged'), batchId('answered'), batchId('provisional')]);
+      if (error) throw error;
+
+      const sources = Object.fromEntries(
+        data.map((row) => {
+          const c = row.components as { source: string; placed_by: string };
+          return [row.media_item_id, [c.source, c.placed_by]];
+        }),
+      );
+      expect(sources).toEqual({
+        [batchId('logged')]: ['user', 'user'],
+        [batchId('answered')]: ['batch', 'user'],
+        [batchId('provisional')]: ['batch', 'prior'],
+      });
+    });
+
+    it('refuses a source the database does not know', async () => {
+      await expect(
+        finishInsertion(dave, {
+          mediaItemId: batchId('logged'),
+          medium: 'game',
+          tier: 'liked',
+          position: 0,
+          comparisons: [],
+          source: 'import' as never,
+        }),
+      ).rejects.toMatchObject({ code: '22023' });
     });
   });
 });

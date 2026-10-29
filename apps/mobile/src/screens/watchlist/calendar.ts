@@ -11,30 +11,21 @@
  *
  * No React; relative imports only (`test/watchlist-calendar.test.ts`). The
  * sentences are the dictionary's (`lists.calendar`), returned as a `Phrase`
- * the segment says with `t`. The month and weekday words are tables here, one
- * per language, read against the language the app is in, the way `format.ts`
- * keeps its own (Spanish puts the day first: `3 oct`, `sáb 24 oct`).
+ * the segment says with `t`. The month and weekday words are `format.ts`'s
+ * tables (`dateTables`), in the language the app is in; what is here is the
+ * order they go in, one per language (Spanish puts the day first: `3 oct`,
+ * `sáb 24 oct`), and the capitals the date column and the group headers use.
  */
 
 import type { CalendarKind, MovieCalendarRow } from '@verso/api';
 
+import { dateTables } from '../../lib/format';
 import { languageStore } from '../../lib/i18n/store';
 import type { Language } from '../../lib/i18n/model';
 
 import type { Phrase } from './filters';
 
-type Twelve = readonly [string, string, string, string, string, string, string, string, string, string, string, string];
-type Seven = readonly [string, string, string, string, string, string, string];
-
 interface CalendarWords {
-  /** `Oct`, `oct`: the date column's month (upper-cased there) and the short dates. */
-  months: Twelve;
-  /** The group headers: `OCTOBER`, `OCTUBRE`. */
-  monthNames: Twelve;
-  /** The date column's weekday when going: `SAT`, `SÁB`. */
-  weekdays: Seven;
-  /** The ticket's weekday: `Sat`, `sáb`. */
-  weekdayWords: Seven;
   /** `Oct 3`, `3 oct`. */
   monthDay(month: string, day: number): string;
   /** `Jan 15, 2027`, `15 ene 2027`. */
@@ -45,46 +36,11 @@ interface CalendarWords {
 
 const CALENDAR_WORDS: Readonly<Record<Language, CalendarWords>> = {
   en: {
-    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    monthNames: [
-      'JANUARY',
-      'FEBRUARY',
-      'MARCH',
-      'APRIL',
-      'MAY',
-      'JUNE',
-      'JULY',
-      'AUGUST',
-      'SEPTEMBER',
-      'OCTOBER',
-      'NOVEMBER',
-      'DECEMBER',
-    ],
-    weekdays: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
-    weekdayWords: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     monthDay: (month, day) => `${month} ${day}`,
     monthDayYear: (month, day, year) => `${month} ${day}, ${year}`,
     ticket: (weekday, month, day) => `${weekday} ${month} ${day}`,
   },
   es: {
-    // The RAE's abbreviations, as `format.ts` writes them.
-    months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'],
-    monthNames: [
-      'ENERO',
-      'FEBRERO',
-      'MARZO',
-      'ABRIL',
-      'MAYO',
-      'JUNIO',
-      'JULIO',
-      'AGOSTO',
-      'SEPTIEMBRE',
-      'OCTUBRE',
-      'NOVIEMBRE',
-      'DICIEMBRE',
-    ],
-    weekdays: ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'],
-    weekdayWords: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
     monthDay: (month, day) => `${day} ${month}`,
     monthDayYear: (month, day, year) => `${day} ${month} ${year}`,
     ticket: (weekday, month, day) => `${weekday} ${day} ${month}`,
@@ -112,7 +68,7 @@ export function shortDate(value: string, todayYear: number): string {
   const p = parts(value);
   if (!p) return value;
   const w = words();
-  const month = w.months[p.month]!;
+  const month = dateTables().months[p.month]!;
   return p.year === todayYear ? w.monthDay(month, p.day) : w.monthDayYear(month, p.day, p.year);
 }
 
@@ -120,8 +76,8 @@ export function shortDate(value: string, todayYear: number): string {
 export function goingDate(value: string): string {
   const p = parts(value);
   if (!p) return value;
-  const w = words();
-  return w.ticket(w.weekdayWords[p.weekday]!, w.months[p.month]!, p.day);
+  const { months, weekdaysShort } = dateTables();
+  return words().ticket(weekdaysShort[p.weekday]!, months[p.month]!, p.day);
 }
 
 export type CalendarTrailing = 'going?' | 'change' | null;
@@ -155,8 +111,8 @@ export interface CalendarRowView {
 export function rowView(row: MovieCalendarRow, todayYear: number, service?: string | null): CalendarRowView {
   const p = parts(row.onDate);
   const going = row.kind === 'going';
-  const w = words();
-  const dateTop = p ? (going ? w.weekdays[p.weekday]! : w.months[p.month]!.toUpperCase()) : '';
+  const { months, weekdaysShort } = dateTables();
+  const dateTop = p ? (going ? weekdaysShort[p.weekday]! : months[p.month]!).toUpperCase() : '';
   const dateDay = p ? String(p.day) : '';
   return {
     row,
@@ -205,7 +161,7 @@ export interface CalendarGroup {
  */
 export function calendarGroups(rows: readonly MovieCalendarRow[], today: string): CalendarGroup[] {
   const todayYear = parts(today)?.year ?? new Date().getFullYear();
-  const names = words().monthNames;
+  const names = dateTables().monthNames.map((name) => name.toUpperCase());
   const groups: CalendarGroup[] = [];
   const now: CalendarRowView[] = [];
   const byMonth = new Map<string, CalendarGroup>();

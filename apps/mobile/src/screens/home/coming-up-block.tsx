@@ -9,6 +9,7 @@
 
 import type { UseQueryResult } from '@tanstack/react-query';
 import { coverCandidates, type EntryRow } from '@verso/api';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
@@ -95,7 +96,8 @@ const DATE_COLUMN_WIDTH = 44;
 function ReleaseDate({ value }: { value: string | null }) {
   const t = useT();
   const theme = useTheme();
-  const date = comingUpDate(value);
+  // `t` is new per language, so the month follows a change of language too.
+  const date = useMemo(() => comingUpDate(value), [value, t]);
 
   return (
     <View style={styles.date}>
@@ -107,7 +109,7 @@ function ReleaseDate({ value }: { value: string | null }) {
           color="text/secondary"
           numberOfLines={1}
           adjustsFontSizeToFit>
-          {t(date.month).toUpperCase()}
+          {date.month.toUpperCase()}
         </Text>
       ) : null}
       {date ? (

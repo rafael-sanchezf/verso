@@ -15,6 +15,11 @@
  * whatever status `startRanking` left it (played for one that was untracked or
  * in the backlog, otherwise as it was), and the game page offers "Rank this"
  * again.
+ *
+ * The sheet is painted as `SheetFrame` paints the other form sheets (VER-218):
+ * `bg/sheet` with `Sheet`'s dark-mode top hairline, the top corners at the
+ * root layout's radius, and every step inside `ElevatedScope`, so the tier
+ * rows, the comparison cards and the film's fields step up with the sheet.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -38,7 +43,8 @@ import { supabase } from '@/lib/supabase';
 import { movieFacts } from '@/screens/movie/reads';
 import { logTenRankedIfReached } from '@/screens/onboarding/ten-ranked';
 import { ErrorLine } from '@/ui';
-import { useTheme } from '@/ui/theme';
+import { sheetEdge } from '@/ui/sheet';
+import { ElevatedScope, useTheme } from '@/ui/theme';
 
 import { CompareStep } from './compare-step';
 import { ConfirmStep } from './confirm-step';
@@ -159,7 +165,17 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
   const expanded = log.step !== 'tier';
 
   return (
-    <View style={[styles.fill, { backgroundColor: theme.colors['bg/canvas'] }]}>
+    <View
+      style={[
+        styles.fill,
+        {
+          backgroundColor: theme.colors['bg/sheet'],
+          // The root layout's sheetCornerRadius.
+          borderTopLeftRadius: theme.radius.xl,
+          borderTopRightRadius: theme.radius.xl,
+        },
+        sheetEdge(theme),
+      ]}>
       {/*
         The sheet opens at the small detent the root layout registers and grows
         to full height for the comparisons. Replacing the detent list with a
@@ -170,104 +186,106 @@ export function LogFlowScreen({ id, rank = false }: { id: string; rank?: boolean
       */}
       {expanded ? <Stack.Screen options={FULL_HEIGHT_SHEET} /> : null}
 
-      {game.isPending ? null : isFilm && !logged ? (
-        film.data ? (
-          <MovieLogStep
-            film={film.data}
-            onSaved={(rankNext) => {
-              if (rankNext) setLogged(true);
-              else close();
-            }}
-          />
-        ) : film.isError ? (
-          <ErrorLine message={t('browse.log.loadFilm')} onRetry={() => void film.refetch()} />
-        ) : null
-      ) : log.step === 'tier' ? (
-        <View
-          style={{
-            paddingTop: theme.space[3],
-            paddingHorizontal: theme.space[4],
-            paddingBottom: insets.bottom + theme.space[2],
-          }}>
-          {game.isError || (game.isSuccess && game.data === null) ? (
-            <ErrorLine
-              message={t('browse.log.loadGame')}
-              onRetry={() => {
-                void game.refetch();
+      <ElevatedScope>
+        {game.isPending ? null : isFilm && !logged ? (
+          film.data ? (
+            <MovieLogStep
+              film={film.data}
+              onSaved={(rankNext) => {
+                if (rankNext) setLogged(true);
+                else close();
               }}
             />
-          ) : tiers.error && chosen !== null ? (
-            <ErrorLine
-              message={t('browse.log.loadTier', { tier: t(TIER_IN_SENTENCE[chosen]) })}
-              onRetry={tiers.refetch}
-            />
-          ) : (
-            // A tier is chosen but the step has not moved on, so one of the two
-            // reads is still in flight: that row is the one waiting.
-            <TierStep title={newGame?.title ?? null} pending={chosen} onChoose={setChosen} />
-          )}
-        </View>
-      ) : null}
-
-      {log.step === 'compare' && newGame
-        ? (() => {
-            const { insertion } = log;
-            const pivotIndex = insertion.pivotIndex;
-            const pivotItem = pivotIndex === null ? undefined : insertion.list[pivotIndex];
-            const pivot = pivotItem ? gamesById.get(pivotItem.id) : undefined;
-
-            if (pivotIndex === null || !pivot) {
-              return (
-                <View style={styles.centered}>
-                  <ErrorLine message={t('browse.log.loadComparison')} onRetry={tiers.refetch} />
-                </View>
-              );
-            }
-
-            const score = scoreForPosition(insertion.tier, pivotIndex, insertion.list.length);
-            const subtitle =
-              above === null
-                ? scoreText(score)
-                : t('browse.log.pivotRanked', { rank: globalRank(above, pivotIndex), score: scoreText(score) });
-
-            return (
-              <CompareStep
-                medium={medium}
-                insertion={insertion}
-                newGame={newGame}
-                pivot={pivot}
-                pivotSubtitle={subtitle}
-                onAnswer={onAnswer}
-                onClose={close}
+          ) : film.isError ? (
+            <ErrorLine message={t('browse.log.loadFilm')} onRetry={() => void film.refetch()} />
+          ) : null
+        ) : log.step === 'tier' ? (
+          <View
+            style={{
+              paddingTop: theme.space[3],
+              paddingHorizontal: theme.space[4],
+              paddingBottom: insets.bottom + theme.space[2],
+            }}>
+            {game.isError || (game.isSuccess && game.data === null) ? (
+              <ErrorLine
+                message={t('browse.log.loadGame')}
+                onRetry={() => {
+                  void game.refetch();
+                }}
               />
-            );
-          })()
-        : null}
+            ) : tiers.error && chosen !== null ? (
+              <ErrorLine
+                message={t('browse.log.loadTier', { tier: t(TIER_IN_SENTENCE[chosen]) })}
+                onRetry={tiers.refetch}
+              />
+            ) : (
+              // A tier is chosen but the step has not moved on, so one of the two
+              // reads is still in flight: that row is the one waiting.
+              <TierStep title={newGame?.title ?? null} pending={chosen} onChoose={setChosen} />
+            )}
+          </View>
+        ) : null}
 
-      {log.step === 'confirm' && newGame ? (
-        // Not flattened: this is the sheet's own content view, and
-        // react-native-screens counts the subviews it is given when the sheet
-        // holds a scroll view. See the note at the top of `ConfirmStep`.
-        <View
-          collapsable={false}
-          style={{
-            flex: 1,
-            paddingHorizontal: theme.space[4],
-            paddingTop: Math.max(insets.top, theme.space[4]),
-            paddingBottom: Math.max(insets.bottom, theme.space[4]),
-          }}>
-          <ConfirmStep
-            state={log}
-            newGame={newGame}
-            gamesById={gamesById}
-            above={above}
-            onNudge={onNudge}
-            onDone={onDone}
-            saving={save.isPending}
-            error={save.isError ? t('browse.log.savePlacement') : null}
-          />
-        </View>
-      ) : null}
+        {log.step === 'compare' && newGame
+          ? (() => {
+              const { insertion } = log;
+              const pivotIndex = insertion.pivotIndex;
+              const pivotItem = pivotIndex === null ? undefined : insertion.list[pivotIndex];
+              const pivot = pivotItem ? gamesById.get(pivotItem.id) : undefined;
+
+              if (pivotIndex === null || !pivot) {
+                return (
+                  <View style={styles.centered}>
+                    <ErrorLine message={t('browse.log.loadComparison')} onRetry={tiers.refetch} />
+                  </View>
+                );
+              }
+
+              const score = scoreForPosition(insertion.tier, pivotIndex, insertion.list.length);
+              const subtitle =
+                above === null
+                  ? scoreText(score)
+                  : t('browse.log.pivotRanked', { rank: globalRank(above, pivotIndex), score: scoreText(score) });
+
+              return (
+                <CompareStep
+                  medium={medium}
+                  insertion={insertion}
+                  newGame={newGame}
+                  pivot={pivot}
+                  pivotSubtitle={subtitle}
+                  onAnswer={onAnswer}
+                  onClose={close}
+                />
+              );
+            })()
+          : null}
+
+        {log.step === 'confirm' && newGame ? (
+          // Not flattened: this is the sheet's own content view, and
+          // react-native-screens counts the subviews it is given when the sheet
+          // holds a scroll view. See the note at the top of `ConfirmStep`.
+          <View
+            collapsable={false}
+            style={{
+              flex: 1,
+              paddingHorizontal: theme.space[4],
+              paddingTop: Math.max(insets.top, theme.space[4]),
+              paddingBottom: Math.max(insets.bottom, theme.space[4]),
+            }}>
+            <ConfirmStep
+              state={log}
+              newGame={newGame}
+              gamesById={gamesById}
+              above={above}
+              onNudge={onNudge}
+              onDone={onDone}
+              saving={save.isPending}
+              error={save.isError ? t('browse.log.savePlacement') : null}
+            />
+          </View>
+        ) : null}
+      </ElevatedScope>
     </View>
   );
 }

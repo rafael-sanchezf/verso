@@ -475,11 +475,13 @@ describe('the date tables', () => {
   it("give a screen the month and weekday names in the app's language", () => {
     expect(dateTables().months[8]).toBe('Sep');
     expect(dateTables().monthNames[9]).toBe('October');
+    expect(dateTables().weekdaysShort).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
     expect(dateTables().weekdayLetters).toEqual(['S', 'M', 'T', 'W', 'T', 'F', 'S']);
     languageStore.setPreference('es');
     expect(dateTables().months[8]).toBe('sept');
     expect(dateTables().monthNames[9]).toBe('Octubre');
     expect(dateTables().weekdays[3]).toBe('Miércoles');
+    expect(dateTables().weekdaysShort).toEqual(['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']);
     expect(dateTables().weekdayLetters).toEqual(['D', 'L', 'M', 'M', 'J', 'V', 'S']);
   });
 

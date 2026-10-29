@@ -18,9 +18,11 @@
  * the refused call rolled back its own comparisons with it.
  *
  * Pure apart from the `write` it is given, so the bookkeeping is tested in node
- * (`apps/mobile/test/session-writes.test.ts`).
+ * (`apps/mobile/test/session-writes.test.ts`). The write itself is
+ * `writeBatchGame`, which says the call is the batch session's.
  */
 
+import { finishInsertion, type Client } from '@verso/api';
 import type { BatchFinishArgs, Tier } from '@verso/core';
 
 export interface WriteOutcome {
@@ -37,6 +39,17 @@ const ALREADY_RANKED = '23505';
 
 export function isAlreadyRanked(error: unknown): boolean {
   return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === ALREADY_RANKED;
+}
+
+/**
+ * One game's write, marked as the batch session's: `source: 'batch'`, so the
+ * insertion prediction the database logs for it reads batch whether the
+ * person's answers placed it or the prior did. The session started each game
+ * from the engine's guess, which the log flow never does, so its rows are
+ * kept apart from the log flow's `user` rows (VER-237).
+ */
+export function writeBatchGame(client: Client, call: BatchFinishArgs): Promise<number> {
+  return finishInsertion(client, { ...call, source: 'batch' });
 }
 
 export async function runWrites(

@@ -44,6 +44,7 @@ Every script in the workspace, with what it does. The root scripts forward to th
 | `pnpm catalog:opencritic-scores` | OpenCritic critic scores for games with an OpenCritic id; skips when `OPENCRITIC_RAPIDAPI_KEY` is unset |
 | `pnpm catalog:availability` | Subscription availability from Game Pass, GeForce NOW and IsThereAnyDeal |
 | `pnpm catalog:tmdb-sync`, `pnpm catalog:tmdb-sync:full` | The TMDB mirror for films and series: the delta (26 hours by default; the weekly workflow passes `-- --since 194`), or the full pull |
+| `pnpm engine:report` | The recommendation engine's two instruments per user and medium, the leave-one-out harness and the insertion guesses; read-only, on `DATABASE_URL` ([../design/recommendation-engine.md](../design/recommendation-engine.md), "The report") |
 | `pnpm tokens:build`, `pnpm tokens:check` | Build the app's theme from `packages/tokens/tokens.json`, or fail if the committed theme is out of step with it (CI runs the check) |
 | `pnpm typecheck` | `tsc --noEmit` in every package; the app generates its typed routes first |
 | `pnpm test` | The vitest suites in every package; the `packages/api` suites run live when `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` point at a stack, and skip otherwise |

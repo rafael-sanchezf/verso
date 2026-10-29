@@ -61,6 +61,12 @@ export interface RankingEntryPlacement {
  * Place an item in a tier, shifting everything below it down one.
  * Returns the position it actually landed at.
  *
+ * No screen calls this: the app places through `finishInsertion`, which also
+ * writes the answers. The test suites use it to set up a list. Like
+ * `finishInsertion`, it logs the engine's guess for the item to
+ * `prediction_log` (the row `finishInsertion` writes for a call with no
+ * comparisons; 20261028100000_insert_ranking_entry_prediction.sql).
+ *
  * Throws with code 23505 if the item is already ranked, 22023 if the media item
  * is unknown or is not of that medium.
  */
@@ -110,6 +116,14 @@ export async function removeRankingEntry(client: Client, mediaItemId: string): P
 }
 
 /**
+ * Which path is placing a game, as `finishInsertion` tells the database for
+ * the insertion prediction it logs (`prediction_log.components.source`):
+ * `'user'` for the log flow, `'batch'` for the batch session. `'import'` is
+ * the Letterboxd import's own and never comes through `finishInsertion`.
+ */
+export type InsertionSource = 'user' | 'batch';
+
+/**
  * One RPC per ranked game: write the comparison log the insertion produced and
  * place the item, atomically. Build the arguments with `insertionToFinishArgs`
  * from @verso/core for one game, or with `batchFinishArgs` for a batch
@@ -119,10 +133,15 @@ export async function removeRankingEntry(client: Client, mediaItemId: string): P
  * `placedBy` omitted means `'user'`, and nothing is sent for it, so the log
  * flow's call is unchanged. A `'prior'` game still carries its own answers:
  * the mark says the answers did not fix its place, not that there were none.
+ *
+ * `source` is the same kind of option: omitted means `'user'` and nothing is
+ * sent. The batch session sends `'batch'` for every game it writes, so the
+ * insertion prediction the database logs for it reads source batch whether
+ * its answers or the prior placed it (20261028110000_batch_insertion_source.sql).
  */
 export async function finishInsertion(
   client: Client,
-  args: FinishInsertionArgs & { placedBy?: PlacedBy },
+  args: FinishInsertionArgs & { placedBy?: PlacedBy; source?: InsertionSource },
 ): Promise<number> {
   const { data, error } = await client.rpc('finish_insertion', {
     p_media_item_id: args.mediaItemId,
@@ -133,6 +152,7 @@ export async function finishInsertion(
     // objects, which TypeScript will not structurally match to that recursive type.
     p_comparisons: args.comparisons as unknown as Json,
     ...(args.placedBy === undefined ? {} : { p_placed_by: args.placedBy }),
+    ...(args.source === undefined ? {} : { p_source: args.source }),
   });
   if (error) throw error;
   return data;

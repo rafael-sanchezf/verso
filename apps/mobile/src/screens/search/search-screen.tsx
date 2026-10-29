@@ -22,9 +22,9 @@
  * `?intent=addmany` (Ranking's "I know what I played", specs/onboarding.md,
  * "The doors") titles the screen "Add many" with a "{n} added" chip, and every
  * row's control is a check circle: a tap marks the game played at once
- * (`markFinished`) and adds it to the ADDED list under the results; "Rank {n}
- * games", pinned at the bottom, opens the session over them with no tiers
- * yet. `add-many.ts` has the rules; the list ends with the visit.
+ * (`startRanking`, no finished date) and adds it to the ADDED list under the
+ * results; "Rank {n} games", pinned at the bottom, opens the session over them
+ * with no tiers yet. `add-many.ts` has the rules; the list ends with the visit.
  *
  * A film search that finds nothing offers "Search TMDB for “{query}”": the
  * `tmdb-lookup` function writes TMDB's best match into the catalog and the
@@ -34,9 +34,9 @@
 import {
   coverCandidates,
   lookupMovie,
-  markFinished,
   popularGames,
   searchGames,
+  startRanking,
   type OnboardingGameRow,
   type PopularGameRow,
   type SearchGameRow,
@@ -252,7 +252,7 @@ export function SearchScreen() {
       setAdding((current) => new Set(current).add(row.mediaItemId));
       whenReleased(
         () => releaseDateOf(supabase, row.mediaItemId),
-        () => markFinished(supabase, row.mediaItemId),
+        () => startRanking(supabase, row.mediaItemId),
       )
         .then((outcome) => {
           if (!outcome.released) {
@@ -411,7 +411,7 @@ export function SearchScreen() {
 /** What the add-many intent gives every list of game rows. */
 interface AddManyControls {
   state: AddManyState;
-  /** Rows whose `markFinished` is in flight. */
+  /** Rows whose `startRanking` is in flight. */
   adding: ReadonlySet<string>;
   onAdd: (row: OnboardingGameRow) => void;
 }
